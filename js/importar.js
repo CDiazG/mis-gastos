@@ -6,15 +6,16 @@ const drop=$('#drop');
 drop.onclick=()=>$('#pdfInput').click();
 drop.ondragover=e=>{e.preventDefault();drop.classList.add('hover')};
 drop.ondragleave=()=>drop.classList.remove('hover');
-drop.ondrop=e=>{e.preventDefault();drop.classList.remove('hover');leerPDFs([...e.dataTransfer.files])};
-$('#pdfInput').onchange=e=>{leerPDFs([...e.target.files]);e.target.value=''};
-async function leerPDFs(files){
-  files=files.filter(f=>/\.pdf$/i.test(f.name)||f.type==='application/pdf');
-  if(!files.length){toast('Elige un archivo PDF',true);return}
-  $('#impOut').innerHTML='<div class="card pad" style="margin-top:14px">Leyendo '+files.length+' PDF…</div>';
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('hover');leerArchivos([...e.dataTransfer.files])};
+$('#pdfInput').onchange=e=>{leerArchivos([...e.target.files]);e.target.value=''};
+async function leerArchivos(files){
+  files=files.filter(f=>/\.(pdf|csv|txt|xlsx|xls|n43|q43|aeb|c43)$/i.test(f.name)||/pdf|csv|sheet|excel|text/.test(f.type));
+  if(!files.length){toast('Elige un extracto en PDF, Norma 43, CSV o Excel',true);return}
+  $('#impOut').innerHTML='<div class="card pad" style="margin-top:14px">Leyendo '+files.length+' archivo'+(files.length>1?'s':'')+'…</div>';
   const res=[];
   for(const f of files){
-    try{const r=parseStatement(await pdfLines(new Uint8Array(await f.arrayBuffer())));r.archivo=f.name;res.push(r)}
+    try{const rs=await leerExtracto(f);if(!rs.length)res.push({archivo:f.name,error:'cancelado',movs:[]});
+      rs.forEach((r,i)=>{r.archivo=f.name+(rs.length>1?' · cuenta '+(r.cuentaTxt||i+1):'');res.push(r)})}
     catch(e){console.error(e);res.push({archivo:f.name,error:e.message||String(e),movs:[]})}
   }
   prepararRevision(res);
@@ -23,7 +24,8 @@ function prepararRevision(res){
   const rows=[];
   for(const r of res){
     if(r.error)continue;
-    r.cuenta=r.banco&&S.cuentas.some(c=>c.n===r.banco)?r.banco:(r.banco||'EVO');
+    if(r.banco&&!S.cuentas.some(c=>c.n===r.banco))S.cuentas.push({n:r.banco,v:null,f:null,banco:1});
+    r.cuenta=r.banco||(S.cuentas.find(c=>c.banco)||{n:'EVO'}).n;
     r.movs.forEach((m,i)=>{
       const ac=autoCatR(m.concepto,m.detalle,m.importe);let cat=ac.c;
       const nomina=esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
@@ -59,6 +61,7 @@ function rImport(){
   const o=$('#impOut');if(!IMP){o.innerHTML='';return}
   let h='';
   for(const r of IMP.res){
+    if(r.error==='cancelado')continue;
     if(r.error){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no se ha podido leer (${esc(r.error)}).</span></div>`;continue}
     if(!r.movs.length){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no he encontrado movimientos. Si es un PDF escaneado (una foto), no tiene texto que leer.</span></div>`;continue}
     const f=r.movs.map(m=>m.fecha).sort();

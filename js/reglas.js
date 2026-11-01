@@ -41,13 +41,23 @@ function stats(m){
   const ms=S.mov.filter(x=>x.mes===m);
   const by={};let ingresos=0,sinCat=0,sinCatImp=0;
   for(const x of ms){
-    if(!x.cat){sinCat++;sinCatImp+=x.importe;continue}
+    if(!x.cat){sinCat++;sinCatImp+=x.importe;by.SINCAT=(by.SINCAT||0)-x.importe;continue}
     if(x.cat==='INGRESO')ingresos+=x.importe;
     else by[x.cat]=(by[x.cat]||0)-x.importe;
   }
-  const consumo=CONSUMO.reduce((a,c)=>a+(by[c]||0),0);
+  const consumo=CONSUMO.reduce((a,c)=>a+(by[c]||0),0)+(by.SINCAT||0);
   const ahorro=CATS.filter(c=>c.g==='AHORRO'&&c.id!=='DIEZMO').reduce((a,c)=>a+(by[c.id]||0),0),diezmo=by.DIEZMO||0;
   const base=S.aj.base==='fija'?(+S.aj.baseFija||0):ingresos;
   return {ms,by,ingresos:r2(ingresos),consumo:r2(consumo),ahorro:r2(ahorro),diezmo:r2(diezmo),sinCat,sinCatImp:r2(sinCatImp),base};
 }
+// Diezmo automático: un porcentaje de los ingresos del mes, pendiente hasta que se paga.
+function diezmoMes(m,st){st=st||stats(m);const pct=+S.aj.pct.DIEZMO||0;
+  if(!S.aj.diezmoAuto||!pct||(S.aj.diezmoDesde&&m<S.aj.diezmoDesde))return null;
+  const debido=r2(st.ingresos*pct/100),pagado=r2(st.diezmo);return {pct,debido,pagado,pendiente:r2(Math.max(0,debido-pagado))}}
+// Persona de un préstamo: la guardada o, si no, el nombre del Bizum o el concepto
+function personaDe(x){if(x.persona)return x.persona;const m=String(x.concepto||'').match(/BIZUM (?:A|DE) (.+)$/i);return (m?m[1]:x.concepto||'Sin nombre').trim()}
+function prestamosPorPersona(){const g={};
+  for(const x of S.mov.filter(x=>x.cat==='PRESTAMO')){const p=personaDe(x),k=norm(p).trim();const o=g[k]||(g[k]={persona:p,prestado:0,devuelto:0,movs:[]});
+    if(x.importe<0)o.prestado+=-x.importe;else o.devuelto+=x.importe;o.movs.push(x)}
+  return Object.values(g).map(o=>({...o,prestado:r2(o.prestado),devuelto:r2(o.devuelto),pendiente:r2(o.prestado-o.devuelto)})).sort((a,b)=>b.pendiente-a.pendiente)}
 function prestamosPendientes(){return r2(-S.mov.filter(x=>x.cat==='PRESTAMO').reduce((a,x)=>a+x.importe,0))}

@@ -2,7 +2,7 @@
 "use strict";
 /* ============ Resumen ============ */
 function rResumen(){
-  const h=$('#hola');if(NUBE&&USER){h.classList.remove('hide');h.innerHTML=`<span class="avatar">${esc((USER.nombre||'?').charAt(0).toUpperCase())}</span><span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b> · ${esc(USER.email)}</span>`}else h.classList.add('hide');
+  const h=$('#hola');h.innerHTML=NUBE&&USER?`<span class="avatar">${esc((USER.nombre||'?').charAt(0).toUpperCase())}</span><span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b> · ${esc(USER.email)}</span>`:'';
   const st=stats(MES);
   const libre=st.ingresos-st.consumo-st.diezmo;
   const tasa=st.ingresos>0?libre/st.ingresos:null;
@@ -14,7 +14,7 @@ function rResumen(){
    <div class="card pad kpi"><div class="l">Sin asignar</div><div class="v num ${queda<0?'neg':''}">${eur(queda)}</div><div class="s">Ingresos − gastos − ahorro − diezmo</div></div>`;
   // alertas
   const al=[];
-  if(st.sinCat)al.push(`<div class="alert"><span class="grow"><b>${st.sinCat} movimiento${st.sinCat>1?'s':''} sin categoría</b> (${eur(-st.sinCatImp)}). No cuentan en el resumen hasta que les pongas una.</span><button class="btn sm" data-act="sincat">Revisar</button></div>`);
+  if(st.sinCat)al.push(`<div class="alert"><span class="grow"><b>${st.sinCat} movimiento${st.sinCat>1?'s':''} sin categoría</b> (${eur(-st.sinCatImp)}). Cuentan como «Sin categorizar»; ponles categoría para que el presupuesto sea exacto.</span><button class="btn sm" data-act="sincat">Revisar</button></div>`);
   if(!st.ingresos&&S.aj.base==='ingresos'&&st.ms.length)al.push(`<div class="alert info"><span class="grow">Este mes no tiene ingresos apuntados, así que el presupuesto sale a 0. Puedes usar una base fija en Ajustes.</span></div>`);
   const pp=prestamosPendientes();
   if(Math.abs(pp)>0.009)al.push(`<div class="alert info"><span class="grow">${pp>0?'Te deben':'Debes'} <b>${eur(Math.abs(pp))}</b> en préstamos pendientes.</span><button class="btn sm" data-act="prest">Ver</button></div>`);
@@ -26,23 +26,33 @@ function rResumen(){
     const cerca=CATS.filter(c=>c.g!=='AHORRO').map(c=>({c,p:st.base*(S.aj.pct[c.id]||0)/100,v:st.by[c.id]||0})).filter(x=>x.p>0&&x.v>=x.p*0.8&&x.v<=x.p+0.5);
     if(cerca.length)al.push(`<div class="alert"><span class="grow"><b>Cerca del límite:</b> ${cerca.map(x=>`${esc(x.c.n)} (${Math.round(x.v/x.p*100)}%, quedan ${eur(x.p-x.v,0)})`).join(' · ')}</span></div>`);
   }
+  {const hoyM=mesDe(hoy());const fin=new Date(hoyM+'-01');fin.setDate(0);const finAnt=fin.toISOString().slice(0,10);
+   const tarde=S.cuentas.filter(c=>c.banco&&c.f&&c.f<finAnt);
+   if(MES===hoyM&&tarde.length)al.push(`<div class="alert info"><span class="grow"><b>Extracto pendiente:</b> ${tarde.map(c=>`el último de ${esc(c.n)} es del ${fFecha(c.f)}`).join(' · ')}. Sube el de ${nombreMes(addMes(hoyM,-1))} cuando lo tengas.</span><button class="btn sm" data-act="imp">Importar</button></div>`)}
+  {const pend=[];for(let k=1;k<=6;k++){const m=addMes(mesDe(hoy()),-k);const d=diezmoMes(m);if(d&&d.pendiente>0.5)pend.push([m,d.pendiente])}
+   if(pend.length)al.push(`<div class="alert"><span class="grow"><b>Diezmo pendiente:</b> ${pend.map(([m,v])=>nombreMes(m)+' '+eur(v,0)).join(' · ')}</span><button class="btn sm" data-act="dz" data-m="${pend[0][0]}">Ver</button></div>`)}
   {const fx=fijosDelMes(MES).filter(f=>f.estado==='falta'||f.estado==='cambia');
    if(fx.length)al.push(`<div class="alert"><span class="grow"><b>Gastos fijos:</b> ${fx.map(f=>f.estado==='falta'?`${esc(f.f.nombre)} no ha llegado`:`${esc(f.f.nombre)} ha cambiado (${eur(f.pagado)} en vez de ${eur(f.f.importe)})`).join(' · ')}</span></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
   $('#alerts').innerHTML=al.join('');
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
-    if(a==='prest'){F.cat='PRESTAMO';F.todos=true;go('movs')}
+    if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
     if(a==='copia')exportar();
     if(a==='imp')go('importar');
     if(a==='aj'||a==='sug')go('ajustes');
     if(a==='usu')go('usuarios');
+    if(a==='dz'){MES=b.dataset.m;render()}
   });
   // grupos
+  const mAnt=addMes(MES,-1),stAnt=stats(mAnt),hayAnt=stAnt.ms.length>0;
+  const dz=diezmoMes(MES,st);
+  const cmp=(id,v)=>{if(!hayAnt)return '';const d=r2(v-(stAnt.by[id]||0));if(Math.abs(d)<1)return '';
+    return ` · <span class="${d>0?'neg':'pos'}" title="Comparado con ${nombreMes(mAnt)}">${d>0?'▲':'▼'} ${eur(Math.abs(d),0)} vs ${MESES[+mAnt.slice(5)-1].slice(0,3)}</span>`};
   $('#groups').innerHTML=GROUPS.map(g=>{
     const cs=CATS.filter(c=>c.g===g.id);
     const gp=cs.reduce((a,c)=>a+st.base*(S.aj.pct[c.id]||0)/100,0);
-    const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0);
+    const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
     const pctG=cs.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0);
     return `<div class="card"><div class="ghead"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}</span></div>`+
       cs.map(c=>{
@@ -52,13 +62,21 @@ function rResumen(){
         const over=v>p+0.5;
         const isSave=g.id==='AHORRO';
         const cerca=!isSave&&!over&&p>0&&v>=p*0.8;
+        if(c.id==='DIEZMO'&&dz){
+          const w2=dz.debido>0?Math.min(100,dz.pagado/dz.debido*100):0;
+          return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n} ${dz.pendiente>0.5?'<span class="tag cash">pendiente</span>':dz.debido>0?'<span class="tag good">al día</span>':''}</span><span class="num"><b>${eur(dz.pagado)}</b> <span class="mut small">de ${eur(dz.debido,0)}</span></span></div>
+            <div class="bar"><i style="width:${w2}%"></i></div>
+            <div class="b"><span>${dz.pct}% de los ingresos del mes</span>${dz.pendiente>0.5?`<button class="btn sm dzpag" type="button">Marcar ${eur(dz.pendiente,0)} pagado</button>`:'<span class="pos">pagado</span>'}</div></div>`}
         return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
           <div class="bar ${over&&!isSave?'over':cerca?'warn':''}"><i style="width:${w}%"></i></div>
-          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(rest>0.5?'faltan '+eur(rest,0):'cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
-      }).join('')+'</div>';
+          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(rest>0.5?'faltan '+eur(rest,0):'cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
+      }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
+          <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
   }).join('');
-  $$('#groups .crow').forEach(r=>r.onclick=()=>{F.cat=r.dataset.cat;F.sinCat=false;F.todos=false;go('movs')});
-  rFijosCard();rObjCard();
+  $$('#groups .crow').forEach(r=>r.onclick=e=>{if(e.target.closest('.dzpag'))return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
+  $$('#groups .dzpag').forEach(b=>b.onclick=()=>{aTipo='gasto';cCat='DIEZMO';cCatManual=true;aPago='__efectivo';go('efectivo');$('#cImp').value=fmt(dz.pendiente);$('#cCon').value='Diezmo '+nombreMes(MES);
+    const ult=addMes(MES,1)+'-01';const d=new Date(ult);d.setDate(0);const fin=d.toISOString().slice(0,10);$('#cFecha').value=hoy()<fin?hoy():fin;$('#cImp').focus();toast('Revisa el importe y la forma de pago, y pulsa «Añadir gasto»')});
+  rGrafico(st);rFijosCard();rObjCard();
   // especiales
   const esp=SPECIAL.filter(c=>c.id!=='INGRESO').map(c=>({c,v:st.by[c.id]||0})).filter(x=>Math.abs(x.v)>0.009);
   const cuentas=S.cuentas.filter(c=>c.banco&&c.v!=null);
@@ -67,6 +85,19 @@ function rResumen(){
     `<span style="flex:1"></span>`+
     cuentas.map(c=>`<div class="it right"><div class="l">Saldo ${esc(c.n)} ${c.f?'al '+fFecha(c.f):''}</div><div class="v num">${eur(c.v)}</div></div>`).join('')+
     `</div><p class="small mut" style="margin:10px 0 0">Los traspasos entre cuentas, las retiradas de efectivo, los préstamos y los ajustes no cuentan como gasto. Lo pagado o cobrado en efectivo, o en cuentas sin extracto, se apunta en la pestaña «Añadir».</p>`;
+}
+
+/* ---- Gráfico del mes ---- */
+function barrasHtml(items){if(!items.length)return '';const tot=items.reduce((a,x)=>a+x.v,0),max=Math.max(...items.map(x=>x.v));
+  return items.map(x=>`<div class="gbar" data-cat="${x.id}" title="Ver movimientos"><span class="gn">${esc(x.n)}</span><span class="gt"><i style="width:${Math.max(1,x.v/max*100)}%"></i></span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}
+function rGrafico(st){
+  const el=$('#grafCard');
+  const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
+  if(!items.length){el.classList.add('hide');return}
+  el.classList.remove('hide');
+  const tot=items.reduce((a,x)=>a+x.v,0);
+  el.innerHTML=`<div class="toolbar" style="margin:0 0 8px"><h3>En qué se ha ido el dinero</h3><span class="sp"></span><span class="small mut num">${eur(tot,0)} en ${nombreMes(MES)}</span></div>`+barrasHtml(items);
+  $$('#grafCard .gbar').forEach(r=>r.onclick=()=>{if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
 }
 
 /* ============ Gastos fijos previstos ============ */

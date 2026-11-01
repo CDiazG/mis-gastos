@@ -15,7 +15,7 @@ const nombreMesC=m=>{const [y,mm]=m.split('-');return MESES[+mm-1].slice(0,3)+' 
 const hoy=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const fFecha=f=>{const [y,m,d]=f.split('-');return d+'/'+m+'/'+y.slice(2)};
 const parseNum=s=>{s=String(s).trim().replace(/[€\s]/g,'');if(!s)return NaN;if(s.includes(',')){s=s.replace(/\./g,'').replace(',','.')}return parseFloat(s)};
-const catN=id=>id?((ALLC.find(c=>c.id===id)||{n:id}).n):'Sin categoría';
+const catN=id=>!id?'Sin categoría':id==='SINCAT'?'Sin categorizar':((ALLC.find(c=>c.id===id)||{n:id}).n);
 const isGastoCat=id=>CATS.some(c=>c.id===id);
 
 function toast(msg,err){const t=$('#toast');t.textContent=msg;t.className='on'+(err?' err':'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',err?5000:2600)}

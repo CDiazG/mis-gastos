@@ -59,7 +59,7 @@ function exportarExcel(alcance){
   const E=v=>({v:r2(v),s:3});
   const m1=[['Fecha','Mes','Concepto','Detalle del banco','Categoría','Grupo','Pagado con','Importe','Origen','Nota']];
   for(const x of movs)m1.push([{v:dSerial(x.fecha),s:2},x.mes,x.concepto,x.detalle||'',catN(x.cat),grupoN(x.cat),x.metodo==='efectivo'?'Efectivo':(x.cuenta||''),E(x.importe),{extracto:'Extracto',excel:'Excel antiguo',manual:'A mano'}[x.origen]||x.origen,x.nota||'']);
-  const cc=CATS.filter(c=>c.g!=='AHORRO');
+  const cc=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}];
   const m2=[['Mes','Ingresos',...cc.map(c=>c.n),'Total gastado','Inversión','Diezmo','Ahorro del mes','% ahorro']];
   const mm=[...new Set(movs.map(x=>x.mes))].sort();
   for(const m of mm){const st=stats(m);const ah=st.ingresos-st.consumo-st.diezmo;
@@ -76,6 +76,46 @@ function exportarExcel(alcance){
   const a=document.createElement('a');a.href=URL.createObjectURL(buildXlsx(sheets));a.download=nombre;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);toast('Descargado: '+nombre);
 }
+/* ============ Informe para imprimir ============ */
+function informeMes(m){
+  const st=stats(m),ant=stats(addMes(m,-1)),libre=st.ingresos-st.consumo-st.diezmo;
+  const filas=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].map(c=>{const p=st.base*(S.aj.pct[c.id]||0)/100,v=st.by[c.id]||0,d=v-(ant.by[c.id]||0);
+    return (v||p)?`<tr><td>${esc(c.n)}</td><td class="r">${p?eur(p,0):'—'}</td><td class="r">${eur(v)}</td><td class="r ${p&&v>p+0.5?'neg':''}">${p?eur(p-v,0):''}</td><td class="r">${ant.ms.length&&Math.abs(d)>=1?(d>0?'+':'−')+eur(Math.abs(d),0):''}</td></tr>`:''}).join('');
+  const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
+  const top=st.ms.filter(x=>x.importe<0&&x.cat!=='TRASPASO'&&x.cat!=='EFECTIVO').sort((a,b)=>a.importe-b.importe).slice(0,10);
+  const fx=fijosDelMes(m),ps=prestamosPorPersona().filter(p=>Math.abs(p.pendiente)>0.5),os=S.objetivos||[],dz=diezmoMes(m,st);
+  return `<section><div class="kp"><div>Ingresos<b>${eur(st.ingresos)}</b></div><div>Gastado<b>${eur(st.consumo)}</b></div><div>Ahorro del mes<b>${eur(libre)}</b>${st.ingresos?Math.round(libre/st.ingresos*100)+'% de lo ingresado':''}</div>${st.ahorro?`<div>A inversión<b>${eur(st.ahorro)}</b></div>`:''}${st.diezmo||dz?`<div>Diezmo<b>${eur(st.diezmo)}</b>${dz&&dz.pendiente>0.5?'pendiente '+eur(dz.pendiente,0):''}</div>`:''}</div></section>
+   <section><h2>Presupuesto por categoría</h2><table><thead><tr><th>Categoría</th><th class="r">Presupuesto</th><th class="r">Gastado</th><th class="r">Queda</th><th class="r">vs mes anterior</th></tr></thead><tbody>${filas}</tbody></table></section>
+   ${items.length?`<section><h2>En qué se ha ido el dinero</h2>${barrasHtml(items)}</section>`:''}
+   ${top.length?`<section><h2>Mayores gastos</h2><table><tbody>${top.map(x=>`<tr><td>${fFecha(x.fecha)}</td><td>${esc(x.concepto)}</td><td>${catN(x.cat)}</td><td class="r">${eur(-x.importe)}</td></tr>`).join('')}</tbody></table></section>`:''}
+   ${fx.length?`<section><h2>Gastos fijos</h2><table><tbody>${fx.map(x=>`<tr><td>${esc(x.f.nombre)}</td><td>${{ok:'pagado',cambia:'ha cambiado',pendiente:'pendiente',falta:'no ha llegado'}[x.estado]}</td><td class="r">${eur(x.cands.length?x.pagado:x.f.importe)}</td></tr>`).join('')}</tbody></table></section>`:''}
+   ${ps.length?`<section><h2>Préstamos pendientes</h2><table><tbody>${ps.map(p=>`<tr><td>${esc(p.persona)}</td><td class="r">${p.pendiente>0?'te debe ':'le debes '}${eur(Math.abs(p.pendiente))}</td></tr>`).join('')}</tbody></table></section>`:''}
+   ${os.length?`<section><h2>Objetivos de ahorro</h2><table><tbody>${os.map(o=>{const i=infoObj(o);return `<tr><td>${esc(o.nombre)}</td><td class="r">${eur(i.ah,0)} de ${eur(o.meta,0)}</td><td class="r">${i.falta>0?'faltan '+eur(i.falta,0):'conseguido'}</td></tr>`}).join('')}</tbody></table></section>`:''}`;
+}
+function informeAnio(y){
+  const ms=[];for(let k=1;k<=12;k++)ms.push(y+'-'+String(k).padStart(2,'0'));
+  const sts=ms.map(m=>({m,...stats(m)})).filter(x=>x.ms.length);
+  if(!sts.length)return '<p>No hay datos de ese año.</p>';
+  const I=sts.reduce((a,x)=>a+x.ingresos,0),G=sts.reduce((a,x)=>a+x.consumo,0),D=sts.reduce((a,x)=>a+x.diezmo,0),A=sts.reduce((a,x)=>a+x.ahorro,0);
+  const cats=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].map(c=>({n:c.n,id:c.id,v:sts.reduce((a,x)=>a+(x.by[c.id]||0),0)})).filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
+  return `<section><div class="kp"><div>Ingresos<b>${eur(I,0)}</b></div><div>Gastado<b>${eur(G,0)}</b>${eur(G/sts.length,0)} al mes</div><div>Ahorro<b>${eur(I-G-D,0)}</b>${I?Math.round((I-G-D)/I*100)+'% de lo ingresado':''}</div>${A?`<div>A inversión<b>${eur(A,0)}</b></div>`:''}${D?`<div>Diezmo<b>${eur(D,0)}</b></div>`:''}</div></section>
+   <section><h2>Mes a mes</h2><table><thead><tr><th>Mes</th><th class="r">Ingresos</th><th class="r">Gastado</th><th class="r">Ahorro</th><th class="r">%</th></tr></thead><tbody>${sts.map(x=>{const l=x.ingresos-x.consumo-x.diezmo;return `<tr><td style="text-transform:capitalize">${nombreMes(x.m)}</td><td class="r">${eur(x.ingresos,0)}</td><td class="r">${eur(x.consumo,0)}</td><td class="r ${l<0?'neg':''}">${eur(l,0)}</td><td class="r">${x.ingresos?Math.round(l/x.ingresos*100)+'%':''}</td></tr>`}).join('')}</tbody></table></section>
+   <section><h2>Gasto por categoría en el año</h2>${barrasHtml(cats)}<table style="margin-top:8pt"><tbody>${cats.map(c=>`<tr><td>${esc(c.n)}</td><td class="r">${eur(c.v,0)}</td><td class="r mut">${eur(c.v/sts.length,0)} al mes</td></tr>`).join('')}</tbody></table></section>`;
+}
+function imprimirInforme(tipo,val){
+  const quien=NUBE&&USER?esc(USER.nombre)+' · ':'';
+  $('#informe').innerHTML=`<h1>Cuentas Claras · ${tipo==='mes'?'Informe de '+nombreMes(val):'Informe del año '+val}</h1><p class="sub">${quien}generado el ${fFecha(hoy())}</p>`+(tipo==='mes'?informeMes(val):informeAnio(val));
+  const limpiar=()=>{$('#informe').innerHTML='';window.removeEventListener('afterprint',limpiar)};
+  window.addEventListener('afterprint',limpiar);
+  setTimeout(()=>window.print(),50);
+}
+function dlgInforme(){
+  const ys=[...new Set(mesesConDatos().map(m=>m.slice(0,4)))].reverse();
+  dialog('Informe para imprimir',`<p class="small mut" style="margin-top:0">Se abre la ventana de impresión. Para guardarlo como PDF, elige «Guardar como PDF» como impresora.</p><div class="formgrid"><label>Periodo</label><select id="infP"><option value="mes:${MES}">${nombreMes(MES)}</option>${ys.map(y=>`<option value="anio:${y}">Año ${y}</option>`).join('')}</select></div>`,
+    [{t:'Cancelar'},{t:'Imprimir',cls:'pri',fn:()=>{const [t,v]=$('#infP').value.split(':');imprimirInforme(t==='mes'?'mes':'anio',v)}}]);
+}
+$$('[data-informe]').forEach(b=>b.onclick=dlgInforme);
+
 function dlgExportar(){
   const ys=[...new Set(mesesConDatos().map(m=>m.slice(0,4)))].reverse();
   dialog('Exportar a Excel',`<p class="small mut" style="margin-top:0">Se descarga un archivo .xlsx con los movimientos y un resumen por mes.</p><div class="formgrid"><label>Periodo</label><select id="xAl"><option value="mes">${nombreMes(MES)}</option>${ys.map(y=>`<option value="${y}">Año ${y}</option>`).join('')}<option value="todo">Todo</option></select></div>`,

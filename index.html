@@ -10,7 +10,7 @@
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="css/estilos.css?v=2.6.1">
+<link rel="stylesheet" href="css/estilos.css?v=2.7.0">
 </head>
 <body>
 <header>
@@ -40,10 +40,11 @@
 <main>
   <!-- RESUMEN -->
   <section id="s-resumen" class="on">
-    <div class="hola hide" id="hola"></div>
+    <div class="hola"><span id="hola" class="hola-t"></span><span style="flex:1"></span><button class="btn sm" data-informe type="button">Informe para imprimir</button></div>
     <div class="grid kpis" id="kpis"></div>
     <div class="alerts" id="alerts"></div>
     <div class="grid groups" id="groups"></div>
+    <div class="card pad" style="margin-top:14px" id="grafCard"></div>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:14px">
       <div class="card" id="fijosCard"></div>
       <div class="card" id="objCard"></div>
@@ -62,6 +63,7 @@
           <div><label class="l" for="cImp">Importe</label><div class="bigamt"><input type="text" id="cImp" inputmode="decimal" placeholder="0,00" required><span>€</span></div></div>
           <div><label class="l" for="cCon" id="aConL">¿En qué?</label><input type="text" id="cCon" style="width:100%" required></div>
           <div><label class="l">Categoría</label><div class="chips" id="cChips"></div></div>
+          <div id="aPerW" class="hide"><label class="l" for="aPer" id="aPerL">¿A quién?</label><input type="text" id="aPer" list="aPerList" placeholder="Nombre" style="width:100%"><datalist id="aPerList"></datalist></div>
           <div><label class="l" id="aPagoL">Pagado con</label><div class="chips" id="aPago"></div></div>
           <div><label class="l" for="cFecha">Fecha</label><input type="date" id="cFecha" required></div>
           <button class="btn pri" type="submit" id="aGo">Añadir gasto</button>
@@ -100,21 +102,25 @@
   <!-- IMPORTAR -->
   <section id="s-importar">
     <h2>Importar extracto</h2>
-    <p class="sub">Sube el PDF del banco (EVO o Revolut). El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar. El PDF no sale de este ordenador.</p>
-    <div class="drop" id="drop"><b>Arrastra aquí el PDF</b> o haz clic para elegirlo<br><span class="small">Puedes subir varios a la vez</span></div>
-    <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple class="hide">
+    <p class="sub">Sube el extracto del banco: en <b>PDF</b> (EVO y Revolut, y muchos otros bancos), en <b>Norma 43</b> (el formato estándar que dan todos los bancos españoles, a veces llamado «fichero de movimientos» o «CSB43»), en <b>CSV</b> o en <b>Excel</b>. El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar. El archivo no sale de este ordenador.</p>
+    <div class="drop" id="drop"><b>Arrastra aquí el extracto</b> o haz clic para elegirlo<br><span class="small">PDF (EVO, Revolut…), Norma 43, CSV o Excel · puedes subir varios a la vez</span></div>
+    <input type="file" id="pdfInput" accept=".pdf,.csv,.txt,.xlsx,.xls,.n43,.q43,.aeb,.c43,application/pdf,text/csv" multiple class="hide">
     <div id="impOut"></div>
   </section>
 
   <!-- HISTORICO -->
   <section id="s-hist">
-    <div class="toolbar" style="margin:0"><h2>Histórico</h2><span class="sp"></span><button class="btn" data-export>Exportar a Excel</button></div>
+    <div class="toolbar" style="margin:0"><h2>Histórico</h2><span class="sp"></span><button class="btn" data-informe type="button">Informe para imprimir</button><button class="btn" data-export>Exportar a Excel</button></div>
     <p class="sub">Ingresos y gastos de todos los meses guardados. El ahorro del mes es lo que entra menos lo que se gasta (sin contar traspasos, préstamos ni ajustes).</p>
     <div class="card pad chart" id="chart"></div>
     <div class="grid years" id="years"></div>
     <div class="card pad" style="margin-bottom:14px">
       <div class="toolbar" style="margin-top:0"><h3>Gasto medio por categoría</h3><span class="sp"></span><select id="yearSel"></select></div>
       <div class="tablewrap" id="catAvg"></div>
+    </div>
+    <div class="card pad" style="margin-bottom:14px">
+      <div class="toolbar" style="margin-top:0"><h3>Evolución de una categoría</h3><span class="sp"></span><select id="evoCat"></select></div>
+      <div class="chart" id="evoChart"></div>
     </div>
     <div class="card tablewrap"><table id="histTable"></table></div>
   </section>
@@ -128,6 +134,7 @@
       <div class="card pad" id="patTotal"></div>
     </div>
     <div class="card" id="objetivos" style="margin-top:14px"></div>
+    <div class="card" id="prestamos" style="margin-top:14px"></div>
   </section>
 
   <!-- AJUSTES -->
@@ -150,6 +157,12 @@
         <p class="small" id="pctSum"></p>
       </div>
       <div class="grid" style="align-content:start">
+        <div class="card pad">
+          <h3>Diezmo</h3>
+          <p class="small mut" style="margin:4px 0 10px">Si lo activas, cada mes se calcula el porcentaje de diezmo del presupuesto sobre los ingresos del mes y se muestra como pendiente hasta que lo pagas (poniendo la categoría «Diezmo» al movimiento del banco o con el botón «Marcar pagado» del Resumen).</p>
+          <label class="pill"><input type="checkbox" id="dzAuto"> Calcular el diezmo automáticamente</label>
+          <p class="small mut" id="dzTxt" style="margin:8px 0 0"></p>
+        </div>
         <div class="card pad">
           <h3>Nómina</h3>
           <p class="small mut" style="margin:4px 0 10px">El programa reconoce la nómina y la marca. Solo la nómina puede contar para otro mes; los demás ingresos (Bizum, devoluciones…) cuentan siempre en el mes en que entran.</p>
@@ -254,24 +267,26 @@
 
 <dialog id="dlg"><form method="dialog"><div class="dh" id="dlgT"></div><div class="db" id="dlgB"></div><div class="df" id="dlgF"></div></form></dialog>
 <div id="toast"></div>
+<div id="informe"></div>
 
-<script src="js/config.js?v=2.6.1"></script>
-<script src="js/categorias.js?v=2.6.1"></script>
-<script src="js/version.js?v=2.6.1"></script>
-<script src="js/utilidades.js?v=2.6.1"></script>
-<script src="js/estado.js?v=2.6.1"></script>
-<script src="js/reglas.js?v=2.6.1"></script>
-<script src="js/navegacion.js?v=2.6.1"></script>
-<script src="js/resumen.js?v=2.6.1"></script>
-<script src="js/movimientos.js?v=2.6.1"></script>
-<script src="js/excel.js?v=2.6.1"></script>
-<script src="js/dialogos.js?v=2.6.1"></script>
-<script src="js/pdf.js?v=2.6.1"></script>
-<script src="js/importar.js?v=2.6.1"></script>
-<script src="js/historico.js?v=2.6.1"></script>
-<script src="js/ajustes.js?v=2.6.1"></script>
-<script src="js/usuarios.js?v=2.6.1"></script>
-<script src="js/acceso.js?v=2.6.1"></script>
-<script src="js/arranque.js?v=2.6.1"></script>
+<script src="js/config.js?v=2.7.0"></script>
+<script src="js/categorias.js?v=2.7.0"></script>
+<script src="js/version.js?v=2.7.0"></script>
+<script src="js/utilidades.js?v=2.7.0"></script>
+<script src="js/estado.js?v=2.7.0"></script>
+<script src="js/reglas.js?v=2.7.0"></script>
+<script src="js/navegacion.js?v=2.7.0"></script>
+<script src="js/resumen.js?v=2.7.0"></script>
+<script src="js/movimientos.js?v=2.7.0"></script>
+<script src="js/excel.js?v=2.7.0"></script>
+<script src="js/dialogos.js?v=2.7.0"></script>
+<script src="js/pdf.js?v=2.7.0"></script>
+<script src="js/formatos.js?v=2.7.0"></script>
+<script src="js/importar.js?v=2.7.0"></script>
+<script src="js/historico.js?v=2.7.0"></script>
+<script src="js/ajustes.js?v=2.7.0"></script>
+<script src="js/usuarios.js?v=2.7.0"></script>
+<script src="js/acceso.js?v=2.7.0"></script>
+<script src="js/arranque.js?v=2.7.0"></script>
 </body>
 </html>

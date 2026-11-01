@@ -73,6 +73,7 @@ function editar(x){
     <label>Categoría</label><select id="eK">${catOptions(x.cat)}</select>
     <label>Pagado con</label><select id="eP">${pagoOptions(x.metodo==='efectivo'?'__efectivo':x.cuenta)}</select>
     <label>Nota</label><input type="text" id="eN" value="${esc(x.nota||'')}">
+    <label>Persona (préstamos)</label><input type="text" id="ePer" value="${esc(x.persona||'')}" placeholder="${esc(x.cat==='PRESTAMO'?personaDe(x):'')}">
     </div><p class="small mut" style="margin:10px 0 0">Importe en negativo = salida; en positivo = entrada (ingresos, devoluciones, Bizum que te mandan).${x.detalle?'<br>Banco: '+esc(x.detalle):''}</p>`,
    [{t:'Borrar',cls:'dan',fn:()=>{confirmar('Borrar','¿Borrar «'+x.concepto+'»?','Borrar',()=>{S.mov=S.mov.filter(m=>m!==x);save();render()});return false}},
     {t:'Cancelar'},
@@ -82,13 +83,14 @@ function editar(x){
       x.nomina=nom;x.cat=$('#eK').value;
       x.mes=((nf!==x.fecha||cambioNom)&&$('#eM').value===eraMes)?mesPara({...x,fecha:nf}):$('#eM').value;x.fecha=nf;
       x.concepto=$('#eC').value.trim();x.importe=r2(v);x.cat=$('#eK').value;
+      if($('#ePer').value.trim())x.persona=$('#ePer').value.trim();else delete x.persona;
       const p=$('#eP').value;x.metodo=p==='__efectivo'?'efectivo':'banco';x.cuenta=p==='__efectivo'?'':p;x.nota=$('#eN').value.trim();
       save();render();toast('Guardado')}}]);
 }
 
 /* ============ Añadir (gasto o ingreso a mano) ============ */
 let aTipo='gasto',cCat='',cCatManual=false,aPago='__efectivo';
-const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO'];
+const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO').map(c=>c.id)];
 function rEfectivo(){
   const f=$('#cFecha');if(!f.value||mesDe(f.value)!==MES)f.value=mesDe(hoy())===MES?hoy():MES+'-01';
   const g=aTipo==='gasto';
@@ -100,6 +102,8 @@ function rEfectivo(){
     :chip('INGRESO','Ingreso (sueldo, venta, regalo…)')+chip('PRESTAMO','Me devuelven un préstamo')+'<div class="chiplbl">o la devolución de algo que pagué en:</div>'+CATS.filter(c=>c.g!=='AHORRO').map(c=>chip(c.id)).join('');
   $$('#cChips .chip').forEach(b=>b.onclick=()=>{cCat=b.dataset.c;cCatManual=true;rEfectivo()});
   $('#aPagoL').textContent=g?'Pagado con':'Cobrado en';
+  $('#aPerW').classList.toggle('hide',cCat!=='PRESTAMO');$('#aPerL').textContent=g?'¿A quién se lo prestas?':'¿Quién te lo devuelve?';
+  $('#aPerList').innerHTML=prestamosPorPersona().map(p=>`<option value="${esc(p.persona)}">`).join('');
   if(aPago!=='__efectivo'&&!S.cuentas.some(c=>c.n===aPago))aPago='__efectivo';
   $('#aPago').innerHTML=[{v:'__efectivo',n:'Efectivo'},...S.cuentas.map(c=>({v:c.n,n:c.n}))].map(o=>`<button type="button" class="chip${o.v===aPago?' on':''}" data-p="${esc(o.v)}">${esc(o.n)}</button>`).join('')+'<button type="button" class="chip add" id="aOtra">＋ Otra cuenta</button>';
   $$('#aPago .chip[data-p]').forEach(b=>b.onclick=()=>{aPago=b.dataset.p;rEfectivo()});
@@ -124,8 +128,9 @@ $('#cashForm').onsubmit=e=>{
   if(!cCat){toast('Elige una categoría',true);return}
   const fecha=$('#cFecha').value,ef=aPago==='__efectivo',g=aTipo==='gasto';
   const x={id:uid(),fecha,mes:mesDe(fecha),concepto:$('#cCon').value.trim(),importe:r2(Math.abs(v)*(g?-1:1)),cat:cCat,metodo:ef?'efectivo':'banco',cuenta:ef?'':aPago,origen:'manual'};
+  if(cCat==='PRESTAMO'&&$('#aPer').value.trim())x.persona=$('#aPer').value.trim();
   marcarNomina(x);S.mov.push(x);save();
-  $('#cImp').value='';$('#cCon').value='';cCat='';cCatManual=false;
+  $('#cImp').value='';$('#cCon').value='';$('#aPer').value='';cCat='';cCatManual=false;
   if(x.mes!==MES)MES=x.mes;
   render();$('#cImp').focus();toast('Apuntado: '+x.concepto+' '+(x.importe>0?'+':'')+eur(x.importe)+(ef?' (efectivo)':' ('+x.cuenta+')'));
 };

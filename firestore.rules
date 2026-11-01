@@ -27,7 +27,10 @@ service cloud.firestore {
         && request.resource.data.estado == 'pendiente'
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80);
-      allow update, delete: if esAdmin();
+      // Cada usuario solo puede actualizar su fecha de último acceso; el resto, el administrador.
+      allow update: if esAdmin() || (request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso']));
+      allow delete: if esAdmin();
 
       // Datos (movimientos, ajustes): solo el propio usuario, y solo si su cuenta está activa.
       // El administrador NO tiene acceso a los datos de los demás.

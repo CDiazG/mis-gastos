@@ -90,6 +90,7 @@ async function entrar(u){
   if(!perfil||!perfil.activo){await fb.authM.signOut(fb.auth);
     mostrarLogin(perfil&&perfil.estado==='pendiente'&&!perfil.eliminado?'Tu solicitud de acceso está pendiente. Podrás entrar cuando el administrador la apruebe.':perfil&&perfil.estado==='rechazada'?'Tu solicitud de acceso no ha sido aceptada.':'Tu cuenta no está activa. Habla con el administrador.',!(perfil&&perfil.estado==='pendiente'));return}
   USER={uid:u.uid,email:u.email,nombre:perfil.nombre||u.email,admin};
+  try{fb.fsM.updateDoc(doc(fb.db,'users',u.uid),{ultimoAcceso:Date.now()}).catch(e=>console.warn('último acceso',e.code||e))}catch(_){}
   try{sessionStorage.setItem('mg-sesion',u.uid)}catch(_){}
   if(admin){try{localStorage.setItem('mg-admin-ok','1')}catch(_){}$('#lAlta').classList.add('hide')}
   try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+(e.code||e.message),true);return}

@@ -1,6 +1,8 @@
 // Cuentas Claras · Pestaña Usuarios (solo administrador)
 "use strict";
 /* ============ Usuarios (administrador) ============ */
+function haceCuanto(t){const d=Math.floor((Date.now()-t)/864e5);const h=new Date(t);
+  if(d<1&&h.toDateString()===new Date().toDateString())return 'hoy';if(d<2)return 'ayer';if(d<30)return 'hace '+d+' días';return 'el '+h.toLocaleDateString('es-ES')}
 let USERS=[],USERS_VIVO=false;
 function parcheLocal(id,patch){const u=USERS.find(x=>x.id===id);if(u)Object.assign(u,patch);badgeUsuarios()}
 const pendientesN=()=>USERS.filter(u=>u.estado==='pendiente'&&!u.eliminado).length;
@@ -20,7 +22,7 @@ async function rUsuarios(){
   $('#uTable').innerHTML=`<thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>`+
     (pend.length?`<tr><td colspan="3" class="small" style="padding-top:12px"><b>Solicitudes de acceso</b> · esperan tu aprobación</td></tr>`+pend.map(u=>`<tr data-u="${u.id}" class="nocat"><td><div>${esc(u.nombre||'')}</div><div class="det">${esc(u.email||'')} · pedido ${u.creado?new Date(u.creado).toLocaleDateString('es-ES'):''}</div></td><td><span class="tag cash">pendiente</span></td><td class="r" style="white-space:nowrap"><button class="btn sm pri uok">Aprobar</button> <button class="btn sm dan uno">Rechazar</button></td></tr>`).join('')+`<tr><td colspan="3" class="small mut" style="padding-top:12px"><b>Usuarios</b></td></tr>`:'')+
     vivos.map(u=>`<tr data-u="${u.id}">
-    <td><div>${esc(u.nombre||'')}${u.rol==='admin'?' <span class="tag acc">administrador</span>':''}</div><div class="det">${esc(u.email||'')}${u.creado?' · alta '+new Date(u.creado).toLocaleDateString('es-ES'):''}</div></td>
+    <td><div>${esc(u.nombre||'')}${u.rol==='admin'?' <span class="tag acc">administrador</span>':''}</div><div class="det">${esc(u.email||'')}${u.creado?' · alta '+new Date(u.creado).toLocaleDateString('es-ES'):''}${u.ultimoAcceso?' · entró '+haceCuanto(u.ultimoAcceso):''}</div></td>
     <td>${u.activo?'<span class="tag good">activo</span>':'<span class="tag bad">desactivado</span>'}</td>
     <td class="r" style="white-space:nowrap"><button class="btn sm ur" title="Enviar correo para poner o cambiar la contraseña">Correo de contraseña</button>${u.id===USER.uid?'':` <button class="btn sm ua">${u.activo?'Desactivar':'Activar'}</button> <button class="btn sm dan ux" title="Eliminar usuario y todos sus datos">Eliminar</button>`}</td></tr>`).join('')+
     (bajas.length?`<tr><td colspan="3" class="small mut" style="padding-top:14px"><b>Eliminados</b> · sin datos ni acceso</td></tr>`+bajas.map(u=>`<tr data-u="${u.id}" class="off"><td><div>${esc(u.nombre||'')}</div><div class="det">${esc(u.email||'')} · eliminado ${u.eliminadoEn?new Date(u.eliminadoEn).toLocaleDateString('es-ES'):''}</div></td><td><span class="tag">eliminado</span></td><td class="r"><button class="btn sm urev">Dar de alta de nuevo</button></td></tr>`).join(''):'')+'</tbody>';
