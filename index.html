@@ -443,11 +443,13 @@ dialog .df{flex-wrap:wrap}
   <h1><img src="icons/logo.svg" alt="" style="width:34px;height:34px;border-radius:9px">Cuentas Claras</h1>
   <div class="small mut" id="lSub">Entra con tu correo y tu contraseña.</div>
   <form id="lForm" autocomplete="on">
+    <div id="lNomWrap" class="hide"><input type="text" id="lNom" placeholder="Tu nombre" autocomplete="name"></div>
     <input type="email" id="lMail" placeholder="Correo" autocomplete="username" required>
     <div class="passwrap"><input type="password" id="lPass" placeholder="Contraseña" autocomplete="current-password" required><button type="button" id="lVer" class="ojo" aria-label="Mostrar contraseña" title="Mostrar contraseña"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="tacha" d="M4 4l16 16" style="display:none"/></svg></button></div>
     <button class="btn pri" id="lGo">Entrar</button>
   </form>
   <div class="links"><button class="link" id="lOlvido" type="button">¿Has olvidado la contraseña?</button><button class="link hide" id="lAlta" type="button">Crear cuenta de administrador</button></div>
+  <div class="links" style="justify-content:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><button class="link" id="lSolic" type="button">¿No tienes cuenta? Solicitar acceso</button></div>
   <div id="lMsg"></div>
 </div></div>
 <button id="fabCash" class="fab hide" type="button">＋ Gasto en efectivo</button>
@@ -520,8 +522,9 @@ const SEED_RULES=[
 ];
 
 /* ============ Versión ============ */
-const VERSION='2.4.0';
+const VERSION='2.5.0';
 const CAMBIOS=[
+ {v:'2.5.0',f:'2026-11-01',c:['Cualquiera puede pedir acceso desde la pantalla de entrada («¿No tienes cuenta? Solicitar acceso»), eligiendo ya su contraseña.','El administrador ve las solicitudes en Usuarios (y un aviso en el Resumen) y las aprueba o rechaza con un clic.']},
  {v:'2.4.0',f:'2026-11-01',c:['Sincronización al instante entre dispositivos: lo que apuntas en el móvil aparece solo en el ordenador (y al revés), sin recargar.']},
  {v:'2.3.0',f:'2026-11-01',c:['Adaptado al móvil: cabecera más compacta, movimientos en tarjetas, textos que no se cortan y sin zoom al escribir.','En el móvil hay un botón fijo «＋ Gasto en efectivo» para apuntar un gasto desde cualquier pestaña.','Recordatorio mensual para descargar una copia de seguridad.']},
  {v:'2.2.0',f:'2026-11-01',c:['El administrador puede eliminar usuarios: se borran todos sus datos y su acceso, con confirmación escribiendo ELIMINAR.','Los usuarios eliminados se pueden volver a dar de alta (empiezan sin datos).']},
@@ -632,7 +635,7 @@ async function cargarNube(){
 }
 /* ---- Sincronización en tiempo real entre dispositivos ---- */
 let UNSUB=[],REMOTO={meta:null,meses:{}},tRemoto=null,renderPend=false;
-function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
+function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];USERS_VIVO=false;USERS=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
 function escuchar(){
   pararEscucha();if(!fb.fsM.onSnapshot)return;
   const {doc,collection,onSnapshot}=fb.fsM;const uid=USER.uid;
@@ -647,6 +650,15 @@ function escuchar(){
       else{const j=ch.doc.data().m;if(j!==LAST.meses[id]){REMOTO.meses[id]=j;n++}}});
     if(n)programarRemoto();
   },e=>console.warn('sync meses',e)));
+  if(USER.admin){
+    UNSUB.push(onSnapshot(collection(fb.db,'users'),qs=>{
+      const us=[];qs.forEach?qs.forEach(d=>us.push({id:d.id,...d.data()})):(qs.docs||[]).forEach(d=>us.push({id:d.id,...d.data()}));
+      const antes=pendientesN();USERS=us;USERS_VIVO=true;badgeUsuarios();
+      if(TAB==='usuarios'&&!$('#dlg').open)rUsuarios();
+      if(TAB==='resumen'&&pendientesN()!==antes&&!$('#dlg').open)rResumen();
+      if(pendientesN()>antes)toast('Nueva solicitud de acceso');
+    },e=>console.warn('sync usuarios',e)));
+  }
 }
 function programarRemoto(ms){clearTimeout(tRemoto);tRemoto=setTimeout(aplicarRemoto,ms||250)}
 function aplicarRemoto(){
@@ -764,6 +776,7 @@ function rResumen(){
   const pp=prestamosPendientes();
   if(Math.abs(pp)>0.009)al.push(`<div class="alert info"><span class="grow">${pp>0?'Te deben':'Debes'} <b>${eur(Math.abs(pp))}</b> en préstamos pendientes.</span><button class="btn sm" data-act="prest">Ver</button></div>`);
   if(S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'} Descárgala y guárdala en tu ordenador o en Drive: si algo se borra por error, se puede recuperar con ella.</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
+  if(NUBE&&USER&&USER.admin&&pendientesN())al.push(`<div class="alert"><span class="grow"><b>${pendientesN()} solicitud${pendientesN()>1?'es':''} de acceso</b> esperando tu aprobación.</span><button class="btn sm" data-act="usu">Revisar</button></div>`);
   if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
   else{const sg=sugerencia();if(sg&&sg.cambia)al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
@@ -774,6 +787,7 @@ function rResumen(){
     if(a==='copia')exportar();
     if(a==='imp')go('importar');
     if(a==='aj'||a==='sug')go('ajustes');
+    if(a==='usu')go('usuarios');
   });
   // grupos
   $('#groups').innerHTML=GROUPS.map(g=>{
@@ -1478,16 +1492,25 @@ function cargarHist(H){
 }
 
 /* ============ Usuarios (administrador) ============ */
-let USERS=[];
+let USERS=[],USERS_VIVO=false;
+function parcheLocal(id,patch){const u=USERS.find(x=>x.id===id);if(u)Object.assign(u,patch);badgeUsuarios()}
+const pendientesN=()=>USERS.filter(u=>u.estado==='pendiente'&&!u.eliminado).length;
+function badgeUsuarios(){const n=pendientesN();$('#tabUsuarios').innerHTML='Usuarios'+(n?` <span class="tag bad" style="margin-left:4px">${n}</span>`:'')}
 async function rUsuarios(){
   if(!USER||!USER.admin)return;
-  const {collection,getDocs}=fb.fsM;
-  $('#uTable').innerHTML='<tbody><tr><td class="empty">Cargando…</td></tr></tbody>';
-  let us=[];try{(await getDocs(collection(fb.db,'users'))).forEach(d=>us.push({id:d.id,...d.data()}))}catch(e){$('#uTable').innerHTML=`<tbody><tr><td class="empty">No se han podido leer los usuarios (${esc(e.code||e.message)}).</td></tr></tbody>`;return}
-  USERS=us;
-  const vivos=us.filter(u=>!u.eliminado).sort((a,b)=>(b.rol==='admin')-(a.rol==='admin')||String(a.nombre).localeCompare(b.nombre));
+  if(!USERS_VIVO){
+    const {collection,getDocs}=fb.fsM;
+    $('#uTable').innerHTML='<tbody><tr><td class="empty">Cargando…</td></tr></tbody>';
+    const us=[];try{(await getDocs(collection(fb.db,'users'))).forEach(d=>us.push({id:d.id,...d.data()}))}catch(e){$('#uTable').innerHTML=`<tbody><tr><td class="empty">No se han podido leer los usuarios (${esc(e.code||e.message)}).</td></tr></tbody>`;return}
+    USERS=us;badgeUsuarios();
+  }
+  const us=USERS;
+  const pend=us.filter(u=>u.estado==='pendiente'&&!u.eliminado).sort((a,b)=>(a.creado||0)-(b.creado||0));
+  const vivos=us.filter(u=>!u.eliminado&&u.estado!=='pendiente').sort((a,b)=>(b.rol==='admin')-(a.rol==='admin')||String(a.nombre).localeCompare(b.nombre));
   const bajas=us.filter(u=>u.eliminado).sort((a,b)=>(b.eliminadoEn||0)-(a.eliminadoEn||0));
-  $('#uTable').innerHTML=`<thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>`+vivos.map(u=>`<tr data-u="${u.id}">
+  $('#uTable').innerHTML=`<thead><tr><th>Nombre</th><th>Estado</th><th></th></tr></thead><tbody>`+
+    (pend.length?`<tr><td colspan="3" class="small" style="padding-top:12px"><b>Solicitudes de acceso</b> · esperan tu aprobación</td></tr>`+pend.map(u=>`<tr data-u="${u.id}" class="nocat"><td><div>${esc(u.nombre||'')}</div><div class="det">${esc(u.email||'')} · pedido ${u.creado?new Date(u.creado).toLocaleDateString('es-ES'):''}</div></td><td><span class="tag cash">pendiente</span></td><td class="r" style="white-space:nowrap"><button class="btn sm pri uok">Aprobar</button> <button class="btn sm dan uno">Rechazar</button></td></tr>`).join('')+`<tr><td colspan="3" class="small mut" style="padding-top:12px"><b>Usuarios</b></td></tr>`:'')+
+    vivos.map(u=>`<tr data-u="${u.id}">
     <td><div>${esc(u.nombre||'')}${u.rol==='admin'?' <span class="tag acc">administrador</span>':''}</div><div class="det">${esc(u.email||'')}${u.creado?' · alta '+new Date(u.creado).toLocaleDateString('es-ES'):''}</div></td>
     <td>${u.activo?'<span class="tag good">activo</span>':'<span class="tag bad">desactivado</span>'}</td>
     <td class="r" style="white-space:nowrap"><button class="btn sm ur" title="Enviar correo para poner o cambiar la contraseña">Correo de contraseña</button>${u.id===USER.uid?'':` <button class="btn sm ua">${u.activo?'Desactivar':'Activar'}</button> <button class="btn sm dan ux" title="Eliminar usuario y todos sus datos">Eliminar</button>`}</td></tr>`).join('')+
@@ -1495,9 +1518,11 @@ async function rUsuarios(){
   $$('#uTable tr[data-u]').forEach(tr=>{const u=us.find(x=>x.id===tr.dataset.u);
     const ur=$('.ur',tr);if(ur)ur.onclick=async()=>{try{await fb.authM.sendPasswordResetEmail(fb.auth,u.email);toast('Correo enviado a '+u.email)}catch(e){toast('Error: '+(e.code||e.message),true)}};
     const ua=$('.ua',tr);if(ua)ua.onclick=()=>confirmar(u.activo?'Desactivar usuario':'Activar usuario',u.activo?`${u.nombre} no podrá entrar. Sus datos se conservan.`:`${u.nombre} podrá volver a entrar.`,u.activo?'Desactivar':'Activar',async()=>{
-      try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:!u.activo});toast('Hecho');rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
+      try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:!u.activo});toast('Hecho');parcheLocal(u.id,{activo:!u.activo});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
     const ux=$('.ux',tr);if(ux)ux.onclick=()=>eliminarUsuario(u);
     const urev=$('.urev',tr);if(urev)urev.onclick=()=>reactivarUsuario(u,u.nombre);
+    const uok=$('.uok',tr);if(uok)uok.onclick=async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:true,estado:'activo',aprobado:Date.now()});toast(u.nombre+' ya puede entrar');parcheLocal(u.id,{activo:true,estado:'activo'});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}};
+    const uno=$('.uno',tr);if(uno)uno.onclick=()=>confirmar('Rechazar solicitud',`${u.nombre} (${u.email}) no podrá entrar.`,'Rechazar',async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});toast('Solicitud rechazada');parcheLocal(u.id,{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
   });
 }
 function eliminarUsuario(u){
@@ -1522,7 +1547,7 @@ async function borrarDatosUsuario(u){
     await updateDoc(doc(fb.db,'users',u.id),{activo:false,eliminado:true,eliminadoEn:Date.now()});
     dialog('Usuario eliminado',`<p>Se han borrado los datos de <b>${esc(u.nombre)}</b> y ya no puede entrar.</p><p class="small mut">Su correo sigue registrado en Firebase por si algún día quieres darle de alta de nuevo (empezaría sin datos). Si quieres borrarlo también de ahí: consola de Firebase → Authentication → Usuarios → ⋮ junto a ${esc(u.email)} → Eliminar cuenta.</p>`,[{t:'Entendido',cls:'pri'}]);
   }catch(e){console.error(e);toast('No se ha podido eliminar: '+(e.code||e.message)+(e.code==='permission-denied'?' (¿están publicadas las reglas nuevas?)':''),true)}
-  rUsuarios();
+  USERS_VIVO=false;rUsuarios();
 }
 async function reactivarUsuario(u,nombre){
   try{
@@ -1530,7 +1555,7 @@ async function reactivarUsuario(u,nombre){
     await fb.authM.sendPasswordResetEmail(fb.auth,u.email);
     dialog('Alta de nuevo',`<p><b>${esc(nombre||u.nombre)}</b> vuelve a tener cuenta (empieza sin datos). Le ha llegado un correo a <b>${esc(u.email)}</b> para poner su contraseña.</p>`,[{t:'Entendido',cls:'pri'}]);
   }catch(e){toast('Error: '+(e.code||e.message),true)}
-  rUsuarios();
+  USERS_VIVO=false;rUsuarios();
 }
 $('#uAdd').onsubmit=async e=>{
   e.preventDefault();const nombre=$('#uNom').value.trim(),email=$('#uMail').value.trim().toLowerCase();if(!nombre||!email)return;
@@ -1549,7 +1574,7 @@ $('#uAdd').onsubmit=async e=>{
     await authM.sendPasswordResetEmail(fb.auth,email);
     $('#uNom').value='';$('#uMail').value='';
     dialog('Usuario creado',`<p><b>${esc(nombre)}</b> ya tiene cuenta. Le ha llegado un correo a <b>${esc(email)}</b> para poner su contraseña. Después solo tiene que abrir el programa y entrar.</p>`,[{t:'Entendido',cls:'pri'}]);
-    rUsuarios();
+    USERS_VIVO=false;rUsuarios();
   }catch(err){toast(err.code==='auth/email-already-in-use'?'Ya existe una cuenta con ese correo':'No se ha podido crear: '+(err.code||err.message),true)}
   finally{btn.disabled=false}
 };
@@ -1561,7 +1586,39 @@ function lMsg(t,err){$('#lMsg').innerHTML=t?`<div class="msg${err?' err':''}">${
 function mostrarLogin(msg,err){$('#login').classList.remove('hide');$('#fabCash').classList.add('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
 const adminYaCreado=()=>{try{return localStorage.getItem('mg-admin-ok')==='1'}catch(_){return false}};
 $('#lMail').addEventListener('input',async()=>{$('#lAlta').classList.toggle('hide',adminYaCreado()||!(await esAdminMail($('#lMail').value)))});
-$('#lForm').onsubmit=async e=>{e.preventDefault();$('#lGo').disabled=true;lMsg('Entrando…');
+let modoSolicitud=false;
+function setModo(sol){modoSolicitud=sol;$('#lNomWrap').classList.toggle('hide',!sol);$('#lNom').required=sol;
+  $('#lGo').textContent=sol?'Enviar solicitud':'Entrar';
+  $('#lSub').textContent=sol?'Pide acceso con tu correo y elige una contraseña. El administrador tiene que aprobarlo antes de que puedas entrar.':'Entra con tu correo y tu contraseña.';
+  $('#lPass').setAttribute('autocomplete',sol?'new-password':'current-password');
+  $('#lPass').placeholder=sol?'Elige una contraseña (mín. 8, con minúsculas y números)':'Contraseña';
+  $('#lSolic').textContent=sol?'Ya tengo cuenta: entrar':'¿No tienes cuenta? Solicitar acceso';
+  $('#lOlvido').classList.toggle('hide',sol);if(sol)$('#lAlta').classList.add('hide');lMsg('');(sol?$('#lNom'):$('#lMail')).focus()}
+$('#lSolic').onclick=()=>setModo(!modoSolicitud);
+async function solicitar(){
+  const nombre=$('#lNom').value.trim(),m=$('#lMail').value.trim().toLowerCase(),p=$('#lPass').value;
+  if(!nombre){lMsg('Escribe tu nombre.',true);$('#lNom').focus();return}
+  if(await esAdminMail(m)){lMsg('Ese es el correo del administrador: usa «Entrar».',true);return}
+  if(p.length<8||!/[a-z]/.test(p)||!/\d/.test(p)){lMsg('La contraseña tiene que tener al menos 8 caracteres, con minúsculas y números.',true);$('#lPass').focus();return}
+  creandoAdmin=true;$('#lGo').disabled=true;lMsg('Enviando solicitud…');
+  let existia=false;
+  try{
+    let u;
+    try{u=(await fb.authM.createUserWithEmailAndPassword(fb.auth,m,p)).user}
+    catch(err){if(err.code!=='auth/email-already-in-use')throw err;existia=true;u=(await fb.authM.signInWithEmailAndPassword(fb.auth,m,p)).user}
+    const ref=fb.fsM.doc(fb.db,'users',u.uid);
+    let perfil=null;try{const sn=await fb.fsM.getDoc(ref);perfil=sn.exists()?sn.data():null}catch(_){}
+    if(perfil){await fb.authM.signOut(fb.auth);setModo(false);
+      lMsg(perfil.activo?'Ya tienes cuenta: entra con tu correo y tu contraseña.':perfil.estado==='pendiente'?'Ya enviaste la solicitud y está pendiente de aprobación.':'Esa cuenta no está activa. Habla con el administrador.',!perfil.activo&&perfil.estado!=='pendiente');return}
+    await fb.fsM.setDoc(ref,{nombre,email:m,activo:false,rol:'usuario',estado:'pendiente',creado:Date.now()});
+    await fb.authM.signOut(fb.auth);
+    setModo(false);$('#lPass').value='';
+    lMsg('Solicitud enviada. Cuando el administrador la apruebe, podrás entrar con tu correo y la contraseña que acabas de elegir.');
+  }catch(err){try{await fb.authM.signOut(fb.auth)}catch(_){}
+    lMsg(existia&&(err.code==='auth/invalid-credential'||err.code==='auth/wrong-password')?'Ese correo ya tiene cuenta. Si es tuyo, entra o usa «¿Has olvidado la contraseña?».':errAuth(err),true)}
+  finally{creandoAdmin=false;$('#lGo').disabled=false}
+}
+$('#lForm').onsubmit=async e=>{e.preventDefault();if(modoSolicitud)return solicitar();$('#lGo').disabled=true;lMsg('Entrando…');
   try{await fb.authM.signInWithEmailAndPassword(fb.auth,$('#lMail').value.trim(),$('#lPass').value)}catch(err){lMsg(errAuth(err),true);$('#lGo').disabled=false}};
 $('#lVer').onclick=()=>{const i=$('#lPass'),ver=i.type==='password';i.type=ver?'text':'password';
   $('#lVer .tacha').style.display=ver?'':'none';const t=ver?'Ocultar contraseña':'Mostrar contraseña';$('#lVer').title=t;$('#lVer').setAttribute('aria-label',t);i.focus()};
@@ -1602,7 +1659,8 @@ async function entrar(u){
   let perfil=null;
   try{const sn=await getDoc(doc(fb.db,'users',u.uid));perfil=sn.exists()?sn.data():null}catch(e){console.warn(e)}
   if(admin&&!perfil){perfil={nombre:'Administrador',email:u.email,activo:true,rol:'admin',creado:Date.now()};await setDoc(doc(fb.db,'users',u.uid),perfil)}
-  if(!perfil||!perfil.activo){await fb.authM.signOut(fb.auth);mostrarLogin('Tu cuenta no está activa. Habla con el administrador.',true);return}
+  if(!perfil||!perfil.activo){await fb.authM.signOut(fb.auth);
+    mostrarLogin(perfil&&perfil.estado==='pendiente'&&!perfil.eliminado?'Tu solicitud de acceso está pendiente. Podrás entrar cuando el administrador la apruebe.':perfil&&perfil.estado==='rechazada'?'Tu solicitud de acceso no ha sido aceptada.':'Tu cuenta no está activa. Habla con el administrador.',!(perfil&&perfil.estado==='pendiente'));return}
   USER={uid:u.uid,email:u.email,nombre:perfil.nombre||u.email,admin};
   if(admin){try{localStorage.setItem('mg-admin-ok','1')}catch(_){}$('#lAlta').classList.add('hide')}
   try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+(e.code||e.message),true);return}

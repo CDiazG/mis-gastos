@@ -19,7 +19,15 @@ service cloud.firestore {
     // Perfil de cada usuario: lo lee el propio usuario; solo el administrador lo crea o cambia.
     match /users/{uid} {
       allow read: if esAdmin() || (request.auth != null && request.auth.uid == uid);
-      allow write: if esAdmin();
+      // Solicitud de acceso: el propio usuario crea su perfil, siempre inactivo y pendiente.
+      allow create: if esAdmin() || (request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['nombre', 'email', 'activo', 'rol', 'estado', 'creado'])
+        && request.resource.data.activo == false
+        && request.resource.data.rol == 'usuario'
+        && request.resource.data.estado == 'pendiente'
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80);
+      allow update, delete: if esAdmin();
 
       // Datos (movimientos, ajustes): solo el propio usuario, y solo si su cuenta está activa.
       // El administrador NO tiene acceso a los datos de los demás.
