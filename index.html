@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mis gastos</title>
+<title>Cuentas Claras</title>
+<meta name="description" content="Control de gastos personales">
+<meta name="theme-color" content="#0f6b5c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="icons/logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 :root{
   --bg:#f5f4ef; --card:#ffffff; --ink:#1d2321; --muted:#68706c; --line:#e3e1da; --soft:#efede7;
@@ -30,6 +36,7 @@ header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px s
 .top{display:flex;align-items:center;gap:16px;max-width:1180px;margin:0 auto;padding:12px 20px 8px}
 .brand{font-weight:700;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
 .brand .dot{width:10px;height:10px;border-radius:3px;background:var(--acc)}
+.brand img{width:26px;height:26px;border-radius:7px;display:block}
 .ver{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;font-size:11.5px;font-weight:600;padding:2px 8px;cursor:pointer}
 .ver:hover{color:var(--ink);border-color:var(--muted)}
 .chlog h4{margin:12px 0 4px;font-size:14px}.chlog h4 span{color:var(--muted);font-weight:400;font-size:12.5px}
@@ -175,13 +182,14 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 <body>
 <header>
   <div class="top">
-    <div class="brand"><span class="dot"></span>Mis gastos <button class="ver" id="verBtn" title="Ver novedades"></button></div>
+    <div class="brand"><img src="icons/logo.svg" alt="">Cuentas Claras <button class="ver" id="verBtn" title="Ver novedades"></button></div>
     <div class="monthnav" id="monthnav">
       <button class="btn icon" id="mPrev" title="Mes anterior">‹</button>
       <div class="m" id="mLabel"></div>
       <button class="btn icon" id="mNext" title="Mes siguiente">›</button>
       <button class="btn sm" id="mHoy">Hoy</button>
     </div>
+    <button class="btn sm hide" id="instalarTop" title="Crear un acceso directo en el escritorio">Instalar</button>
     <div class="userbox hide" id="userbox"><span class="sync" id="sync"></span><span id="uName"></span><button class="btn sm" id="logout">Salir</button></div>
   </div>
   <nav class="tabs" id="tabs">
@@ -339,6 +347,12 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
           </div>
         </div>
         <div class="card pad">
+          <h3>Acceso directo en el escritorio</h3>
+          <p class="small mut" style="margin:4px 0 10px" id="instTxt"></p>
+          <div class="toolbar" style="margin:0"><button class="btn pri hide" id="instalarBtn">Instalar Cuentas Claras</button></div>
+          <div class="small" id="instPasos"></div>
+        </div>
+        <div class="card pad">
           <div class="toolbar" style="margin:0"><h3>Versión</h3><span class="sp"></span><span class="tag acc" id="verTag"></span></div>
           <div class="chlog" id="verList"></div>
         </div>
@@ -380,7 +394,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 </main>
 
 <div id="login" class="hide"><div class="box card pad">
-  <h1><span class="brand"><span class="dot"></span></span>Mis gastos</h1>
+  <h1><img src="icons/logo.svg" alt="" style="width:34px;height:34px;border-radius:9px">Cuentas Claras</h1>
   <div class="small mut" id="lSub">Entra con tu correo y tu contraseña.</div>
   <form id="lForm" autocomplete="on">
     <input type="email" id="lMail" placeholder="Correo" autocomplete="username" required>
@@ -459,8 +473,9 @@ const SEED_RULES=[
 ];
 
 /* ============ Versión ============ */
-const VERSION='2.0.2';
+const VERSION='2.1.0';
 const CAMBIOS=[
+ {v:'2.1.0',f:'2026-11-01',c:['Nuevo nombre y logo: Cuentas Claras.','Se puede instalar como aplicación, con su icono en el escritorio (botón «Instalar» arriba o en Ajustes).','Al pulsar «Salir» se borra la copia de los datos que guardaba el navegador, para que no quede nada en ordenadores compartidos.','Si al salir quedan cambios sin subir por falta de conexión, avisa antes de perderlos.']},
  {v:'2.0.2',f:'2026-11-01',c:['El enlace «Crear cuenta de administrador» ya no aparece cuando la cuenta de administrador existe.']},
  {v:'2.0.1',f:'2026-11-01',c:['Botón con un ojo para ver la contraseña mientras la escribes.']},
  {v:'2.0.0',f:'2026-11-01',c:['El programa está en internet y se actualiza solo: al abrirlo siempre tienes la última versión.','Cada persona entra con su correo y su contraseña, y ve solo sus datos. Si olvidas la contraseña, puedes recuperarla por correo.','Los datos se guardan en la nube y se pueden usar desde cualquier ordenador o el móvil.','Pestaña Usuarios para el administrador: dar de alta, desactivar y reenviar el correo de contraseña.','El historial del Excel se carga desde un archivo aparte.']},
@@ -520,7 +535,7 @@ function load(){
 const CFG=window.MG_CONFIG||{};
 const NUBE=!!(CFG.firebase&&CFG.firebase.apiKey);
 const FBV='https://www.gstatic.com/firebasejs/10.14.1/';
-let creandoAdmin=false;
+let creandoAdmin=false,saliendo=false;
 let fb=null,USER=null,LAST={meta:null,meses:{}},tSave=null,pendiente=false,cargadoEn=0;
 function setSync(st,msg){const el=$('#sync');if(!el)return;el.className='sync'+(st==='error'?' err':'');
   el.textContent=st==='guardando'?'Guardando…':st==='ok'?'Guardado ✓':st==='offline'?'Sin conexión: se guardará al volver':st==='error'?'Error al guardar':'';
@@ -1253,6 +1268,7 @@ function rAjustes(){
   $$('[data-p]').forEach(i=>i.oninput=()=>{S.aj.pct[i.dataset.p]=parseFloat(String(i.value).replace(',','.'))||0;save();sumUI()});sumUI();
   rSug();
   $('#diaNomina').value=S.aj.diaNomina;$('#diaNomina').onchange=e=>{S.aj.diaNomina=Math.min(31,Math.max(1,+e.target.value||25));save();toast('Guardado. Se aplica a los ingresos nuevos')};
+  instUI();
   $('#verTag').textContent='Versión '+VERSION;$('#verList').innerHTML=cambiosHtml(null).replace('<div class="chlog">','');
   $('#bkInfo').textContent=S.ultimaCopia?'Última copia: '+new Date(S.ultimaCopia).toLocaleDateString('es-ES'):'Aún no hay ninguna copia.';
   const nh=S.mov.filter(x=>x.origen==='excel').length;const hm=S.histMeta;
@@ -1425,7 +1441,24 @@ $('#lAlta').onclick=async()=>{const m=$('#lMail').value.trim(),p=$('#lPass').val
   try{const c=await fb.authM.createUserWithEmailAndPassword(fb.auth,m,p);await fb.authM.sendEmailVerification(c.user);try{localStorage.setItem('mg-verif',Date.now())}catch(_){}await fb.authM.signOut(fb.auth);
     mostrarLogin('Cuenta creada. Te he enviado un correo para verificarla: ábrelo, pulsa el enlace y vuelve aquí a entrar.')}catch(err){lMsg(errAuth(err),true)}
   finally{creandoAdmin=false}};
-$('#logout').onclick=async()=>{await flush();await fb.authM.signOut(fb.auth)};
+async function salir(forzar){
+  const btn=$('#logout');btn.disabled=true;btn.textContent='Saliendo…';
+  try{
+    await flush();
+    if(!forzar){
+      const ok=await Promise.race([fb.fsM.waitForPendingWrites(fb.db).then(()=>true),new Promise(r=>setTimeout(()=>r(false),5000))]);
+      if(!ok){btn.disabled=false;btn.textContent='Salir';
+        dialog('Hay cambios sin guardar',`<p>Parece que no hay conexión a internet y quedan cambios por subir a la nube. Si sales ahora, <b>esos cambios se perderán</b>.</p><p class="small mut">Lo mejor es esperar a tener conexión y volver a pulsar «Salir».</p>`,[{t:'Esperar'},{t:'Salir igualmente',cls:'dan',fn:()=>{salir(true)}}]);
+        return}
+    }
+    saliendo=true;
+    await fb.authM.signOut(fb.auth);
+    try{await fb.fsM.terminate(fb.db)}catch(e){console.warn(e)}
+    try{await fb.fsM.clearIndexedDbPersistence(fb.db)}catch(e){console.warn('No se pudo borrar la copia local (¿otra pestaña abierta?)',e)}
+  }catch(e){console.error(e)}
+  location.reload();
+}
+$('#logout').onclick=()=>salir(false);
 $('#cambiarPass').onclick=async()=>{if(!NUBE||!USER)return;try{await fb.authM.sendPasswordResetEmail(fb.auth,USER.email);toast('Te he enviado un correo para cambiar la contraseña')}catch(e){toast(errAuth(e),true)}};
 async function entrar(u){
   const {doc,getDoc,setDoc}=fb.fsM;
@@ -1446,6 +1479,27 @@ async function entrar(u){
   $('#cuentaTxt').textContent='Has entrado como '+USER.email+'.';
   iniciarUI();
 }
+
+/* ============ Instalar (acceso directo) ============ */
+let promptInstalar=null;
+const instalada=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+function instUI(){
+  const puede=!!promptInstalar&&!instalada();
+  $('#instalarTop').classList.toggle('hide',!puede);
+  const b=$('#instalarBtn');if(!b)return;b.classList.toggle('hide',!puede);
+  if(instalada()){$('#instTxt').textContent='Ya la estás usando como aplicación instalada. Aparece en el escritorio y en el menú de inicio.';$('#instPasos').innerHTML='';return}
+  $('#instTxt').textContent=puede?'Crea un icono en el escritorio que abre Cuentas Claras en su propia ventana, como un programa más.':'Puedes crear un icono en el escritorio que abre Cuentas Claras en su propia ventana:';
+  $('#instPasos').innerHTML=puede?'':`<ul style="margin:8px 0 0;padding-left:18px">
+    <li><b>Chrome:</b> menú ⋮ → «Enviar, guardar y compartir» → «Instalar página como aplicación…» (o el icono de instalar a la derecha de la barra de direcciones).</li>
+    <li><b>Edge:</b> menú … → «Aplicaciones» → «Instalar este sitio como una aplicación».</li>
+    <li><b>Safari (Mac):</b> menú «Archivo» → «Añadir al Dock».</li>
+    <li><b>Móvil:</b> en Chrome, menú ⋮ → «Añadir a pantalla de inicio»; en el iPhone, botón Compartir → «Añadir a pantalla de inicio».</li></ul>`;
+}
+async function instalar(){if(!promptInstalar)return;promptInstalar.prompt();const r=await promptInstalar.userChoice;promptInstalar=null;instUI();if(r&&r.outcome==='accepted')toast('Instalada. Ya tienes el icono en el escritorio.')}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();promptInstalar=e;instUI()});
+window.addEventListener('appinstalled',()=>{promptInstalar=null;instUI()});
+$('#instalarTop').onclick=instalar;$('#instalarBtn').onclick=instalar;
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(e=>console.warn(e));
 
 /* ============ Actualizaciones ============ */
 async function buscarVersion(){
@@ -1485,7 +1539,7 @@ window.addEventListener('offline',()=>{if(NUBE&&USER)setSync('offline')});
   mostrarLogin('Cargando…');
   try{await fbInit()}catch(e){mostrarLogin('No se ha podido conectar. Revisa la conexión a internet y recarga la página.',true);return}
   lMsg('');
-  fb.authM.onAuthStateChanged(fb.auth,u=>{if(creandoAdmin)return;if(u)entrar(u);else{USER=null;S=defState();mostrarLogin()}});
+  fb.authM.onAuthStateChanged(fb.auth,u=>{if(creandoAdmin||saliendo)return;if(u)entrar(u);else{USER=null;S=defState();mostrarLogin()}});
 })();
 </script>
 </body>
