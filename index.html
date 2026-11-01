@@ -459,8 +459,9 @@ const SEED_RULES=[
 ];
 
 /* ============ Versión ============ */
-const VERSION='2.0.1';
+const VERSION='2.0.2';
 const CAMBIOS=[
+ {v:'2.0.2',f:'2026-11-01',c:['El enlace «Crear cuenta de administrador» ya no aparece cuando la cuenta de administrador existe.']},
  {v:'2.0.1',f:'2026-11-01',c:['Botón con un ojo para ver la contraseña mientras la escribes.']},
  {v:'2.0.0',f:'2026-11-01',c:['El programa está en internet y se actualiza solo: al abrirlo siempre tienes la última versión.','Cada persona entra con su correo y su contraseña, y ve solo sus datos. Si olvidas la contraseña, puedes recuperarla por correo.','Los datos se guardan en la nube y se pueden usar desde cualquier ordenador o el móvil.','Pestaña Usuarios para el administrador: dar de alta, desactivar y reenviar el correo de contraseña.','El historial del Excel se carga desde un archivo aparte.']},
  {v:'1.4.0',f:'2026-11-01',c:['Categorías editables en Ajustes: cambiar el nombre, moverlas de grupo, ordenarlas, añadir nuevas y borrarlas (sus movimientos pasan a la categoría que elijas).','Las versiones ahora tienen tres números: el último sube con los arreglos pequeños (por ejemplo, 1.4.1).']},
@@ -1410,7 +1411,8 @@ const ERR_AUTH={'auth/invalid-credential':'Correo o contraseña incorrectos.','a
 const errAuth=e=>ERR_AUTH[e.code]||('Error: '+(e.code||e.message));
 function lMsg(t,err){$('#lMsg').innerHTML=t?`<div class="msg${err?' err':''}">${t}</div>`:''}
 function mostrarLogin(msg,err){$('#login').classList.remove('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
-$('#lMail').addEventListener('input',async()=>{$('#lAlta').classList.toggle('hide',!(await esAdminMail($('#lMail').value)))});
+const adminYaCreado=()=>{try{return localStorage.getItem('mg-admin-ok')==='1'}catch(_){return false}};
+$('#lMail').addEventListener('input',async()=>{$('#lAlta').classList.toggle('hide',adminYaCreado()||!(await esAdminMail($('#lMail').value)))});
 $('#lForm').onsubmit=async e=>{e.preventDefault();$('#lGo').disabled=true;lMsg('Entrando…');
   try{await fb.authM.signInWithEmailAndPassword(fb.auth,$('#lMail').value.trim(),$('#lPass').value)}catch(err){lMsg(errAuth(err),true);$('#lGo').disabled=false}};
 $('#lVer').onclick=()=>{const i=$('#lPass'),ver=i.type==='password';i.type=ver?'text':'password';
@@ -1437,6 +1439,7 @@ async function entrar(u){
   if(admin&&!perfil){perfil={nombre:'Administrador',email:u.email,activo:true,rol:'admin',creado:Date.now()};await setDoc(doc(fb.db,'users',u.uid),perfil)}
   if(!perfil||!perfil.activo){await fb.authM.signOut(fb.auth);mostrarLogin('Tu cuenta no está activa. Habla con el administrador.',true);return}
   USER={uid:u.uid,email:u.email,nombre:perfil.nombre||u.email,admin};
+  if(admin){try{localStorage.setItem('mg-admin-ok','1')}catch(_){}$('#lAlta').classList.add('hide')}
   try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+(e.code||e.message),true);return}
   $('#login').classList.add('hide');$('#userbox').classList.remove('hide');$('#uName').textContent=USER.nombre;setSync('ok');
   $('#tabUsuarios').classList.toggle('hide',!admin);
