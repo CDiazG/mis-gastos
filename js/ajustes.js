@@ -174,6 +174,7 @@ function cargarHist(H){
     else if(n.includes(' DESAJUST'))cat='AJUSTE';
     else if(legacy.has(cat)||!ALLC.some(c=>c.id===cat)){const r=matchRule(h.c);cat=r&&!['INGRESO','EFECTIVO','TRASPASO'].includes(r.c)?r.c:'OTROS'}
     if(cat==='SALUD'&&RE_ACTIVIDAD.test(norm(h.c)))cat='ACTIVIDADES';
+    if(cat==='AHORRO'&&RE_INVERSION.test(norm(h.c)))cat='INVERSION';
     S.mov.push({id:uid(),fecha:h.f,mes:h.f.slice(0,7),concepto:h.c,importe:h.i,cat,metodo:h.e?'efectivo':'banco',cuenta:h.e?'':'',origen:'excel'});
   }
   S.notas={...(S.notas||{}),...(H.notas||{})};S.histMeta={desde:H.desde,hasta:H.hasta,n:H.mov.length};

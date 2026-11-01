@@ -8,7 +8,7 @@ function defState(){
     cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
     aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente'},
     cuentas:[{n:'EVO',v:null,f:null,banco:1},{n:'Revolut',v:null,f:null,banco:1},{n:'Trade Republic',v:null,f:null},{n:'Santander',v:null,f:null},{n:'Oro',v:null,f:null}],
-    fijos:[],objetivos:[],mig:{actividades:true},
+    fijos:[],objetivos:[],mig:{actividades:true,inversion:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};
 }
 // Cambios de categorías de la versión 2.8.0: «Salud y bienestar» se separa en «Salud» y «Deporte y actividades»
@@ -29,8 +29,23 @@ function migrarActividades(){
   for(const f of S.fijos||[])if(f.cat==='SALUD'&&esAct(f.nombre+' '+(f.texto||'')))f.cat='ACTIVIDADES';
   return true;
 }
+// Versión 2.9.0: «Ahorro / inversión» se separa en «Ahorro» e «Inversión»
+function migrarInversion(){
+  if(!S||(S.mig&&S.mig.inversion))return false;
+  S.mig={...(S.mig||{}),inversion:true};
+  if(!Array.isArray(S.cats))return true;
+  if(!S.cats.some(c=>c.id==='INVERSION')){
+    const i=S.cats.findIndex(c=>c.id==='AHORRO');S.cats.splice(i>=0?i+1:S.cats.length,0,{id:'INVERSION',n:'Inversión',g:'AHORRO'});
+    const pa=+S.aj.pct.AHORRO||0,inv=Math.round(pa/2);S.aj.pct.AHORRO=pa-inv;S.aj.pct.INVERSION=inv;
+  }
+  const ah=S.cats.find(c=>c.id==='AHORRO');if(ah&&ah.n==='Ahorro / inversión')ah.n='Ahorro';
+  const esInv=t=>RE_INVERSION.test(norm(t));
+  for(const x of S.mov||[])if(x.cat==='AHORRO'&&esInv(x.concepto+' '+(x.detalle||'')))x.cat='INVERSION';
+  for(const r of S.reglas||[])if(r.c==='AHORRO'&&esInv(r.t))r.c='INVERSION';
+  return true;
+}
 let HAY_MIGRACION=false;
-function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
+function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(S&&S.aj&&migrarInversion())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
   const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined)S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
 function load(){
   try{const t=localStorage.getItem(KEY);if(t){S=JSON.parse(t);completar();return}}catch(e){console.error(e)}

@@ -59,7 +59,7 @@ function rHist(){
       return `<tr><td>${c.n}</td><td class="r num">${eur(v,0)}</td><td class="r num ${bad?'neg':''}">${fmt(p,1)}%</td><td class="r num mut">${o}%</td></tr>`}).join('')+
     `</tbody></table><p class="small mut" style="margin:8px 0 0">${xs.length} meses. En los meses antiguos del Excel, lo que estaba como «Caprichos» o «Necesidades» se ha repartido por el concepto; lo que no se ha podido identificar está en «Otros».</p>`;
   // tabla
-  $('#histTable').innerHTML=`<thead><tr><th>Mes</th><th class="r">Ingresos</th><th class="r">Gastado</th><th class="r">Inversión</th><th class="r">Diezmo</th><th class="r">Ahorro del mes</th><th>Mayor gasto</th></tr></thead><tbody>`+
+  $('#histTable').innerHTML=`<thead><tr><th>Mes</th><th class="r">Ingresos</th><th class="r">Gastado</th><th class="r">Ahorro e inversión</th><th class="r">Diezmo</th><th class="r">Ahorro del mes</th><th>Mayor gasto</th></tr></thead><tbody>`+
     data.slice().reverse().map(x=>{
       if(x.vacio)return `<tr><td style="text-transform:capitalize">${nombreMes(x.m)}</td><td colspan="6" class="mut small">${notas[x.m]?esc(notas[x.m]):'Sin datos'}</td></tr>`;
       const top=CONSUMO.map(c=>[c,x.by[c]||0]).sort((a,b)=>b[1]-a[1])[0];

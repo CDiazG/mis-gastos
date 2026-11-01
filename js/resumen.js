@@ -10,7 +10,7 @@ function rResumen(){
   $('#kpis').innerHTML=`
    <div class="card pad kpi"><div class="l">Ingresos</div><div class="v num pos">${eur(st.ingresos)}</div><div class="s">${st.ms.filter(x=>x.cat==='INGRESO').map(x=>esc(x.concepto)).slice(0,2).join(' · ')||'Sin ingresos apuntados'}</div></div>
    <div class="card pad kpi"><div class="l">Gastado</div><div class="v num">${eur(st.consumo)}</div><div class="s">${st.base>0?Math.round(st.consumo/st.base*100)+'% de la base del presupuesto':'&nbsp;'}</div></div>
-   <div class="card pad kpi"><div class="l">Ahorro del mes</div><div class="v num ${libre<0?'neg':''}">${eur(libre)}</div><div class="s">${tasa!==null?Math.round(tasa*100)+'% de lo ingresado':'&nbsp;'}${st.ahorro?' · '+eur(st.ahorro,0)+' movidos a inversión':''}</div></div>
+   <div class="card pad kpi"><div class="l">Ahorro del mes</div><div class="v num ${libre<0?'neg':''}">${eur(libre)}</div><div class="s">${tasa!==null?Math.round(tasa*100)+'% de lo ingresado':'&nbsp;'}${[st.by.INVERSION?eur(st.by.INVERSION,0)+' invertidos':'',st.by.AHORRO?eur(st.by.AHORRO,0)+' apartados':''].filter(Boolean).map(t=>' · '+t).join('')}</div></div>
    <div class="card pad kpi"><div class="l">Sin asignar</div><div class="v num ${queda<0?'neg':''}">${eur(queda)}</div><div class="s">Ingresos − gastos − ahorro − diezmo</div></div>`;
   // alertas
   const al=[];
@@ -139,7 +139,7 @@ function rFijosCard(){
 }
 function detectarFijos(){
   const hoyM=mesDe(hoy());const desde=addMes(hoyM,-6);
-  const excl=new Set(['TRASPASO','EFECTIVO','AHORRO','DIEZMO','PRESTAMO','AJUSTE','INGRESO','']);
+  const excl=new Set(['TRASPASO','EFECTIVO','AHORRO','INVERSION','DIEZMO','PRESTAMO','AJUSTE','INGRESO','']);
   const grupos={};
   for(const x of S.mov){const m=mesDe(x.fecha);if(x.importe>=0||m<desde||m>=hoyM||excl.has(x.cat||'')||isBizum(x.concepto))continue;
     const k=learnKey(x.concepto);if(!k||k.length<3)continue;(grupos[k]||(grupos[k]=[])).push(x)}

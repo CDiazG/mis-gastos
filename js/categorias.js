@@ -13,7 +13,8 @@ const CATS_DEF=[
  {id:'ACTIVIDADES',n:'Deporte y actividades',g:'VARIABLES',p:2},
  {id:'REGALOS',n:'Regalos',g:'VARIABLES',p:2},
  {id:'OTROS',n:'Otros',g:'VARIABLES',p:0},
- {id:'AHORRO',n:'Ahorro / inversión',g:'AHORRO',p:20},
+ {id:'AHORRO',n:'Ahorro',g:'AHORRO',p:10},
+ {id:'INVERSION',n:'Inversión',g:'AHORRO',p:10},
  {id:'DIEZMO',n:'Diezmo',g:'AHORRO',p:10},
 ];
 const SPECIAL=[
@@ -24,6 +25,8 @@ const SPECIAL=[
  {id:'AJUSTE',n:'Ajuste / descuadre'},
 ];
 const GROUPS=[{id:'FIJOS',n:'Necesidades'},{id:'VARIABLES',n:'Ocio y caprichos'},{id:'AHORRO',n:'Ahorro y donativos'}];
+// Palabras que identifican inversiones (acciones, ETFs, fondos, oro…) dentro de lo que antes era «Ahorro / inversión»
+const RE_INVERSION=/ (TRADE|TRADE REPUBLIC|ORO|ETF|ETFS|ACCIONES|FONDO|FONDOS|INDEXA|MYINVESTOR|DEGIRO|BROKER|INVERSION|INVERTIR|CRIPTO|BITCOIN|BITPANDA|FINIZENS|SCALABLE|ETORO|INTERACTIVE)/
 // Palabras que identifican deporte y actividades (gimnasio, baile…) dentro de lo que antes era «Salud y bienestar»
 const RE_ACTIVIDAD=/ (GIMNASIO|GIMANSIO|GYM|SYNERGYM|ALTAFIT|BASIC FIT|BELLALBA|BALLET|BAILE|YOGA|PILATES|PADEL|PISCINA|CROSSFIT|DEPORTE|DEPORTES|ACTIVIDADES|ESCALADA|TENIS|NATACION|CLUB)/
 const FIJAS=new Set(['AHORRO','DIEZMO','OTROS']); // no se pueden borrar
@@ -59,6 +62,6 @@ const SEED_RULES=[
  ['NOMI','INGRESO'],['NOMINA','INGRESO'],['TRANSF NOMI','INGRESO'],
  ['CAJERO','EFECTIVO'],['REINTEGRO','EFECTIVO'],['RETIRADA EFECTIVO','EFECTIVO'],
  ['REVOLUT','TRASPASO'],['RECARGA','TRASPASO'],['TRASPASO','TRASPASO'],
- ['TRADE REPUBLIC','AHORRO'],['DIEZMO','DIEZMO'],
+ ['TRADE REPUBLIC','INVERSION'],['MYINVESTOR','INVERSION'],['INDEXA','INVERSION'],['FINIZENS','INVERSION'],['DEGIRO','INVERSION'],['INTERACTIVE BROKERS','INVERSION'],['SCALABLE','INVERSION'],['ETORO','INVERSION'],['BITPANDA','INVERSION'],['FONDO DE INVERSION','INVERSION'],['DIEZMO','DIEZMO'],
  ['PRESTAMO','PRESTAMO'],['DESAJUSTE','AJUSTE'],['DESAJUSTES','AJUSTE'],
 ];
