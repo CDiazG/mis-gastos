@@ -8,10 +8,29 @@ function defState(){
     cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
     aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente'},
     cuentas:[{n:'EVO',v:null,f:null,banco:1},{n:'Revolut',v:null,f:null,banco:1},{n:'Trade Republic',v:null,f:null},{n:'Santander',v:null,f:null},{n:'Oro',v:null,f:null}],
-    fijos:[],objetivos:[],
+    fijos:[],objetivos:[],mig:{actividades:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};
 }
-function completar(){if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
+// Cambios de categorías de la versión 2.8.0: «Salud y bienestar» se separa en «Salud» y «Deporte y actividades»
+function migrarActividades(){
+  if(!S||(S.mig&&S.mig.actividades))return false;
+  S.mig={...(S.mig||{}),actividades:true};
+  if(!Array.isArray(S.cats))return true; // usuario nuevo: ya nace con las categorías nuevas
+  const salud=S.cats.find(c=>c.id==='SALUD');
+  if(!S.cats.some(c=>c.id==='ACTIVIDADES')){
+    const i=S.cats.map(c=>c.g).lastIndexOf('VARIABLES');const j=S.cats.findIndex((c,k)=>c.g==='VARIABLES'&&c.id==='REGALOS');
+    S.cats.splice(j>=0?j:(i>=0?i+1:S.cats.length),0,{id:'ACTIVIDADES',n:'Deporte y actividades',g:'VARIABLES'});
+    const ps=+S.aj.pct.SALUD||0;const pasa=Math.min(2,ps);S.aj.pct.SALUD=ps-pasa;S.aj.pct.ACTIVIDADES=pasa;
+  }
+  if(salud&&salud.n==='Salud y bienestar')salud.n='Salud';
+  const esAct=t=>RE_ACTIVIDAD.test(norm(t));
+  for(const x of S.mov||[])if(x.cat==='SALUD'&&esAct(x.concepto+' '+(x.detalle||'')))x.cat='ACTIVIDADES';
+  for(const r of S.reglas||[])if(r.c==='SALUD'&&esAct(r.t))r.c='ACTIVIDADES';
+  for(const f of S.fijos||[])if(f.cat==='SALUD'&&esAct(f.nombre+' '+(f.texto||'')))f.cat='ACTIVIDADES';
+  return true;
+}
+let HAY_MIGRACION=false;
+function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
   const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined)S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
 function load(){
   try{const t=localStorage.getItem(KEY);if(t){S=JSON.parse(t);completar();return}}catch(e){console.error(e)}

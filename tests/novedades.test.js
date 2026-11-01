@@ -79,6 +79,27 @@ module.exports = {
     })();
   },
 
+  'migración: el gimnasio pasa a «Deporte y actividades»'(browser, estado) {
+    return (async () => {
+      const ctx = await browser.newContext(); (estado.contextos ||= []).push(ctx);
+      await ctx.route('**/js/config.js*', r => r.fulfill({ contentType: 'text/javascript', body: 'window.MG_CONFIG={firebase:null};' }));
+      // datos guardados con la versión anterior (sin la categoría nueva)
+      await ctx.addInitScript(() => { if (localStorage.getItem('mis-gastos-v1')) return;
+        const pct = { VIVIENDA: 25, SUPERMERCADO: 10, PROFESIONAL: 5, SALUD: 5, TRANSPORTE: 5, OCIO: 8, PERSONAL: 5, VIAJES: 5, REGALOS: 2, OTROS: 0, AHORRO: 20, DIEZMO: 10 };
+        const cats = [['VIVIENDA','Vivienda','FIJOS'],['SUPERMERCADO','Supermercado','FIJOS'],['PROFESIONAL','Profesional','FIJOS'],['SALUD','Salud y bienestar','FIJOS'],['TRANSPORTE','Transporte','FIJOS'],['OCIO','Restaurantes y ocio','VARIABLES'],['PERSONAL','Personal','VARIABLES'],['VIAJES','Viajes y conciertos','VARIABLES'],['REGALOS','Regalos','VARIABLES'],['OTROS','Otros','VARIABLES'],['AHORRO','Ahorro / inversión','AHORRO'],['DIEZMO','Diezmo','AHORRO']].map(([id,n,g]) => ({ id, n, g }));
+        localStorage.setItem('mis-gastos-v1', JSON.stringify({ v: 1, histOfrecido: true, verVista: '2.7.0', cats, aj: { pct, base: 'ingresos', baseFija: 0, diaNomina: 25 }, reglas: [{ t: 'GIMNASIO', c: 'SALUD', u: 0 }, { t: 'PSICOLOGO', c: 'SALUD', u: 0 }], cuentas: [], mov: [
+          { id: 'a', fecha: '2026-10-02', mes: '2026-10', concepto: 'Gimnasio Energy', importe: -40, cat: 'SALUD', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' },
+          { id: 'b', fecha: '2026-10-03', mes: '2026-10', concepto: 'PSICOLOGO', importe: -60, cat: 'SALUD', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }] })); });
+      const p = await L.nuevaPagina(ctx); estado.paginas.push(p);
+      await p.goto(L.URL_APP); await L.esperar(500);
+      const r = await p.evaluate(() => ({ g: S.mov.find(x => x.id === 'a').cat, ps: S.mov.find(x => x.id === 'b').cat, suma: sumaPct(), salud: S.cats.find(c => c.id === 'SALUD').n, regla: S.reglas.find(r => r.t === 'GIMNASIO').c }));
+      assert.equal(r.g, 'ACTIVIDADES'); assert.equal(r.ps, 'SALUD'); assert.equal(r.suma, 100); assert.equal(r.salud, 'Salud'); assert.equal(r.regla, 'ACTIVIDADES');
+      assert.match(await p.textContent('#groups'), /Necesidades/);
+      await p.reload(); await L.esperar(300);
+      assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 'a').cat), 'ACTIVIDADES', 'el cambio queda guardado');
+    })();
+  },
+
   'aviso de extracto pendiente y último acceso'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

@@ -3,6 +3,7 @@
 /* ============ Arranque ============ */
 let uiLista=false;
 function iniciarUI(){
+  if(HAY_MIGRACION){HAY_MIGRACION=false;save()}
   refreshCats();MES=mesDe(hoy());go('resumen');
   if(uiLista&&!NUBE)return;uiLista=true;
   if(S.histOfrecido&&cmpV(VERSION,S.verVista||'1.0')>0){

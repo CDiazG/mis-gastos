@@ -5,11 +5,12 @@ const CATS_DEF=[
  {id:'VIVIENDA',n:'Vivienda',g:'FIJOS',p:25},
  {id:'SUPERMERCADO',n:'Supermercado',g:'FIJOS',p:10},
  {id:'PROFESIONAL',n:'Profesional',g:'FIJOS',p:5},
- {id:'SALUD',n:'Salud y bienestar',g:'FIJOS',p:5},
+ {id:'SALUD',n:'Salud',g:'FIJOS',p:3},
  {id:'TRANSPORTE',n:'Transporte',g:'FIJOS',p:5},
  {id:'OCIO',n:'Restaurantes y ocio',g:'VARIABLES',p:8},
  {id:'PERSONAL',n:'Personal',g:'VARIABLES',p:5},
  {id:'VIAJES',n:'Viajes y conciertos',g:'VARIABLES',p:5},
+ {id:'ACTIVIDADES',n:'Deporte y actividades',g:'VARIABLES',p:2},
  {id:'REGALOS',n:'Regalos',g:'VARIABLES',p:2},
  {id:'OTROS',n:'Otros',g:'VARIABLES',p:0},
  {id:'AHORRO',n:'Ahorro / inversión',g:'AHORRO',p:20},
@@ -22,7 +23,9 @@ const SPECIAL=[
  {id:'TRASPASO',n:'Traspaso entre mis cuentas'},
  {id:'AJUSTE',n:'Ajuste / descuadre'},
 ];
-const GROUPS=[{id:'FIJOS',n:'Gastos fijos'},{id:'VARIABLES',n:'Variables y ocio'},{id:'AHORRO',n:'Ahorro y diezmo'}];
+const GROUPS=[{id:'FIJOS',n:'Necesidades'},{id:'VARIABLES',n:'Ocio y caprichos'},{id:'AHORRO',n:'Ahorro y donativos'}];
+// Palabras que identifican deporte y actividades (gimnasio, baile…) dentro de lo que antes era «Salud y bienestar»
+const RE_ACTIVIDAD=/ (GIMNASIO|GIMANSIO|GYM|SYNERGYM|ALTAFIT|BASIC FIT|BELLALBA|BALLET|BAILE|YOGA|PILATES|PADEL|PISCINA|CROSSFIT|DEPORTE|DEPORTES|ACTIVIDADES|ESCALADA|TENIS|NATACION|CLUB)/
 const FIJAS=new Set(['AHORRO','DIEZMO','OTROS']); // no se pueden borrar
 let CATS=[],ALLC=[],CONSUMO=[];
 function refreshCats(){
@@ -45,7 +48,7 @@ const SEED_RULES=[
  // profesional
  ['COLEGIO OFICIAL DE MEDI','PROFESIONAL'],['COLEGIO MEDICOS','PROFESIONAL'],['COLEGIACION','PROFESIONAL'],['CONGRESOS Y EDICIONES','PROFESIONAL'],['CONGRESO','PROFESIONAL'],['SEMFYC','PROFESIONAL'],['SEMERGEN','PROFESIONAL'],['SEMG','PROFESIONAL'],
  // salud y bienestar
- ['PSICOLOGO','SALUD'],['PSICOLOGA','SALUD'],['PSICO','SALUD'],['FARMACIA','SALUD'],['NUTRI','SALUD'],['FISIO','SALUD'],['BELLALBA','SALUD'],['GIMNASIO','SALUD'],['GIMANSIO','SALUD'],['SYNERGYM','SALUD'],['ALTAFIT','SALUD'],['BASIC FIT','SALUD'],['DENTAL','SALUD'],['BALLET','SALUD'],
+ ['PSICOLOGO','SALUD'],['PSICOLOGA','SALUD'],['PSICO','SALUD'],['FARMACIA','SALUD'],['NUTRI','SALUD'],['FISIO','SALUD'],['BELLALBA','ACTIVIDADES'],['GIMNASIO','ACTIVIDADES'],['GIMANSIO','ACTIVIDADES'],['SYNERGYM','ACTIVIDADES'],['ALTAFIT','ACTIVIDADES'],['BASIC FIT','ACTIVIDADES'],['DENTAL','SALUD'],['YOGA','ACTIVIDADES'],['PILATES','ACTIVIDADES'],['PADEL','ACTIVIDADES'],['PISCINA','ACTIVIDADES'],['CROSSFIT','ACTIVIDADES'],['BAILE','ACTIVIDADES'],['BALLET','ACTIVIDADES'],
  // personal
  ['AMAZON','PERSONAL'],['ZARA','PERSONAL'],['MANGO','PERSONAL'],['PRIMARK','PERSONAL'],['STRADIVARIUS','PERSONAL'],['BERSHKA','PERSONAL'],['PULL BEAR','PERSONAL'],['TEZENIS','PERSONAL'],['SEPHORA','PERSONAL'],['KIKO','PERSONAL'],['ZAPA','PERSONAL'],['LIBRERIA','PERSONAL'],['LIBROS','PERSONAL'],['CASA DEL LIBRO','PERSONAL'],['FNAC','PERSONAL'],['IKEA','PERSONAL'],['DECATHLON','PERSONAL'],['EL CORTE INGLES','PERSONAL'],['SHEIN','PERSONAL'],['VINTED','PERSONAL'],['PELUQUERIA','PERSONAL'],['PELU','PERSONAL'],['GOOGLE ONE','PERSONAL'],['SPOTIFY','PERSONAL'],['NETFLIX','PERSONAL'],['RELOJERIA','PERSONAL'],['ROPA','PERSONAL'],['ZAPATOS','PERSONAL'],['ZAPATILLAS','PERSONAL'],['BOTAS','PERSONAL'],['CONVERSE','PERSONAL'],['UNAS','PERSONAL'],['CEJAS','PERSONAL'],['ESTETICA','PERSONAL'],['PERFUME','PERSONAL'],['COLONIA','PERSONAL'],['ADIDAS','PERSONAL'],['PANTALONES','PERSONAL'],['MACETAS','PERSONAL'],['CUADROS','PERSONAL'],
  // restaurantes y ocio
