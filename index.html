@@ -149,6 +149,10 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 #login h1{font-size:22px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
 #login form{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 #login input{width:100%;padding:10px 12px}
+#login .passwrap{position:relative}
+#login .passwrap input{padding-right:44px}
+#login .ojo{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;display:flex}
+#login .ojo:hover{color:var(--ink);background:var(--soft)}
 #login .msg{font-size:13.5px;margin-top:10px;padding:9px 12px;border-radius:8px;background:var(--acc-soft)}
 #login .msg.err{background:var(--bad-soft);color:var(--bad)}
 #login .links{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-top:12px}
@@ -380,7 +384,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
   <div class="small mut" id="lSub">Entra con tu correo y tu contraseña.</div>
   <form id="lForm" autocomplete="on">
     <input type="email" id="lMail" placeholder="Correo" autocomplete="username" required>
-    <input type="password" id="lPass" placeholder="Contraseña" autocomplete="current-password" required>
+    <div class="passwrap"><input type="password" id="lPass" placeholder="Contraseña" autocomplete="current-password" required><button type="button" id="lVer" class="ojo" aria-label="Mostrar contraseña" title="Mostrar contraseña"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="tacha" d="M4 4l16 16" style="display:none"/></svg></button></div>
     <button class="btn pri" id="lGo">Entrar</button>
   </form>
   <div class="links"><button class="link" id="lOlvido" type="button">¿Has olvidado la contraseña?</button><button class="link hide" id="lAlta" type="button">Crear cuenta de administrador</button></div>
@@ -455,8 +459,9 @@ const SEED_RULES=[
 ];
 
 /* ============ Versión ============ */
-const VERSION='2.0.0';
+const VERSION='2.0.1';
 const CAMBIOS=[
+ {v:'2.0.1',f:'2026-11-01',c:['Botón con un ojo para ver la contraseña mientras la escribes.']},
  {v:'2.0.0',f:'2026-11-01',c:['El programa está en internet y se actualiza solo: al abrirlo siempre tienes la última versión.','Cada persona entra con su correo y su contraseña, y ve solo sus datos. Si olvidas la contraseña, puedes recuperarla por correo.','Los datos se guardan en la nube y se pueden usar desde cualquier ordenador o el móvil.','Pestaña Usuarios para el administrador: dar de alta, desactivar y reenviar el correo de contraseña.','El historial del Excel se carga desde un archivo aparte.']},
  {v:'1.4.0',f:'2026-11-01',c:['Categorías editables en Ajustes: cambiar el nombre, moverlas de grupo, ordenarlas, añadir nuevas y borrarlas (sus movimientos pasan a la categoría que elijas).','Las versiones ahora tienen tres números: el último sube con los arreglos pequeños (por ejemplo, 1.4.1).']},
  {v:'1.3.0',f:'2026-11-01',c:['Número de versión visible arriba y lista de novedades.','Al abrir una versión nueva se muestran sus novedades una vez.','Las copias de seguridad guardan la versión con la que se hicieron.']},
@@ -1404,10 +1409,12 @@ $('#uAdd').onsubmit=async e=>{
 const ERR_AUTH={'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'Correo o contraseña incorrectos.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos o recupera la contraseña.','auth/invalid-email':'El correo no es válido.','auth/network-request-failed':'Sin conexión a internet.','auth/weak-password':'La contraseña tiene que tener al menos 6 caracteres.','auth/email-already-in-use':'Ya existe una cuenta con ese correo: entra con tu contraseña.'};
 const errAuth=e=>ERR_AUTH[e.code]||('Error: '+(e.code||e.message));
 function lMsg(t,err){$('#lMsg').innerHTML=t?`<div class="msg${err?' err':''}">${t}</div>`:''}
-function mostrarLogin(msg,err){$('#login').classList.remove('hide');$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
+function mostrarLogin(msg,err){$('#login').classList.remove('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
 $('#lMail').addEventListener('input',async()=>{$('#lAlta').classList.toggle('hide',!(await esAdminMail($('#lMail').value)))});
 $('#lForm').onsubmit=async e=>{e.preventDefault();$('#lGo').disabled=true;lMsg('Entrando…');
   try{await fb.authM.signInWithEmailAndPassword(fb.auth,$('#lMail').value.trim(),$('#lPass').value)}catch(err){lMsg(errAuth(err),true);$('#lGo').disabled=false}};
+$('#lVer').onclick=()=>{const i=$('#lPass'),ver=i.type==='password';i.type=ver?'text':'password';
+  $('#lVer .tacha').style.display=ver?'':'none';const t=ver?'Ocultar contraseña':'Mostrar contraseña';$('#lVer').title=t;$('#lVer').setAttribute('aria-label',t);i.focus()};
 $('#lOlvido').onclick=async()=>{const m=$('#lMail').value.trim();if(!m){lMsg('Escribe primero tu correo.',true);$('#lMail').focus();return}
   try{await fb.authM.sendPasswordResetEmail(fb.auth,m);lMsg('Si ese correo tiene cuenta, te llegará un enlace para poner una contraseña nueva. Mira también en spam.')}catch(err){lMsg(errAuth(err),true)}};
 $('#lAlta').onclick=async()=>{const m=$('#lMail').value.trim(),p=$('#lPass').value;
