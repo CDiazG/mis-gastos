@@ -169,6 +169,52 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
 .sync.err{color:var(--bad)}
 #updBar{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:45;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 #updBar .btn{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+dialog .df{flex-wrap:wrap}
+.fab{display:none}
+.monthnav.nomes{visibility:hidden}
+@media (max-width:640px){
+  header{position:static}
+  .top{padding:10px 12px 4px;gap:8px;flex-wrap:wrap}
+  .brand{font-size:16px}
+  .monthnav{order:3;width:100%;margin-left:0;justify-content:space-between}
+  .monthnav .m{flex:1;min-width:0}
+  .monthnav.nomes{display:none}
+  .userbox{margin-left:auto}
+  #uName,.sync{display:none}
+  .tabs{padding:0 6px}
+  .tab{padding:9px 10px 10px}
+  main{padding:14px 12px 96px}
+  h2{font-size:18px}
+  input,select,textarea{font-size:16px!important}
+  .kpi .v{font-size:20px}
+  .pad{padding:14px}
+  .rtable thead{display:none}
+  .rtable,.rtable tbody{display:block;width:100%}
+  .rtable tr{display:grid;grid-template-columns:28px minmax(0,1fr) auto;grid-template-areas:"chk con imp" "chk fec x" "chk cat cat";gap:4px 10px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:center}
+  .rtable tr:last-child{border-bottom:0}
+  .rtable td{border:0;padding:0;background:none!important}
+  .rtable td:nth-child(1){grid-area:chk;align-self:start;padding-top:2px}
+  .rtable td:nth-child(2){grid-area:fec;font-size:12.5px;color:var(--muted)}
+  .rtable td:nth-child(3){grid-area:con;min-width:0;overflow-wrap:anywhere}
+  .rtable td:nth-child(4){grid-area:cat}
+  .rtable td:nth-child(4) select{max-width:none;width:100%}
+  .rtable td:nth-child(5){grid-area:imp;font-weight:600}
+  .rtable td:nth-child(6){grid-area:x;justify-self:end}
+  .rtable td.empty{grid-column:1/-1}
+  .rtable tr.nocat{background:color-mix(in srgb,var(--warn-soft) 55%,transparent)}
+  .utable thead{display:none}
+  .utable tr{display:block;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .utable td{display:block;border:0;padding:3px 0;text-align:left!important;white-space:normal!important}
+  .utable td .btn{margin:4px 6px 0 0}
+  .toolbar{gap:6px}
+  #fBuscar{width:100%!important}
+  .quick{grid-template-columns:1fr 1fr}
+  .quick #qConcepto{grid-column:1/-1}
+  dialog .df .btn{flex:1 1 auto}
+  .fab{display:block;position:fixed;right:14px;bottom:16px;z-index:30;border:0;border-radius:999px;padding:13px 18px;background:var(--acc);color:var(--acc-ink);font-weight:600;font-size:15px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  .fab.hide{display:none}
+  #updBar{left:12px;right:12px;transform:none;bottom:76px}
+}
 @media (max-width:900px){.cashgrid{grid-template-columns:1fr}}
 @media (max-width:900px){
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -262,7 +308,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
       <button class="btn sm dan hide" id="bulkDel">Borrar marcados</button>
     </div>
     <div class="card tablewrap">
-      <table id="movTable">
+      <table id="movTable" class="rtable">
         <thead><tr><th style="width:28px"><input type="checkbox" id="movAll"></th><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th style="width:40px"></th></tr></thead>
         <tbody></tbody>
       </table>
@@ -297,7 +343,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <h2>Patrimonio</h2>
     <p class="sub">Lo que hay en cada cuenta. El saldo de las cuentas con extracto se actualiza solo al importarlo; el resto se apunta a mano.</p>
     <div class="row2">
-      <div class="card"><table id="patTable"></table></div>
+      <div class="card tablewrap"><table id="patTable"></table></div>
       <div class="card pad" id="patTotal"></div>
     </div>
   </section>
@@ -378,7 +424,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
     <h2>Usuarios</h2>
     <p class="sub">Cada persona tiene su cuenta y sus datos. Nadie puede ver los datos de otra persona desde el programa, tampoco el administrador.</p>
     <div class="row2">
-      <div class="card"><table id="uTable"></table></div>
+      <div class="card"><table id="uTable" class="utable"></table></div>
       <div class="card pad">
         <h3>Dar de alta</h3>
         <p class="small mut" style="margin:4px 0 12px">Le llegará un correo para que ponga su propia contraseña. Revisad también la carpeta de spam.</p>
@@ -404,6 +450,7 @@ dialog .df{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8
   <div class="links"><button class="link" id="lOlvido" type="button">¿Has olvidado la contraseña?</button><button class="link hide" id="lAlta" type="button">Crear cuenta de administrador</button></div>
   <div id="lMsg"></div>
 </div></div>
+<button id="fabCash" class="fab hide" type="button">＋ Gasto en efectivo</button>
 <div id="updBar" class="hide"><span id="updTxt"></span><button class="btn sm" id="updGo">Actualizar</button></div>
 
 <dialog id="dlg"><form method="dialog"><div class="dh" id="dlgT"></div><div class="db" id="dlgB"></div><div class="df" id="dlgF"></div></form></dialog>
@@ -473,8 +520,9 @@ const SEED_RULES=[
 ];
 
 /* ============ Versión ============ */
-const VERSION='2.2.0';
+const VERSION='2.3.0';
 const CAMBIOS=[
+ {v:'2.3.0',f:'2026-11-01',c:['Adaptado al móvil: cabecera más compacta, movimientos en tarjetas, textos que no se cortan y sin zoom al escribir.','En el móvil hay un botón fijo «＋ Gasto en efectivo» para apuntar un gasto desde cualquier pestaña.','Recordatorio mensual para descargar una copia de seguridad.']},
  {v:'2.2.0',f:'2026-11-01',c:['El administrador puede eliminar usuarios: se borran todos sus datos y su acceso, con confirmación escribiendo ELIMINAR.','Los usuarios eliminados se pueden volver a dar de alta (empiezan sin datos).']},
  {v:'2.1.0',f:'2026-11-01',c:['Nuevo nombre y logo: Cuentas Claras.','Se puede instalar como aplicación, con su icono en el escritorio (botón «Instalar» arriba o en Ajustes).','Al pulsar «Salir» se borra la copia de los datos que guardaba el navegador, para que no quede nada en ordenadores compartidos.','Si al salir quedan cambios sin subir por falta de conexión, avisa antes de perderlos.']},
  {v:'2.0.2',f:'2026-11-01',c:['El enlace «Crear cuenta de administrador» ya no aparece cuando la cuenta de administrador existe.']},
@@ -652,7 +700,8 @@ function go(t){
 function render(){
   refreshCats();
   $('#mLabel').textContent=nombreMes(MES);
-  $('#monthnav').style.visibility=(TAB==='resumen'||TAB==='movs'||TAB==='efectivo')?'visible':'hidden';
+  $('#monthnav').classList.toggle('nomes',!(TAB==='resumen'||TAB==='movs'||TAB==='efectivo'));
+  $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER));
   ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes})[TAB]();
 }
 
@@ -673,7 +722,7 @@ function rResumen(){
   if(!st.ingresos&&S.aj.base==='ingresos'&&st.ms.length)al.push(`<div class="alert info"><span class="grow">Este mes no tiene ingresos apuntados, así que el presupuesto sale a 0. Puedes usar una base fija en Ajustes.</span></div>`);
   const pp=prestamosPendientes();
   if(Math.abs(pp)>0.009)al.push(`<div class="alert info"><span class="grow">${pp>0?'Te deben':'Debes'} <b>${eur(Math.abs(pp))}</b> en préstamos pendientes.</span><button class="btn sm" data-act="prest">Ver</button></div>`);
-  if(!NUBE&&S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'}</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
+  if(S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'} Descárgala y guárdala en tu ordenador o en Drive: si algo se borra por error, se puede recuperar con ella.</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
   if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
   else{const sg=sugerencia();if(sg&&sg.cambia)al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
@@ -1111,7 +1160,7 @@ function rImport(){
       ${R.some(x=>!x.cat&&isBizum(x.concepto)&&x.importe>0)?`<label class="pill small">Bizum recibidos sin categoría → <select id="impBiz">${catOptions('',{blankText:'elige…'})}</select></label>`:''}
       <span class="small ${pend?'ko':'mut'}">${pend?pend+' marcados sin categoría':''}</span>
       <button class="btn" id="impCancel">Cancelar</button><button class="btn pri" id="impGo" ${nsel?'':'disabled'}>Guardar ${nsel} movimientos</button></div>
-    <div class="card tablewrap"><table><thead><tr><th style="width:28px"><input type="checkbox" id="impAll" ${R.every(x=>x.sel||x.estado==='ya')?'checked':''}></th><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th>Estado</th></tr></thead><tbody>`+
+    <div class="card tablewrap"><table class="rtable"><thead><tr><th style="width:28px"><input type="checkbox" id="impAll" ${R.every(x=>x.sel||x.estado==='ya')?'checked':''}></th><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th>Estado</th></tr></thead><tbody>`+
     vis.map(x=>{const k=R.indexOf(x);
       const est=x.estado==='ya'?'<span class="tag">ya importado</span>':x.estado==='dup'?`<span class="tag bad" title="${esc(x.dupDe.concepto)} · ${fFecha(x.dupDe.fecha)}">¿repetido? ${esc(x.dupDe.concepto.slice(0,18))}</span>`:(x.cat&&x.auto?`<span class="tag good" title="${x.reglaU?'Regla aprendida':'Regla de serie'}: el concepto contiene «${esc(x.regla)}». Si no es correcta, cambia la categoría.">auto · ${esc(x.regla)}</span>`:'');
       return `<tr data-k="${k}" class="${x.sel?'':'off'} ${x.cat||!x.sel?'':'nocat'}"><td><input type="checkbox" class="isel" ${x.sel?'checked':''} ${x.estado==='ya'?'disabled':''}></td>
@@ -1465,10 +1514,10 @@ $('#uAdd').onsubmit=async e=>{
 };
 
 /* ============ Acceso ============ */
-const ERR_AUTH={'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'Correo o contraseña incorrectos.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos o recupera la contraseña.','auth/invalid-email':'El correo no es válido.','auth/network-request-failed':'Sin conexión a internet.','auth/weak-password':'La contraseña tiene que tener al menos 6 caracteres.','auth/email-already-in-use':'Ya existe una cuenta con ese correo: entra con tu contraseña.'};
+const ERR_AUTH={'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'Correo o contraseña incorrectos.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos o recupera la contraseña.','auth/invalid-email':'El correo no es válido.','auth/network-request-failed':'Sin conexión a internet.','auth/weak-password':'La contraseña tiene que tener al menos 6 caracteres.','auth/email-already-in-use':'Ya existe una cuenta con ese correo: entra con tu contraseña.','auth/password-does-not-meet-requirements':'La contraseña no cumple los requisitos: mínimo 8 caracteres, con minúsculas y números.'};
 const errAuth=e=>ERR_AUTH[e.code]||('Error: '+(e.code||e.message));
 function lMsg(t,err){$('#lMsg').innerHTML=t?`<div class="msg${err?' err':''}">${t}</div>`:''}
-function mostrarLogin(msg,err){$('#login').classList.remove('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
+function mostrarLogin(msg,err){$('#login').classList.remove('hide');$('#fabCash').classList.add('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
 const adminYaCreado=()=>{try{return localStorage.getItem('mg-admin-ok')==='1'}catch(_){return false}};
 $('#lMail').addEventListener('input',async()=>{$('#lAlta').classList.toggle('hide',adminYaCreado()||!(await esAdminMail($('#lMail').value)))});
 $('#lForm').onsubmit=async e=>{e.preventDefault();$('#lGo').disabled=true;lMsg('Entrando…');
@@ -1478,7 +1527,7 @@ $('#lVer').onclick=()=>{const i=$('#lPass'),ver=i.type==='password';i.type=ver?'
 $('#lOlvido').onclick=async()=>{const m=$('#lMail').value.trim();if(!m){lMsg('Escribe primero tu correo.',true);$('#lMail').focus();return}
   try{await fb.authM.sendPasswordResetEmail(fb.auth,m);lMsg('Si ese correo tiene cuenta, te llegará un enlace para poner una contraseña nueva. Mira también en spam.')}catch(err){lMsg(errAuth(err),true)}};
 $('#lAlta').onclick=async()=>{const m=$('#lMail').value.trim(),p=$('#lPass').value;
-  if(!(await esAdminMail(m)))return;if(p.length<8){lMsg('Elige una contraseña de al menos 8 caracteres y vuelve a pulsar.',true);$('#lPass').focus();return}
+  if(!(await esAdminMail(m)))return;if(p.length<8||!/[a-z]/.test(p)||!/\d/.test(p)){lMsg('Elige una contraseña de al menos 8 caracteres, con minúsculas y números, y vuelve a pulsar.',true);$('#lPass').focus();return}
   creandoAdmin=true;
   try{const c=await fb.authM.createUserWithEmailAndPassword(fb.auth,m,p);await fb.authM.sendEmailVerification(c.user);try{localStorage.setItem('mg-verif',Date.now())}catch(_){}await fb.authM.signOut(fb.auth);
     mostrarLogin('Cuenta creada. Te he enviado un correo para verificarla: ábrelo, pulsa el enlace y vuelve aquí a entrar.')}catch(err){lMsg(errAuth(err),true)}
@@ -1564,6 +1613,7 @@ function iniciarUI(){
      [{t:'Empezar vacío',fn:()=>{S.histOfrecido=true;save()}},{t:'Historial del Excel…',fn:()=>{S.histOfrecido=true;save();$('#histFile').click()}},{t:'Copia de seguridad…',cls:'pri',fn:()=>{S.histOfrecido=true;save();$('#bkFile').click()}}]);
   }
 }
+$('#fabCash').onclick=()=>{MES=mesDe(hoy());go('efectivo');setTimeout(()=>$('#cImp').focus(),50)};
 $('#verBtn').textContent='v'+VERSION;
 $('#verBtn').onclick=()=>dialog('Novedades',cambiosHtml(null),[{t:'Cerrar',cls:'pri'}]);
 window.addEventListener('beforeunload',e=>{
