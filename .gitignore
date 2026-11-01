@@ -1,0 +1,4 @@
+historial*.json
+*.pdf
+*.xlsx
+node_modules/

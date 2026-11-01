@@ -1,0 +1,31 @@
+rules_version = '2';
+// Reglas de Firestore para Mis gastos.
+// Sustituye CORREO_DEL_ADMINISTRADOR por el correo del administrador antes de publicarlas
+// (Firebase → Firestore Database → Reglas).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'CORREO_DEL_ADMINISTRADOR'
+        && request.auth.token.email_verified == true;
+    }
+
+    function activo(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid))
+        && get(/databases/$(database)/documents/users/$(uid)).data.activo == true;
+    }
+
+    // Perfil de cada usuario: lo lee el propio usuario; solo el administrador lo crea o cambia.
+    match /users/{uid} {
+      allow read: if esAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow write: if esAdmin();
+
+      // Datos (movimientos, ajustes): solo el propio usuario, y solo si su cuenta está activa.
+      // El administrador NO tiene acceso a los datos de los demás.
+      match /{resto=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid && activo(uid);
+      }
+    }
+  }
+}
