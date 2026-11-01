@@ -520,8 +520,9 @@ const SEED_RULES=[
 ];
 
 /* ============ Versión ============ */
-const VERSION='2.3.0';
+const VERSION='2.4.0';
 const CAMBIOS=[
+ {v:'2.4.0',f:'2026-11-01',c:['Sincronización al instante entre dispositivos: lo que apuntas en el móvil aparece solo en el ordenador (y al revés), sin recargar.']},
  {v:'2.3.0',f:'2026-11-01',c:['Adaptado al móvil: cabecera más compacta, movimientos en tarjetas, textos que no se cortan y sin zoom al escribir.','En el móvil hay un botón fijo «＋ Gasto en efectivo» para apuntar un gasto desde cualquier pestaña.','Recordatorio mensual para descargar una copia de seguridad.']},
  {v:'2.2.0',f:'2026-11-01',c:['El administrador puede eliminar usuarios: se borran todos sus datos y su acceso, con confirmación escribiendo ELIMINAR.','Los usuarios eliminados se pueden volver a dar de alta (empiezan sin datos).']},
  {v:'2.1.0',f:'2026-11-01',c:['Nuevo nombre y logo: Cuentas Claras.','Se puede instalar como aplicación, con su icono en el escritorio (botón «Instalar» arriba o en Ajustes).','Al pulsar «Salir» se borra la copia de los datos que guardaba el navegador, para que no quede nada en ordenadores compartidos.','Si al salir quedan cambios sin subir por falta de conexión, avisa antes de perderlos.']},
@@ -605,6 +606,7 @@ async function flush(){
   for(const m in LAST.meses)if(!(m in nuevos))ops.push(['del',doc(fb.db,'users',uid,'meses',m)]);
   pendiente=false;
   if(!ops.length){setSync('ok');return}
+  for(const o of ops){const pth=o[1].path||'';const id=pth.split('/').pop();if(pth.includes('/meses/'))delete REMOTO.meses[id];else REMOTO.meta=null}
   const prev={meta:LAST.meta,meses:LAST.meses};LAST={meta:mj,meses:nuevos};
   try{
     for(let i=0;i<ops.length;i+=400){const b=writeBatch(fb.db);for(const o of ops.slice(i,i+400))o[0]==='set'?b.set(o[1],o[2]):b.delete(o[1]);await b.commit()}
@@ -626,6 +628,45 @@ async function cargarNube(){
   else{S=meta.exists()?JSON.parse(meta.data().s):defState();LAST.meta=meta.exists()?meta.data().s:null;S.mov=[];
     ms.forEach(d=>{const j=d.data().m||'[]';LAST.meses[d.id]=j;S.mov.push(...JSON.parse(j))})}
   completar();cargadoEn=Date.now();
+  escuchar();
+}
+/* ---- Sincronización en tiempo real entre dispositivos ---- */
+let UNSUB=[],REMOTO={meta:null,meses:{}},tRemoto=null,renderPend=false;
+function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
+function escuchar(){
+  pararEscucha();if(!fb.fsM.onSnapshot)return;
+  const {doc,collection,onSnapshot}=fb.fsM;const uid=USER.uid;
+  UNSUB.push(onSnapshot(doc(fb.db,'users',uid,'estado','meta'),sn=>{
+    if(sn.metadata&&sn.metadata.hasPendingWrites)return;
+    if(!sn.exists())return;const j=sn.data().s;if(j!==LAST.meta){REMOTO.meta=j;programarRemoto()}
+  },e=>console.warn('sync meta',e)));
+  UNSUB.push(onSnapshot(collection(fb.db,'users',uid,'meses'),qs=>{
+    if(qs.metadata&&qs.metadata.hasPendingWrites)return;
+    let n=0;qs.docChanges().forEach(ch=>{const id=ch.doc.id;
+      if(ch.type==='removed'){if(LAST.meses[id]!==undefined){REMOTO.meses[id]=null;n++}}
+      else{const j=ch.doc.data().m;if(j!==LAST.meses[id]){REMOTO.meses[id]=j;n++}}});
+    if(n)programarRemoto();
+  },e=>console.warn('sync meses',e)));
+}
+function programarRemoto(ms){clearTimeout(tRemoto);tRemoto=setTimeout(aplicarRemoto,ms||250)}
+function aplicarRemoto(){
+  if(!USER||!S)return;
+  if(pendiente){programarRemoto(1200);return} // primero se guardan los cambios de este dispositivo
+  let cambios=0;
+  if(REMOTO.meta&&REMOTO.meta!==LAST.meta){const mov=S.mov;S=JSON.parse(REMOTO.meta);S.mov=mov;completar();LAST.meta=REMOTO.meta;cambios++}
+  const nm={...LAST.meses};
+  for(const m in REMOTO.meses){const j=REMOTO.meses[m];
+    if(j===null){S.mov=S.mov.filter(x=>x.mes!==m);delete nm[m];cambios++}
+    else if(j!==LAST.meses[m]){S.mov=S.mov.filter(x=>x.mes!==m).concat(JSON.parse(j));nm[m]=j;cambios++}}
+  LAST.meses=nm;REMOTO={meta:null,meses:{}};
+  if(cambios){renderPend=true;refrescarSiSeguro()}
+}
+function refrescarSiSeguro(){
+  if(!renderPend)return;
+  const ae=document.activeElement;
+  const escribiendo=ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)&&ae.closest('main')&&TAB!=='efectivo'&&TAB!=='resumen';
+  if($('#dlg').open||escribiendo){setTimeout(refrescarSiSeguro,1500);return}
+  renderPend=false;render();setSync('ok');toast('Actualizado con cambios de otro dispositivo');
 }
 async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 async function esAdminMail(m){return !!(CFG.adminHash&&m&&(await sha256(m.trim().toLowerCase()))===CFG.adminHash)}
@@ -1542,7 +1583,7 @@ async function salir(forzar){
         dialog('Hay cambios sin guardar',`<p>Parece que no hay conexión a internet y quedan cambios por subir a la nube. Si sales ahora, <b>esos cambios se perderán</b>.</p><p class="small mut">Lo mejor es esperar a tener conexión y volver a pulsar «Salir».</p>`,[{t:'Esperar'},{t:'Salir igualmente',cls:'dan',fn:()=>{salir(true)}}]);
         return}
     }
-    saliendo=true;
+    saliendo=true;pararEscucha();
     await fb.authM.signOut(fb.auth);
     try{await fb.fsM.terminate(fb.db)}catch(e){console.warn(e)}
     try{await fb.fsM.clearIndexedDbPersistence(fb.db)}catch(e){console.warn('No se pudo borrar la copia local (¿otra pestaña abierta?)',e)}
@@ -1620,8 +1661,6 @@ window.addEventListener('beforeunload',e=>{
   if(NUBE&&pendiente)flush();
   if(Math.abs(sumaPct()-100)>0.01||(NUBE&&pendiente)){e.preventDefault();e.returnValue=''}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&NUBE&&pendiente)flush();if(document.visibilityState==='visible')buscarVersion()});
-window.addEventListener('focus',async()=>{
-  if(NUBE&&USER&&!pendiente&&!IMP&&Date.now()-cargadoEn>120000&&!$('#dlg').open){try{await cargarNube();render()}catch(_){}}});
 window.addEventListener('online',()=>{if(NUBE&&USER)setSync('ok')});
 window.addEventListener('offline',()=>{if(NUBE&&USER)setSync('offline')});
 (async()=>{
@@ -1631,7 +1670,7 @@ window.addEventListener('offline',()=>{if(NUBE&&USER)setSync('offline')});
   mostrarLogin('Cargando…');
   try{await fbInit()}catch(e){mostrarLogin('No se ha podido conectar. Revisa la conexión a internet y recarga la página.',true);return}
   lMsg('');
-  fb.authM.onAuthStateChanged(fb.auth,u=>{if(creandoAdmin||saliendo)return;if(u)entrar(u);else{USER=null;S=defState();mostrarLogin()}});
+  fb.authM.onAuthStateChanged(fb.auth,u=>{if(creandoAdmin||saliendo)return;if(u)entrar(u);else{pararEscucha();USER=null;S=defState();mostrarLogin()}});
 })();
 </script>
 </body>
