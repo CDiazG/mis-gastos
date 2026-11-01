@@ -1,0 +1,119 @@
+// Cuentas Claras · Datos del usuario: guardado local o en Firebase y sincronización en tiempo real
+"use strict";
+/* ============ Estado ============ */
+const KEY='mis-gastos-v1';
+let S;
+function defState(){
+  return {v:1,mov:[],reglas:SEED_RULES.map(([t,c])=>({t,c,u:0})),
+    cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
+    aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente'},
+    cuentas:[{n:'EVO',v:null,f:null,banco:1},{n:'Revolut',v:null,f:null,banco:1},{n:'Trade Republic',v:null,f:null},{n:'Santander',v:null,f:null},{n:'Oro',v:null,f:null}],
+    fijos:[],objetivos:[],
+    ultimaCopia:null,histCargado:false,histOfrecido:false};
+}
+function completar(){if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
+  const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined)S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
+function load(){
+  try{const t=localStorage.getItem(KEY);if(t){S=JSON.parse(t);completar();return}}catch(e){console.error(e)}
+  S=defState();
+}
+
+/* ---- Nube (Firebase) ---- */
+const CFG=window.MG_CONFIG||{};
+const NUBE=!!(CFG.firebase&&CFG.firebase.apiKey);
+const FBV='https://www.gstatic.com/firebasejs/10.14.1/';
+let creandoAdmin=false,saliendo=false;
+let fb=null,USER=null,LAST={meta:null,meses:{}},tSave=null,pendiente=false,cargadoEn=0;
+function setSync(st,msg){const el=$('#sync');if(!el)return;el.className='sync'+(st==='error'?' err':'');
+  el.textContent=st==='guardando'?'Guardando…':st==='ok'?'Guardado ✓':st==='offline'?'Sin conexión: se guardará al volver':st==='error'?'Error al guardar':'';
+  el.title=msg||''}
+function save(){
+  if(!NUBE){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No se ha podido guardar: '+e.message,true)}return}
+  if(!USER)return;
+  pendiente=true;setSync(navigator.onLine?'guardando':'offline');clearTimeout(tSave);tSave=setTimeout(flush,600);
+}
+async function flush(){
+  clearTimeout(tSave);if(!NUBE||!USER||!S)return;
+  const {writeBatch,doc}=fb.fsM;const uid=USER.uid;
+  const {mov,...meta}=S;const mj=JSON.stringify(meta);
+  const by={};for(const x of mov)(by[x.mes]||(by[x.mes]=[])).push(x);
+  const nuevos={};const ops=[];
+  if(mj!==LAST.meta)ops.push(['set',doc(fb.db,'users',uid,'estado','meta'),{s:mj,app:VERSION,t:Date.now()}]);
+  for(const m in by){const j=JSON.stringify(by[m]);nuevos[m]=j;if(j!==LAST.meses[m])ops.push(['set',doc(fb.db,'users',uid,'meses',m),{m:j,n:by[m].length,t:Date.now()}])}
+  for(const m in LAST.meses)if(!(m in nuevos))ops.push(['del',doc(fb.db,'users',uid,'meses',m)]);
+  pendiente=false;
+  if(!ops.length){setSync('ok');return}
+  for(const o of ops){const pth=o[1].path||'';const id=pth.split('/').pop();if(pth.includes('/meses/'))delete REMOTO.meses[id];else REMOTO.meta=null}
+  const prev={meta:LAST.meta,meses:LAST.meses};LAST={meta:mj,meses:nuevos};
+  try{
+    for(let i=0;i<ops.length;i+=400){const b=writeBatch(fb.db);for(const o of ops.slice(i,i+400))o[0]==='set'?b.set(o[1],o[2]):b.delete(o[1]);await b.commit()}
+    if(!pendiente)setSync('ok');
+  }catch(e){console.error(e);LAST=prev;setSync('error',e.message);toast('No se ha podido guardar en la nube: '+(e.code||e.message),true)}
+}
+async function fbInit(){
+  const [appM,authM,fsM]=await Promise.all([import(FBV+'firebase-app.js'),import(FBV+'firebase-auth.js'),import(FBV+'firebase-firestore.js')]);
+  const app=appM.initializeApp(CFG.firebase);
+  const auth=authM.getAuth(app);auth.languageCode='es';
+  let db;try{db=fsM.initializeFirestore(app,{localCache:fsM.persistentLocalCache({tabManager:fsM.persistentMultipleTabManager()})})}catch(e){console.warn(e);db=fsM.getFirestore(app)}
+  fb={appM,authM,fsM,app,auth,db};
+}
+async function cargarNube(){
+  const {doc,getDoc,getDocs,collection}=fb.fsM;const uid=USER.uid;
+  const [meta,ms]=await Promise.all([getDoc(doc(fb.db,'users',uid,'estado','meta')),getDocs(collection(fb.db,'users',uid,'meses'))]);
+  LAST={meta:null,meses:{}};
+  if(!meta.exists()&&ms.empty){S=defState();}
+  else{S=meta.exists()?JSON.parse(meta.data().s):defState();LAST.meta=meta.exists()?meta.data().s:null;S.mov=[];
+    ms.forEach(d=>{const j=d.data().m||'[]';LAST.meses[d.id]=j;S.mov.push(...JSON.parse(j))})}
+  completar();cargadoEn=Date.now();
+  escuchar();
+}
+
+/* ---- Sincronización en tiempo real entre dispositivos ---- */
+let UNSUB=[],REMOTO={meta:null,meses:{}},tRemoto=null,renderPend=false;
+function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];USERS_VIVO=false;USERS=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
+function escuchar(){
+  pararEscucha();if(!fb.fsM.onSnapshot)return;
+  const {doc,collection,onSnapshot}=fb.fsM;const uid=USER.uid;
+  UNSUB.push(onSnapshot(doc(fb.db,'users',uid,'estado','meta'),sn=>{
+    if(sn.metadata&&sn.metadata.hasPendingWrites)return;
+    if(!sn.exists())return;const j=sn.data().s;if(j!==LAST.meta){REMOTO.meta=j;programarRemoto()}
+  },e=>console.warn('sync meta',e)));
+  UNSUB.push(onSnapshot(collection(fb.db,'users',uid,'meses'),qs=>{
+    if(qs.metadata&&qs.metadata.hasPendingWrites)return;
+    let n=0;qs.docChanges().forEach(ch=>{const id=ch.doc.id;
+      if(ch.type==='removed'){if(LAST.meses[id]!==undefined){REMOTO.meses[id]=null;n++}}
+      else{const j=ch.doc.data().m;if(j!==LAST.meses[id]){REMOTO.meses[id]=j;n++}}});
+    if(n)programarRemoto();
+  },e=>console.warn('sync meses',e)));
+  if(USER.admin){
+    UNSUB.push(onSnapshot(collection(fb.db,'users'),qs=>{
+      const us=[];qs.forEach?qs.forEach(d=>us.push({id:d.id,...d.data()})):(qs.docs||[]).forEach(d=>us.push({id:d.id,...d.data()}));
+      const antes=pendientesN();USERS=us;USERS_VIVO=true;badgeUsuarios();
+      if(TAB==='usuarios'&&!$('#dlg').open)rUsuarios();
+      if(TAB==='resumen'&&pendientesN()!==antes&&!$('#dlg').open)rResumen();
+      if(pendientesN()>antes)toast('Nueva solicitud de acceso');
+    },e=>console.warn('sync usuarios',e)));
+  }
+}
+function programarRemoto(ms){clearTimeout(tRemoto);tRemoto=setTimeout(aplicarRemoto,ms||250)}
+function aplicarRemoto(){
+  if(!USER||!S)return;
+  if(pendiente){programarRemoto(1200);return} // primero se guardan los cambios de este dispositivo
+  let cambios=0;
+  if(REMOTO.meta&&REMOTO.meta!==LAST.meta){const mov=S.mov;S=JSON.parse(REMOTO.meta);S.mov=mov;completar();LAST.meta=REMOTO.meta;cambios++}
+  const nm={...LAST.meses};
+  for(const m in REMOTO.meses){const j=REMOTO.meses[m];
+    if(j===null){S.mov=S.mov.filter(x=>x.mes!==m);delete nm[m];cambios++}
+    else if(j!==LAST.meses[m]){S.mov=S.mov.filter(x=>x.mes!==m).concat(JSON.parse(j));nm[m]=j;cambios++}}
+  LAST.meses=nm;REMOTO={meta:null,meses:{}};
+  if(cambios){renderPend=true;refrescarSiSeguro()}
+}
+function refrescarSiSeguro(){
+  if(!renderPend)return;
+  const ae=document.activeElement;
+  const escribiendo=ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)&&ae.closest('main')&&TAB!=='efectivo'&&TAB!=='resumen';
+  if($('#dlg').open||escribiendo){setTimeout(refrescarSiSeguro,1500);return}
+  renderPend=false;render();setSync('ok');toast('Actualizado con cambios de otro dispositivo');
+}
+async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function esAdminMail(m){return !!(CFG.adminHash&&m&&(await sha256(m.trim().toLowerCase()))===CFG.adminHash)}

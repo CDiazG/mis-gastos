@@ -2,3 +2,6 @@ historial*.json
 *.pdf
 *.xlsx
 node_modules/
+package-lock.json
+tests/resultados/
+_site/

@@ -1,0 +1,11 @@
+{
+  "name": "cuentas-claras",
+  "private": true,
+  "description": "Cuentas Claras: control de gastos personales",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "devDependencies": {
+    "playwright": "1.49.1"
+  }
+}

@@ -13,13 +13,29 @@ Cada persona entra con su correo y su contraseña y solo ve sus datos (Firebase 
 5. **GitHub Pages**: *Settings → Pages → Deploy from a branch → main / (root)*.
 6. El administrador abre la web, escribe su correo y una contraseña y pulsa «Crear cuenta de administrador». Tras verificar el correo, ya puede entrar y dar de alta usuarios en la pestaña *Usuarios*.
 
+## Cómo está organizado
+
+- `index.html`: la estructura de las pantallas.
+- `css/estilos.css`: el aspecto.
+- `js/`: el programa, en archivos por partes (se cargan en el orden de `index.html`; `arranque.js` va el último).
+  - `version.js`: número de versión y lista de cambios.
+  - `pdf.js` e `importar.js`: lectura de extractos.
+  - `estado.js`: guardado en Firebase y sincronización entre dispositivos.
+  - `acceso.js` y `usuarios.js`: entrada, solicitudes de acceso y administración.
+- `tests/`: pruebas automáticas con un Firebase simulado y extractos inventados.
+- `herramientas/nueva-version.py`: sube el número de versión en todos los sitios.
+
+## Pruebas automáticas
+
+`npm install && npx playwright install chromium && npm test` las ejecuta en local. En GitHub se ejecutan solas con cada cambio (pestaña *Actions*); si alguna falla, la web no se actualiza y se guardan capturas de pantalla del fallo.
+
 ## Publicar una versión nueva
 
-Las versiones siguen el formato `mayor.menor.parche` (por ejemplo, 2.1.0 para una mejora y 2.1.1 para un arreglo pequeño).
+Las versiones siguen el formato `mayor.menor.parche` (por ejemplo, 2.7.0 para una mejora y 2.7.1 para un arreglo pequeño).
 
-1. Cambiar `VERSION` y añadir la entrada en `CAMBIOS` dentro de `index.html`.
-2. Poner el mismo número en `version.json`.
-3. Subir los cambios a `main`. Quien tenga el programa abierto verá el aviso «Hay una versión nueva»; al abrirlo de nuevo ya carga la última.
+1. `python3 herramientas/nueva-version.py 2.7.0 "Qué cambia" "Otro cambio"`.
+2. `npm test`.
+3. Subir los cambios a `main`. Si las pruebas pasan, GitHub publica la web; quien tenga el programa abierto verá «Hay una versión nueva».
 
 ## Créditos
 
