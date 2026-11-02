@@ -97,6 +97,65 @@ async function parseXLSX(buf){
     filas.push([...f].map(x=>(x==null?'':String(x)).trim()))}
   return filas.filter(f=>f.some(x=>x));
 }
+// Excel antiguo (.xls, formato binario BIFF8 dentro de un archivo OLE2), sin librerías: primera hoja
+function parseXLS(buf){
+  const dv=new DataView(buf.buffer,buf.byteOffset,buf.byteLength);
+  const u16=o=>dv.getUint16(o,true),u32=o=>dv.getUint32(o,true),i32=o=>dv.getInt32(o,true);
+  if(u32(0)!==0xE011CFD0)throw new Error('no es un archivo de Excel');
+  const ss=1<<u16(30),mss=1<<u16(32),corte=u32(56),sec=n=>512+n*ss;
+  // tabla FAT a partir de la DIFAT (109 entradas en la cabecera + sectores DIFAT encadenados)
+  const fatSecs=[];for(let i=0;i<109;i++){const v=i32(76+i*4);if(v>=0)fatSecs.push(v)}
+  for(let d=i32(68),n=u32(72);d>=0&&n-->0;){const o=sec(d);for(let i=0;i<ss/4-1;i++){const v=i32(o+i*4);if(v>=0)fatSecs.push(v)}d=i32(o+ss-4)}
+  const fat=[];for(const fs of fatSecs){const o=sec(fs);for(let i=0;i<ss/4;i++)fat.push(i32(o+i*4))}
+  const cadena=(ini,tabla)=>{const r=[];const vistos=new Set();for(let x=ini;x>=0&&!vistos.has(x)&&r.length<1e6;x=tabla[x]){vistos.add(x);r.push(x)}return r};
+  const leerSecs=(ini,tam)=>{const out=new Uint8Array(tam);let p=0;for(const x of cadena(ini,fat)){const o=sec(x),n=Math.min(ss,tam-p);if(n<=0)break;out.set(buf.subarray(o,o+n),p);p+=n}return out};
+  // directorio
+  const dirSecs=cadena(i32(48),fat);const ents=[];
+  for(const x of dirSecs){const o=sec(x);for(let k=0;k<ss/128;k++){const e=o+k*128,ln=u16(e+64);if(!ln)continue;let nom='';for(let i=0;i<ln/2-1;i++)nom+=String.fromCharCode(u16(e+i*2));ents.push({nom,tipo:buf[e+66],ini:i32(e+116),tam:u32(e+120)})}}
+  const root=ents.find(e=>e.tipo===5),wbE=ents.find(e=>/^(Workbook|Book)$/i.test(e.nom));
+  if(!wbE)throw new Error('no encuentro los datos dentro del .xls');
+  let wb;
+  if(wbE.tam>=corte)wb=leerSecs(wbE.ini,wbE.tam);
+  else{const mini=leerSecs(root.ini,root.tam);const mfat=[];for(const x of cadena(i32(60),fat)){const o=sec(x);for(let i=0;i<ss/4;i++)mfat.push(i32(o+i*4))}
+    wb=new Uint8Array(wbE.tam);let p=0;for(const x of cadena(wbE.ini,mfat)){const n=Math.min(mss,wbE.tam-p);wb.set(mini.subarray(x*mss,x*mss+n),p);p+=n}}
+  const w=new DataView(wb.buffer,wb.byteOffset,wb.byteLength);
+  // registros BIFF
+  const regs=[];for(let o=0;o+4<=wb.length;){const t=w.getUint16(o,true),l=w.getUint16(o+2,true);regs.push({t,o:o+4,l});o+=4+l}
+  // tabla de textos compartidos (SST), con sus registros CONTINUE
+  const sst=[];const iS=regs.findIndex(r=>r.t===0x00FC);
+  if(iS>=0){const segs=[regs[iS]];for(let k=iS+1;k<regs.length&&regs[k].t===0x003C;k++)segs.push(regs[k]);
+    let si=0,pos=segs[0].o+8;const fin=()=>segs[si].o+segs[si].l;
+    const sig=()=>{si++;pos=segs[si]?segs[si].o:0};
+    const byte=()=>{if(pos>=fin())sig();return wb[pos++]};
+    const word=()=>byte()|(byte()<<8);const dword=()=>(word()|(word()<<16))>>>0;
+    const saltar=n=>{while(n>0&&segs[si]){const q=Math.min(n,fin()-pos);pos+=q;n-=q;if(n>0)sig()}};
+    const total=w.getUint32(segs[0].o+4,true);
+    for(let k=0;k<total&&segs[si];k++){
+      const cch=word();let fl=byte();const rich=fl&8,ext=fl&4;const nR=rich?word():0,nE=ext?dword():0;
+      let t='';let alto=fl&1;
+      for(let c=0;c<cch;c++){if(pos>=fin()){sig();if(!segs[si])break;alto=wb[pos++]&1}
+        t+=String.fromCharCode(alto?(wb[pos]|(wb[pos+1]<<8)):wb[pos]);pos+=alto?2:1}
+      saltar(nR*4);saltar(nE);sst.push(t)}
+  }
+  // primera hoja de cálculo (BOUNDSHEET de tipo hoja)
+  const bs=regs.filter(r=>r.t===0x0085).map(r=>({off:w.getUint32(r.o,true),tipo:wb[r.o+5]})).find(b=>b.tipo===0);
+  if(!bs)throw new Error('el .xls no tiene ninguna hoja');
+  const rk=v=>{let n;if(v&2)n=v>>2;else{const b=new DataView(new ArrayBuffer(8));b.setUint32(4,v&0xFFFFFFFC,true);n=b.getFloat64(0,true)}return v&1?n/100:n};
+  const filas=[];const pon=(r,c,v)=>{(filas[r]||(filas[r]=[]))[c]=v};
+  const txt8=(o)=>{const cch=w.getUint16(o,true),fl=wb[o+2];let t='';for(let c=0;c<cch;c++)t+=String.fromCharCode(fl&1?w.getUint16(o+3+c*2,true):wb[o+3+c]);return t};
+  let ultF=null;
+  for(let k=regs.findIndex(r=>r.o-4===bs.off)+1;k<regs.length&&k>0;k++){const {t,o,l}=regs[k];if(t===0x000A)break;
+    if(t===0x00FD)pon(w.getUint16(o,true),w.getUint16(o+2,true),sst[w.getUint32(o+6,true)]??'');
+    else if(t===0x0203)pon(w.getUint16(o,true),w.getUint16(o+2,true),w.getFloat64(o+6,true));
+    else if(t===0x027E)pon(w.getUint16(o,true),w.getUint16(o+2,true),rk(w.getUint32(o+6,true)));
+    else if(t===0x00BD){const r=w.getUint16(o,true),c0=w.getUint16(o+2,true),n=(l-6)/6;for(let i=0;i<n;i++)pon(r,c0+i,rk(w.getUint32(o+4+i*6+2,true)))}
+    else if(t===0x0204)pon(w.getUint16(o,true),w.getUint16(o+2,true),txt8(o+6));
+    else if(t===0x0006){const r=w.getUint16(o,true),c=w.getUint16(o+2,true);if(w.getUint16(o+12,true)===0xFFFF){ultF=[r,c];if(wb[o+6]===1)pon(r,c,wb[o+8]?'VERDADERO':'FALSO')}else pon(r,c,w.getFloat64(o+6,true))}
+    else if(t===0x0207&&ultF){pon(ultF[0],ultF[1],txt8(o));ultF=null}
+  }
+  const out=[];for(let r=0;r<filas.length;r++){const f=filas[r]||[];out.push([...f].map(x=>(x==null?'':String(x)).trim()))}
+  return out.filter(f=>f.some(x=>x));
+}
 function parseHTMLTabla(txt){
   const d=new DOMParser().parseFromString(txt,'text/html');const tablas=[...d.querySelectorAll('table')];
   if(!tablas.length)return [];
@@ -180,6 +239,16 @@ function pedirColumnas(filas,nombre){
   });
 }
 const firmaCab=f=>norm(f.join('|')).trim().slice(0,120);
+// Banco del extracto: por el IBAN (código de entidad) o por el nombre que aparece en la cabecera
+const BANCOS_NOMBRE=[['TRADE REPUBLIC','Trade Republic'],['SANTANDER','Santander'],['OPENBANK','Openbank'],['BBVA','BBVA'],['CAIXABANK','CaixaBank'],['LA CAIXA','CaixaBank'],['IMAGIN','imagin'],['SABADELL','Sabadell'],['BANKINTER','Bankinter'],['UNICAJA','Unicaja'],['KUTXABANK','Kutxabank'],['ABANCA','Abanca'],['IBERCAJA','Ibercaja'],['CAJAMAR','Cajamar'],['CAJA RURAL','Caja Rural'],['EVO BANCO','EVO'],['EVOBANCO','EVO'],['REVOLUT','Revolut'],['N26','N26'],['MYINVESTOR','MyInvestor'],['DEUTSCHE BANK','Deutsche Bank'],['TRIODOS','Triodos'],['PIBANK','Pibank'],['ING DIRECT','ING'],['ING BANK','ING']];
+function detectarBanco(texto){
+  const t=' '+String(texto||'').toUpperCase()+' ';
+  const m=t.match(/\bES\d{2}[ \-]?(\d{4})[ \-]?(\d{4})[ \-]?(\d{2})[ \-]?(\d{10})\b/)||t.match(/\bES\d{2}(\d{4})(\d{4})(\d{2})(\d{10})\b/);
+  const iban=m?m[0].replace(/[ \-]/g,''):'';
+  let banco=m&&ENTIDADES[m[1]]||'';
+  if(!banco){const n=norm(t);const b=BANCOS_NOMBRE.find(([k])=>n.includes(' '+k+' '));if(b)banco=b[1]}
+  return {banco,iban:iban?iban.slice(-4):''};
+}
 async function leerTabla(filas,nombre){
   let map=detectarColumnas(filas);
   if(!map){
@@ -188,7 +257,9 @@ async function leerTabla(filas,nombre){
     else{map=await pedirColumnas(filas,nombre);if(!map)return null;
       const cab=filas[map.cab];if(cab){(S.mapeos||(S.mapeos=[])).push({firma:firmaCab(cab),map});save()}}
   }
-  return tablaAMovs(filas,map);
+  const r=tablaAMovs(filas,map);
+  const info=detectarBanco(filas.slice(0,Math.max(1,map.cab)).map(f=>f.join(' ')).join(' ')+' '+nombre);
+  r.banco=r.banco||info.banco;r.iban=r.iban||info.iban;return r;
 }
 
 // Lee cualquier archivo de extracto y devuelve una lista de resultados (uno por cuenta)
@@ -198,7 +269,7 @@ async function leerExtracto(f){
   const ini=new TextDecoder('latin1').decode(buf.subarray(0,512));
   if(ext==='pdf'||ini.startsWith('%PDF'))return [parseStatement(await pdfLines(buf))];
   if(buf[0]===0x50&&buf[1]===0x4B){const r=await leerTabla(await parseXLSX(buf),nombre);return r?[r]:[]}
-  if(buf[0]===0xD0&&buf[1]===0xCF)throw new Error('es un Excel antiguo (.xls). Ábrelo y guárdalo como .xlsx o CSV, o descarga el extracto en Norma 43');
+  if(buf[0]===0xD0&&buf[1]===0xCF){const r=await leerTabla(parseXLS(buf),nombre);return r?[r]:[]}
   let txt=new TextDecoder('utf-8').decode(buf);if(txt.includes('�'))txt=new TextDecoder('latin1').decode(buf);
   if(esNorma43(txt))return parseNorma43(txt);
   if(/^\s*</.test(txt)&&/<table/i.test(txt)){const r=await leerTabla(parseHTMLTabla(txt),nombre);return r?[r]:[]}

@@ -1,7 +1,7 @@
 // Lectura de extractos en PDF (EVO y Revolut inventados), categorías, nómina y duplicados.
 const assert = require('assert');
 const L = require('./lib');
-const { htmlEvo, htmlRevolut, htmlTradeRepublic } = require('./extractos');
+const { htmlEvo, htmlRevolut, htmlTradeRepublic, xlsSantander, csv } = require('./extractos');
 
 async function dentro(browser, estado) {
   const ctx = await L.nuevoContexto(browser); (estado.contextos ||= []).push(ctx);
@@ -134,6 +134,48 @@ module.exports = {
       assert.match(await p.textContent('#errAdmin'), /No he encontrado movimientos/);
       await p.click('#errAdmin .erX'); await L.esperar(300);
       assert.match(await p.textContent('#errAdmin'), /No hay errores/);
+    })();
+  },
+  'lee un Excel antiguo (.xls) del Santander y lo pone en su cuenta'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const x = xlsSantander();
+      await subir(p, [{ name: 'transactions.xls', mimeType: 'application/vnd.ms-excel', buffer: x.buffer }]);
+      const r = await p.evaluate(() => ({ b: IMP.res[0].banco, c: IMP.res[0].cuenta, iban: IMP.res[0].iban, n: IMP.res[0].movs.length, cuadra: IMP.res[0].cuadra, fin: IMP.res[0].saldoFin }));
+      assert.deepEqual(r, { b: 'Santander', c: 'Santander', iban: '1234', n: x.n, cuadra: true, fin: x.saldoFinal });
+    })();
+  },
+
+  'si no reconoce el banco pregunta la cuenta, y la recuerda'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const c = csv();
+      await subir(p, [{ name: 'movimientos.csv', mimeType: 'text/csv', buffer: Buffer.from(c.texto) }]);
+      assert.equal(await p.evaluate(() => IMP.res[0].cuenta), '', 'no la mete en EVO');
+      assert.ok(await p.isDisabled('#impGo'), 'no deja guardar sin elegir cuenta');
+      assert.match(await p.textContent('#impOut'), /No reconozco el banco/);
+      await p.selectOption('[data-cuenta="0"]', 'Santander');
+      assert.ok(await p.isEnabled('#impGo'));
+      await p.click('#impGo'); await L.esperar(300);
+      assert.equal(await p.evaluate(() => S.mov.filter(x => x.cuenta === 'Santander').length), c.n);
+    })();
+  },
+
+  'un extracto guardado en la cuenta equivocada se puede pasar a la buena'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const x = xlsSantander();
+      await subir(p, [{ name: 'transactions.xls', mimeType: 'application/vnd.ms-excel', buffer: x.buffer }]);
+      await p.selectOption('[data-cuenta="0"]', 'EVO'); await p.click('#impGo'); await L.esperar(300);
+      assert.equal(await p.evaluate(() => S.cuentas.find(c => c.n === 'EVO').v), x.saldoFinal);
+      await p.evaluate(() => { delete S.aj.ibanCuenta; }); // como en las versiones de antes, que no lo recordaban
+      await subir(p, [{ name: 'transactions.xls', mimeType: 'application/vnd.ms-excel', buffer: x.buffer }]);
+      assert.match(await p.textContent('#impOut'), /ya estaban guardados, pero en/);
+      await p.click('#impMover'); await L.esperar(300);
+      const r = await p.evaluate(() => ({ evo: S.mov.filter(m => m.cuenta === 'EVO').length, san: S.mov.filter(m => m.cuenta === 'Santander').length, vEvo: S.cuentas.find(c => c.n === 'EVO').v, vSan: S.cuentas.find(c => c.n === 'Santander').v }));
+      assert.deepEqual(r, { evo: 0, san: x.n, vEvo: null, vSan: x.saldoFinal });
+      await p.click('#undoBtn');
+      assert.equal(await p.evaluate(() => S.mov.filter(m => m.cuenta === 'EVO').length), x.n, 'se puede deshacer');
     })();
   },
 };

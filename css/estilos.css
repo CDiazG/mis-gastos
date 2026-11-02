@@ -448,3 +448,4 @@ button.who:hover{background:var(--soft)}
 .pfact{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 .pfact small{display:block;color:var(--muted);font-size:12px}.pfact b{display:block;font-size:18px}
 .ucell{display:flex;gap:10px;align-items:center}
+select.falta{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)}

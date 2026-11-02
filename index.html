@@ -11,7 +11,7 @@
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p}catch(e){}</script>
-<link rel="stylesheet" href="css/estilos.css?v=2.12.0">
+<link rel="stylesheet" href="css/estilos.css?v=2.13.0">
 </head>
 <body>
 <header>
@@ -115,8 +115,8 @@
   <!-- IMPORTAR -->
   <section id="s-importar">
     <h2>Importar extracto</h2>
-    <p class="sub">Sube el extracto del banco: en <b>PDF</b> (EVO y Revolut, y muchos otros bancos), en <b>Norma 43</b> (el formato estándar que dan todos los bancos españoles, a veces llamado «fichero de movimientos» o «CSB43»), en <b>CSV</b> o en <b>Excel</b>. El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar. El archivo no sale de este ordenador.</p>
-    <div class="drop" id="drop"><b>Arrastra aquí el extracto</b> o haz clic para elegirlo<br><span class="small">PDF (EVO, Revolut…), Norma 43, CSV o Excel · puedes subir varios a la vez</span></div>
+    <p class="sub">Sube el extracto del banco: en <b>PDF</b> (EVO, Revolut, Trade Republic y muchos otros bancos), en <b>Norma 43</b> (el formato estándar que dan todos los bancos españoles, a veces llamado «fichero de movimientos» o «CSB43»), en <b>CSV</b> o en <b>Excel</b> (.xlsx o .xls, como el del Santander). El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar. El archivo no sale de este ordenador.</p>
+    <div class="drop" id="drop"><b>Arrastra aquí el extracto</b> o haz clic para elegirlo<br><span class="small">PDF, Excel (.xlsx o .xls), CSV o Norma 43 · puedes subir varios a la vez</span></div>
     <input type="file" id="pdfInput" accept=".pdf,.csv,.txt,.xlsx,.xls,.n43,.q43,.aeb,.c43,application/pdf,text/csv" multiple class="hide">
     <div id="impOut"></div>
   </section>
@@ -363,29 +363,29 @@
 <div id="undo" role="status"><span id="undoTxt"></span><button class="btn sm" type="button" id="undoBtn">Deshacer</button></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.12.0"></script>
-<script src="js/categorias.js?v=2.12.0"></script>
-<script src="js/version.js?v=2.12.0"></script>
-<script src="js/utilidades.js?v=2.12.0"></script>
-<script src="js/estado.js?v=2.12.0"></script>
-<script src="js/reglas.js?v=2.12.0"></script>
-<script src="js/navegacion.js?v=2.12.0"></script>
-<script src="js/resumen.js?v=2.12.0"></script>
-<script src="js/movimientos.js?v=2.12.0"></script>
-<script src="js/excel.js?v=2.12.0"></script>
-<script src="js/dialogos.js?v=2.12.0"></script>
-<script src="js/pdf.js?v=2.12.0"></script>
-<script src="js/formatos.js?v=2.12.0"></script>
-<script src="js/importar.js?v=2.12.0"></script>
-<script src="js/historico.js?v=2.12.0"></script>
-<script src="js/ajustes.js?v=2.12.0"></script>
-<script src="js/usuarios.js?v=2.12.0"></script>
-<script src="js/errores.js?v=2.12.0"></script>
-<script src="js/buzon.js?v=2.12.0"></script>
-<script src="js/perfil.js?v=2.12.0"></script>
-<script src="js/inicio.js?v=2.12.0"></script>
-<script src="js/ayuda.js?v=2.12.0"></script>
-<script src="js/acceso.js?v=2.12.0"></script>
-<script src="js/arranque.js?v=2.12.0"></script>
+<script src="js/config.js?v=2.13.0"></script>
+<script src="js/categorias.js?v=2.13.0"></script>
+<script src="js/version.js?v=2.13.0"></script>
+<script src="js/utilidades.js?v=2.13.0"></script>
+<script src="js/estado.js?v=2.13.0"></script>
+<script src="js/reglas.js?v=2.13.0"></script>
+<script src="js/navegacion.js?v=2.13.0"></script>
+<script src="js/resumen.js?v=2.13.0"></script>
+<script src="js/movimientos.js?v=2.13.0"></script>
+<script src="js/excel.js?v=2.13.0"></script>
+<script src="js/dialogos.js?v=2.13.0"></script>
+<script src="js/pdf.js?v=2.13.0"></script>
+<script src="js/formatos.js?v=2.13.0"></script>
+<script src="js/importar.js?v=2.13.0"></script>
+<script src="js/historico.js?v=2.13.0"></script>
+<script src="js/ajustes.js?v=2.13.0"></script>
+<script src="js/usuarios.js?v=2.13.0"></script>
+<script src="js/errores.js?v=2.13.0"></script>
+<script src="js/buzon.js?v=2.13.0"></script>
+<script src="js/perfil.js?v=2.13.0"></script>
+<script src="js/inicio.js?v=2.13.0"></script>
+<script src="js/ayuda.js?v=2.13.0"></script>
+<script src="js/acceso.js?v=2.13.0"></script>
+<script src="js/arranque.js?v=2.13.0"></script>
 </body>
 </html>

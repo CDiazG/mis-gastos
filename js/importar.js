@@ -26,9 +26,12 @@ function prepararRevision(res){
   const rows=[];
   for(const r of res){
     if(r.error)continue;
-    if(r.banco&&!S.cuentas.some(c=>c.n===r.banco))S.cuentas.push({n:r.banco,v:null,f:null,banco:1});
-    if(r.inversion){const c=S.cuentas.find(c=>c.n===r.banco);if(c)c.inversion=1}
-    r.cuenta=r.banco||(S.cuentas.find(c=>c.banco)||{n:'EVO'}).n;
+    // la cuenta: la recordada para este IBAN, la del banco reconocido o, si no, que la elija la persona
+    const recordada=r.iban&&(S.aj.ibanCuenta||{})[r.iban];
+    const porBanco=r.banco&&S.cuentas.find(c=>norm(c.n)===norm(r.banco));
+    if(r.banco&&!porBanco&&!recordada)S.cuentas.push({n:r.banco,v:null,f:null,banco:1});
+    r.cuenta=recordada&&S.cuentas.some(c=>c.n===recordada)?recordada:porBanco?porBanco.n:(r.banco||'');
+    if(r.inversion){const c=S.cuentas.find(c=>c.n===r.cuenta);if(c)c.inversion=1}
     r.movs.forEach((m,i)=>{
       const ac=m.cat?{c:m.cat,r:{t:m.regla||r.banco,u:false}}:autoCatR(m.concepto,m.detalle,m.importe);let cat=ac.c;
       const nomina=!m.cat&&!r.inversion&&esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
@@ -74,12 +77,20 @@ function buscarDobles(rows){
   return lista.length?{lista,on:true}:null;
 }
 function marcarDuplicados(){
+  // movimientos de este extracto que ya se guardaron, pero en otra cuenta (por ejemplo, un Santander metido en EVO)
+  const sinCta=k=>k.split('|').slice(1).join('|');
+  const porClave=new Map();for(const y of S.mov)if(y.key){const k=sinCta(y.key);(porClave.get(k)||porClave.set(k,[]).get(k)).push(y)}
+  const usadosOtra=new Set();
+  IMP.otraCta=[];
   const quitar=new Set();
   for(const m in IMP.sust)if(IMP.sust[m]&&IMP.sust[m].on)S.mov.forEach(y=>{if(y.origen==='excel'&&y.mes===m&&y.metodo!=='efectivo'&&y.cat!=='INGRESO')quitar.add(y.id)});
   const keys=new Set(S.mov.map(x=>x.key).filter(Boolean));
   const usados=new Set();
   for(const x of IMP.rows){
     if(keys.has(x.key)){x.estado='ya';x.sel=false;x.dupDe=null;continue}
+    const otra=x.cuenta&&(porClave.get(sinCta(x.key))||[]).find(y=>y.cuenta!==x.cuenta&&!usadosOtra.has(y));if(otra)usadosOtra.add(otra);
+    if(otra&&otra.cuenta!==x.cuenta){x.estado='ya';x.sel=false;x.dupDe=null;x.enOtra=otra;IMP.otraCta.push(x);continue}
+    x.enOtra=null;
     const d=S.mov.find(y=>!y.key&&y.metodo!=='efectivo'&&!quitar.has(y.id)&&!usados.has(y.id)&&y.mes===x.mes&&Math.abs(y.importe-x.importe)<0.005&&(!x.src.inversion||y.cuenta===x.cuenta));
     if(d){usados.add(d.id);x.estado='dup';x.dupDe=d;if(x._userSel===undefined)x.sel=false}
     else{x.estado='nuevo';x.dupDe=null;if(x._userSel===undefined)x.sel=true}
@@ -96,12 +107,17 @@ function rImport(){
     const f=r.movs.map(m=>m.fecha).sort();
     h+=`<div class="card pad" style="margin-top:14px"><div class="sumline">
       <div class="it"><div class="l">Archivo</div><div class="v">${esc(r.archivo)}</div></div>
-      <div class="it"><div class="l">Cuenta</div><div class="v"><select data-cuenta="${IMP.res.indexOf(r)}">${S.cuentas.map(c=>`<option${c.n===r.cuenta?' selected':''}>${esc(c.n)}</option>`).join('')}</select></div></div>
+      <div class="it"><div class="l">Cuenta${r.iban?` <span class="mut">(…${esc(r.iban)})</span>`:''}</div><div class="v"><select data-cuenta="${IMP.res.indexOf(r)}" class="${r.cuenta?'':'falta'}">${r.cuenta?'':'<option value="" selected>— Elige la cuenta —</option>'}${S.cuentas.map(c=>`<option${c.n===r.cuenta?' selected':''}>${esc(c.n)}</option>`).join('')}<option value="__nueva">＋ Otra cuenta…</option></select></div></div>
       <div class="it"><div class="l">Movimientos</div><div class="v">${r.movs.length} · ${fFecha(f[0])} – ${fFecha(f[f.length-1])}</div></div>
       <div class="it"><div class="l">Saldo inicial → final</div><div class="v num">${r.saldoIni!=null?eur(r.saldoIni):'?'} → ${r.saldoFin!=null?eur(r.saldoFin):'?'}</div></div>
       <div class="it"><div class="l">Comprobación</div><div class="v">${r.cuadra===true?'<span class="ok">✓ Cuadra con el saldo del banco</span>':r.cuadra===false?`<span class="ko">✗ No cuadra (calculado ${eur(r.finCalc)})</span>`:'<span class="mut">Sin saldo para comprobar</span>'}</div></div>
     </div>${r.inversion?`<p class="small mut" style="margin:8px 0 0">Cuenta de inversión: las compras de fondos cuentan como <b>Inversión</b> el día que se hacen, las ventas la reducen y el dinero que llega desde tus otras cuentas es un <b>traspaso</b>. El saldo es el dinero sin invertir, no el valor de los fondos.</p>`:''}${r.malos?`<p class="small ko" style="margin:8px 0 0">${r.malos} líneas no encajan con el saldo; revisa sus importes.</p>`:''}</div>`;
   }
+  const sinCuenta=IMP.res.filter(r=>!r.error&&r.movs.length&&!r.cuenta);
+  if(sinCuenta.length)h+=`<div class="alert bad" style="margin-top:14px"><span class="grow">No reconozco el banco de <b>${sinCuenta.map(r=>esc(r.archivo)).join(', ')}</b>. Elige arriba a qué cuenta pertenece; la próxima vez lo recordaré${sinCuenta.some(r=>r.iban)?' (por el número de cuenta)':''}.</span></div>`;
+  const oc=IMP.otraCta||[];
+  if(oc.length){const de=[...new Set(oc.map(x=>x.enOtra.cuenta||'sin cuenta'))].join(', '),a=oc[0].cuenta;
+    h+=`<div class="alert info" style="margin-top:14px"><span class="grow"><b>${oc.length}</b> movimiento${oc.length>1?'s':''} de este extracto ya estaba${oc.length>1?'n':''} guardado${oc.length>1?'s':''}, pero en <b>${esc(de)}</b>. ¿Los paso a <b>${esc(a)}</b>?</span><button class="btn sm pri" type="button" id="impMover">Pasar a ${esc(a)}</button></div>`}
   const sm=Object.entries(IMP.sust).filter(([m,v])=>v);
   if(sm.length)h+=`<div class="alert info" style="margin-top:14px;flex-direction:column;align-items:stretch">${sm.map(([m,v])=>`<label class="pill"><input type="checkbox" data-sust="${m}" ${v.on?'checked':''}> Sustituir los ${v.n} apuntes del Excel de <b>${nombreMes(m)}</b> por los del extracto (el efectivo y los ingresos del Excel se mantienen)</label>`).join('')}</div>`;
   const db=IMP.dobles;
@@ -114,7 +130,7 @@ function rImport(){
     h+=`<div class="toolbar"><label class="pill small"><input type="checkbox" id="impPend" ${IMP.soloPend?'checked':''}> Ver solo los que no tienen categoría (${R.filter(x=>!x.cat).length})</label><span class="sp"></span>
       ${R.some(x=>!x.cat&&isBizum(x.concepto)&&x.importe>0)?`<label class="pill small">Bizum recibidos sin categoría → <select id="impBiz">${catOptions('',{blankText:'elige…'})}</select></label>`:''}
       <span class="small ${pend?'ko':'mut'}">${pend?pend+' marcados sin categoría':''}</span>
-      <button class="btn" id="impCancel">Cancelar</button><button class="btn pri" id="impGo" ${nsel?'':'disabled'}>Guardar ${nsel} movimientos</button></div>
+      <button class="btn" id="impCancel">Cancelar</button><button class="btn pri" id="impGo" ${nsel&&!sinCuenta.length?'':'disabled'} ${sinCuenta.length?'title="Primero elige la cuenta"':''}>Guardar ${nsel} movimientos</button></div>
     <div class="card tablewrap"><table class="rtable"><thead><tr><th style="width:28px"><input type="checkbox" id="impAll" ${R.every(x=>x.sel||x.estado==='ya')?'checked':''}></th><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th>Estado</th></tr></thead><tbody>`+
     vis.map(x=>{const k=R.indexOf(x);
       const est=x.estado==='ya'?'<span class="tag">ya importado</span>':x.estado==='dup'?`<span class="tag bad" title="${esc(x.dupDe.concepto)} · ${fFecha(x.dupDe.fecha)}">¿repetido? ${esc(x.dupDe.concepto.slice(0,18))}</span>`:(x.cat&&x.auto?`<span class="tag good" title="${x.reglaU?'Regla aprendida':'Regla de serie'}: el concepto contiene «${esc(x.regla)}». Si no es correcta, cambia la categoría.">auto · ${esc(x.regla)}</span>`:'');
@@ -126,7 +142,13 @@ function rImport(){
     <p class="small mut">Las etiquetas «auto» indican qué palabra del concepto ha decidido la categoría; revísalas antes de guardar. Al cambiar una categoría, el programa aprende la regla (con las palabras del nombre del comercio) y la aplica a los movimientos con ese mismo nombre. Los Bizum que te mandan suelen ser devoluciones: ponles la categoría del gasto que pagaste (por ejemplo, Restaurantes y ocio) y se restan de ese gasto.</p>`;
   }
   o.innerHTML=h;
-  $$('[data-cuenta]',o).forEach(s=>s.onchange=()=>{const r=IMP.res[+s.dataset.cuenta];r.cuenta=s.value;IMP.rows.filter(x=>x.src===r).forEach(x=>{x.cuenta=s.value;x.key=[x.cuenta,...x.key.split('|').slice(1)].join('|')});marcarDuplicados();rImport()});
+  const mv=$('#impMover');if(mv)mv.onclick=()=>moverDeCuenta();
+  $$('[data-cuenta]',o).forEach(s=>s.onchange=()=>{const r=IMP.res[+s.dataset.cuenta];
+    if(s.value==='__nueva'){dialog('Otra cuenta',`<p class="small mut" style="margin-top:0">Nombre de la cuenta (por ejemplo «Santander» o «Cuenta nómina»). Aparecerá también en Patrimonio.</p><input type="text" id="impNC" style="width:100%" value="${esc(r.banco||'')}">`,
+      [{t:'Cancelar',fn:()=>rImport()},{t:'Añadir',cls:'pri',fn:()=>{const n=$('#impNC').value.trim();if(!n){toast('Escribe un nombre',true);return false}
+        if(!S.cuentas.some(c=>norm(c.n)===norm(n)))S.cuentas.push({n,v:null,f:null,banco:1});cambiarCuentaImp(r,S.cuentas.find(c=>norm(c.n)===norm(n)).n)}}]);return}
+    cambiarCuentaImp(r,s.value)});
+  function cambiarCuentaImp(r,valor){r.cuenta=valor;IMP.rows.filter(x=>x.src===r).forEach(x=>{x.cuenta=valor;x.key=[x.cuenta,...x.key.split('|').slice(1)].join('|')});marcarDuplicados();rImport()}
   $$('[data-sust]',o).forEach(c=>c.onchange=()=>{IMP.sust[c.dataset.sust].on=c.checked;marcarDuplicados();rImport()});
   const ib=$('#impBiz');if(ib)ib.onchange=()=>{const c=ib.value;if(!c)return;let n=0;IMP.rows.forEach(x=>{if(!x.cat&&isBizum(x.concepto)&&x.importe>0){x.cat=c;x.auto=false;n++}});toast(n+' Bizum actualizados');marcarDuplicados();rImport()};
   const idb=$('#impDobles');if(idb)idb.onchange=()=>{IMP.dobles.on=idb.checked};
@@ -157,6 +179,7 @@ function guardarImport(){
   if(IMP.dobles&&IMP.dobles.on)IMP.dobles.lista.forEach(y=>{y.cat='TRASPASO'});
   let orden=0;
   for(const x of sel)S.mov.push({id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++});
+  for(const r of IMP.res)if(r.iban&&r.cuenta&&!r.error)(S.aj.ibanCuenta||(S.aj.ibanCuenta={}))[r.iban]=r.cuenta;
   for(const r of IMP.res){
     if(r.error||!r.movs.length||r.saldoFin==null)continue;
     const c=S.cuentas.find(c=>c.n===r.cuenta);const ff=r.movs.map(m=>m.fecha).sort().pop();
@@ -169,4 +192,18 @@ function guardarImport(){
   toast(`Guardados ${sel.length} movimientos${quitar.size?` · sustituidos ${quitar.size} del Excel`:''}`);
   if(meses.length){const m=meses.filter(m=>sel.filter(x=>x.mes===m).length>2).pop()||meses[meses.length-1];MES=m}
   if(pend){F.sinCat=true;F.cat='';go('movs')}else go('resumen');
+}
+
+// Pasar a la cuenta correcta los movimientos que se guardaron en otra (y quitarle a esa el saldo que no era suyo)
+function moverDeCuenta(){
+  const oc=IMP.otraCta||[];if(!oc.length)return;const a=oc[0].cuenta,r=oc[0].src;
+  conDeshacer(oc.length+' movimientos pasados a '+a,()=>{
+    const antes=new Set(oc.map(x=>x.enOtra.cuenta));
+    for(const x of oc){const y=x.enOtra;y.cuenta=a;y.key=[a,...y.key.split('|').slice(1)].join('|')}
+    for(const n of antes){const c=S.cuentas.find(c=>c.n===n);if(c&&r&&c.v!=null&&Math.abs(c.v-(r.saldoFin??NaN))<0.005){c.v=null;c.f=null}}
+    const c=S.cuentas.find(c=>c.n===a),ff=r&&r.movs.map(m=>m.fecha).sort().pop();
+    if(c&&r&&r.saldoFin!=null&&(!c.f||ff>=c.f)){c.v=r.saldoFin;c.f=ff;c.banco=1}
+    if(r&&r.iban)(S.aj.ibanCuenta||(S.aj.ibanCuenta={}))[r.iban]=a;
+  });
+  marcarDuplicados();rImport();
 }

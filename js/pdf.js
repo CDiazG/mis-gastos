@@ -137,6 +137,10 @@ function parseTradeRepublic({lines}){
 function parseStatement({lines,text}){
   const T=norm(text);
   if(T.includes(' TRADE REPUBLIC BANK')||T.includes(' TRBKDEBB'))return parseTradeRepublic({lines,text});
+  const res=parseStatementBase({lines,text});const info=detectarBanco(text);res.banco=res.banco||info.banco;res.iban=info.iban;return res;
+}
+function parseStatementBase({lines,text}){
+  const T=norm(text);
   let banco='';if(T.includes(' REVOLUT BANK')||T.includes(' REVOESM'))banco='Revolut';else if(T.includes(' EVO ')||T.includes(' BKBKESMM'))banco='EVO';else if(T.includes(' BANKINTER'))banco='Bankinter';
   let cols=null,expectSum=false,saldoIni=null,saldoFin=null,prev=null,last=null,lastY=0,cont=0;
   const movs=[];

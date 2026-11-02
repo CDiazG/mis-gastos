@@ -158,3 +158,40 @@ function htmlTradeRepublic() {
 }
 const eurTR = n => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' });
 module.exports.htmlTradeRepublic = htmlTradeRepublic;
+
+// ---- Excel antiguo (.xls, BIFF8 dentro de OLE2) inventado, con la cabecera de una exportación del Santander ----
+function xlsSantander() {
+  const filas = [[null, null, 'CUENTA ONLINE SANTANDER', 'FECHA'], [null, null, 'ES0000490000000000001234', '02/11/2026 | 10:00:00'], [null, null, 'Titular', 'Saldo'],
+    [null, null, 'PERSONA INVENTADA', '1.390,00 EUR'], [], ['Movimientos'], [], ['FECHA OPERACIÓN', 'FECHA VALOR', 'CONCEPTO', 'IMPORTE EUR', 'SALDO'],
+    ['20/10/2026', '20/10/2026', 'Compra Zara, Valencia, Tarj. :*0000', -57, 1390], ['15/10/2026', '15/10/2026', 'Transferencia De Empresa Inventada, Concepto Nomina', 500, 1447],
+    ['02/10/2026', '02/10/2026', 'Bizum A Favor De Persona Inventada', -3, 947], ['01/10/2026', '01/10/2026', 'Compra Lidl, Valencia, Tarj. :*0000', -50, 950]];
+  const rec = (t, d) => { const b = Buffer.alloc(4 + d.length); b.writeUInt16LE(t, 0); b.writeUInt16LE(d.length, 2); d.copy(b, 4); return b; };
+  const bof = dt => { const d = Buffer.alloc(16); d.writeUInt16LE(0x0600, 0); d.writeUInt16LE(dt, 2); d.writeUInt16LE(0x0DBB, 4); d.writeUInt16LE(0x07CC, 6); return rec(0x0809, d); };
+  const eof = () => rec(0x000A, Buffer.alloc(0));
+  const textos = []; const idx = t => { let i = textos.indexOf(t); if (i < 0) { textos.push(t); i = textos.length - 1; } return i; };
+  const celdas = [];
+  filas.forEach((f, r) => f.forEach((v, c) => { if (v == null || v === '') return;
+    if (typeof v === 'number') { const d = Buffer.alloc(14); d.writeUInt16LE(r, 0); d.writeUInt16LE(c, 2); d.writeDoubleLE(v, 6); celdas.push(rec(0x0203, d)); }
+    else { const d = Buffer.alloc(10); d.writeUInt16LE(r, 0); d.writeUInt16LE(c, 2); d.writeUInt32LE(idx(v), 6); celdas.push(rec(0x00FD, d)); } }));
+  const sst = Buffer.concat([(() => { const h = Buffer.alloc(8); h.writeUInt32LE(textos.length, 0); h.writeUInt32LE(textos.length, 4); return h; })(),
+    ...textos.map(t => { const s = Buffer.from(t, 'latin1'); const h = Buffer.alloc(3); h.writeUInt16LE(s.length, 0); return Buffer.concat([h, s]); })]);
+  const nombre = Buffer.from('Movimientos', 'latin1');
+  const bsData = off => { const d = Buffer.alloc(8 + nombre.length); d.writeUInt32LE(off, 0); d[6] = nombre.length; nombre.copy(d, 8); return rec(0x0085, d); };
+  const globalesSin = [bof(5), bsData(0), rec(0x00FC, sst), eof()];
+  const off = Buffer.concat(globalesSin).length;
+  let wb = Buffer.concat([bof(5), bsData(off), rec(0x00FC, sst), eof(), bof(0x10), ...celdas, eof()]);
+  while (wb.length < 4200) wb = Buffer.concat([wb, rec(0x00EF, Buffer.alloc(Math.min(1000, 4200 - wb.length)))]); // relleno: registros que no se usan
+  const ns = Math.ceil(wb.length / 512), datos = Buffer.alloc(ns * 512); wb.copy(datos);
+  const cab = Buffer.alloc(512, 0); Buffer.from('D0CF11E0A1B11AE1', 'hex').copy(cab, 0);
+  cab.writeUInt16LE(0x3E, 24); cab.writeUInt16LE(3, 26); cab.writeUInt16LE(0xFFFE, 28); cab.writeUInt16LE(9, 30); cab.writeUInt16LE(6, 32);
+  cab.writeUInt32LE(1, 44); cab.writeUInt32LE(1, 48); cab.writeUInt32LE(4096, 56); cab.writeInt32LE(-2, 60); cab.writeInt32LE(-2, 68);
+  cab.writeUInt32LE(0, 76); for (let i = 1; i < 109; i++) cab.writeInt32LE(-1, 76 + i * 4);
+  const fat = Buffer.alloc(512); for (let i = 0; i < 128; i++) fat.writeInt32LE(-1, i * 4);
+  fat.writeInt32LE(-3, 0); fat.writeInt32LE(-2, 4); for (let i = 0; i < ns; i++) fat.writeInt32LE(i === ns - 1 ? -2 : 3 + i, (2 + i) * 4);
+  const dir = Buffer.alloc(512);
+  const ent = (k, nom, tipo, ini, tam, hijo) => { const o = k * 128; Buffer.from(nom + '\0', 'utf16le').copy(dir, o); dir.writeUInt16LE((nom.length + 1) * 2, o + 64); dir[o + 66] = tipo; dir[o + 67] = 1;
+    dir.writeInt32LE(-1, o + 68); dir.writeInt32LE(-1, o + 72); dir.writeInt32LE(hijo, o + 76); dir.writeInt32LE(ini, o + 116); dir.writeUInt32LE(tam, o + 120); };
+  ent(0, 'Root Entry', 5, -2, 0, 1); ent(1, 'Workbook', 2, 2, wb.length, -1);
+  return { buffer: Buffer.concat([cab, fat, dir, datos]), n: 4, saldoFinal: 1390 };
+}
+module.exports.xlsSantander = xlsSantander;
