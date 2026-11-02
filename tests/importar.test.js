@@ -1,7 +1,7 @@
 // Lectura de extractos en PDF (EVO y Revolut inventados), categorías, nómina y duplicados.
 const assert = require('assert');
 const L = require('./lib');
-const { htmlEvo, htmlRevolut, htmlTradeRepublic, xlsSantander, csv } = require('./extractos');
+const { htmlEvo, htmlRevolut, htmlTradeRepublic, htmlPatrimonioTR, xlsSantander, csv } = require('./extractos');
 
 async function dentro(browser, estado) {
   const ctx = await L.nuevoContexto(browser); (estado.contextos ||= []).push(ctx);
@@ -12,7 +12,7 @@ async function dentro(browser, estado) {
 async function subir(p, archivos) {
   await p.evaluate(() => go('importar'));
   await p.setInputFiles('#pdfInput', archivos);
-  await p.waitForSelector('#impGo', { timeout: 30000 });
+  await p.waitForSelector('#impGo, #impOut .sumline', { timeout: 30000 });
 }
 
 module.exports = {
@@ -143,6 +143,27 @@ module.exports = {
       await subir(p, [{ name: 'transactions.xls', mimeType: 'application/vnd.ms-excel', buffer: x.buffer }]);
       const r = await p.evaluate(() => ({ b: IMP.res[0].banco, c: IMP.res[0].cuenta, iban: IMP.res[0].iban, n: IMP.res[0].movs.length, cuadra: IMP.res[0].cuadra, fin: IMP.res[0].saldoFin }));
       assert.deepEqual(r, { b: 'Santander', c: 'Santander', iban: '1234', n: x.n, cuadra: true, fin: x.saldoFinal });
+    })();
+  },
+
+  'el extracto del patrimonio de Trade Republic actualiza Patrimonio con la cartera'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const x = htmlPatrimonioTR();
+      await subir(p, [{ name: 'Patrimonio_neto.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, x.html) }]);
+      const r = await p.evaluate(() => ({ pat: IMP.res[0].patrimonio, cu: S.cuentas.map(c => ({ n: c.n, v: c.v, f: c.f, pos: c.cartera ? c.cartera.pos.length : 0 })), movs: S.mov.length }));
+      assert.equal(r.pat.cuadra, true, 'los valores suman lo que dice el extracto');
+      assert.deepEqual(r.cu, [{ n: 'Trade Republic', v: x.efectivo, f: '2026-10-15', pos: 0 }, { n: 'Trade Republic · Inversiones', v: x.valores, f: '2026-10-15', pos: x.n }]);
+      assert.equal(r.movs, 0, 'no crea movimientos');
+      assert.match(await p.textContent('#impOut'), /Guardado en Patrimonio/);
+      assert.ok(!(await p.evaluate(() => (typeof ERR_TODOS !== 'undefined' ? ERR_TODOS : []).length)), 'no lo anota como error');
+      // uno más antiguo no pisa el nuevo
+      const viejo = htmlPatrimonioTR('15.09.2026');
+      await subir(p, [{ name: 'Patrimonio_viejo.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, viejo.html) }]);
+      assert.match(await p.textContent('#impOut'), /más antiguo/);
+      assert.equal(await p.evaluate(() => S.cuentas[1].f), '2026-10-15');
+      await p.evaluate(() => go('patri'));
+      assert.match(await p.textContent('#patTable'), /3 valores en cartera/);
     })();
   },
 

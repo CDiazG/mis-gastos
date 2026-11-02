@@ -195,3 +195,30 @@ function xlsSantander() {
   return { buffer: Buffer.concat([cab, fat, dir, datos]), n: 4, saldoFinal: 1390 };
 }
 module.exports.xlsSantander = xlsSantander;
+
+// ---- Extracto del patrimonio neto tipo Trade Republic inventado (sin movimientos: cartera y efectivo)
+function htmlPatrimonioTR(fecha = '15.10.2026') {
+  const pos = [
+    { u: '12,5', n: 'Fondo Inventado Mundial USD (Acc)', p: '100,00', v: 1250, isin: 'IE0000000001', partido: true },
+    { u: '0,25', n: 'Empresa Ficticia Inc.', p: '400,00', v: 100, isin: 'US0000000002' },
+    { u: '30', n: 'Oro Imaginario USD (Acc)', p: '50,10', v: 1503, isin: 'IE0000000003' },
+  ];
+  const valores = pos.reduce((a, x) => a + x.v, 0), efectivo = 87.65;
+  const s = (x, y, t) => `<span style="position:absolute;left:${x}px;top:${y}px">${t}</span>`;
+  let h = s(0, 0, 'TRADE REPUBLIC BANK GMBH BRUNNENSTRASSE 19-21 10119 BERLIN') + s(0, 30, 'PERSONA INVENTADA EJEMPLO') + s(400, 30, 'FECHA ' + fecha)
+    + s(0, 60, 'EXTRACTO DEL PATRIMONIO NETO') + s(0, 72, 'a ' + fecha)
+    + s(0, 100, 'CARTERA') + s(500, 100, 'VALOR EN EUR')
+    + s(0, 115, 'Cuenta de valores') + s(500, 115, eurTR(valores)) + s(0, 130, 'Efectivo') + s(500, 130, eurTR(efectivo))
+    + s(0, 145, 'TOTAL') + s(500, 145, eurTR(valores + efectivo) + ' EUR')
+    + s(0, 180, 'UNIDADES / NOMINAL') + s(100, 180, 'NOMBRE DEL VALOR') + s(380, 180, 'PRECIO POR UNIDAD') + s(500, 180, 'VALOR EN EUR');
+  let top = 200;
+  for (const x of pos) {
+    h += s(0, top, x.u + (x.partido ? '' : ' unidades')) + s(100, top, x.n) + s(380, top, x.p) + s(500, top, eurTR(x.v))
+      + (x.partido ? s(0, top + 12, 'unidades') : '') + s(100, top + 12, 'ISIN: ' + x.isin) + s(380, top + 12, fecha);
+    top += 40;
+  }
+  h += s(0, top, 'NÚMERO DE POSICIONES: ' + pos.length) + s(500, top, eurTR(valores) + ' EUR')
+    + s(0, top + 30, 'EFECTIVO') + s(0, top + 45, 'Cuenta corriente') + s(500, top + 45, eurTR(efectivo) + ' EUR');
+  return { valores, efectivo, n: pos.length, html: `<html><head><style>body{font:8px Arial,sans-serif;margin:0}span{white-space:nowrap}</style></head><body><div style="position:relative;height:${top + 100}px">${h}</div></body></html>` };
+}
+module.exports.htmlPatrimonioTR = htmlPatrimonioTR;

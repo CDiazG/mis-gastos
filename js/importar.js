@@ -16,7 +16,7 @@ async function leerArchivos(files){
   for(const f of files){
     try{const rs=await leerExtracto(f);if(!rs.length)res.push({archivo:f.name,error:'cancelado',movs:[]});
       rs.forEach((r,i)=>{r.archivo=f.name+(rs.length>1?' · cuenta '+(r.cuentaTxt||i+1):'');res.push(r);
-        if(!r.movs.length)r.avisado=registrarError('importar','No he encontrado movimientos',`${descArchivo(f)} · banco: ${r.banco||'no reconocido'}`);
+        if(!r.movs.length&&!r.patrimonio)r.avisado=registrarError('importar','No he encontrado movimientos',`${descArchivo(f)} · banco: ${r.banco||'no reconocido'}`);
         else if(r.cuadra===false)r.avisado=registrarError('importar','El extracto no cuadra con el saldo',`${descArchivo(f)} · banco: ${r.banco||'no reconocido'} · ${r.movs.length} movimientos · ${r.malos||0} líneas raras · calculado ${r.finCalc} frente a ${r.saldoFin}`)})}
     catch(e){console.error(e);const r={archivo:f.name,error:e.message||String(e),movs:[]};res.push(r);r.avisado=registrarError('importar','No se ha podido leer: '+(e.message||String(e)),descArchivo(f))}
   }
@@ -26,6 +26,7 @@ function prepararRevision(res){
   const rows=[];
   for(const r of res){
     if(r.error)continue;
+    if(r.patrimonio){aplicarPatrimonio(r);continue}
     // la cuenta: la recordada para este IBAN, la del banco reconocido o, si no, que la elija la persona
     if(r.demo){r.cuenta='Ejemplo';r.movs.forEach((m,i)=>{const ac=autoCatR(m.concepto,m.detalle,m.importe);rows.push({...m,i,cuenta:'Ejemplo',cat:ac.c,nomina:false,mes:mesDe(m.fecha),key:'demo|'+i,src:r,sel:true,estado:'nuevo',auto:!!ac.c,regla:ac.r?ac.r.t:'',reglaU:false})});continue}
     const recordada=r.iban&&(S.aj.ibanCuenta||{})[r.iban];
@@ -56,6 +57,39 @@ function prepararRevision(res){
 // Cuentas de inversión (Trade Republic): el dinero que llega desde otra cuenta tuya es un traspaso
 // y la inversión se cuenta al comprar los fondos. La transferencia que salió de la otra cuenta
 // estaba como Inversión, así que se pasa a traspaso para no contarla dos veces.
+// Extracto del patrimonio neto (Trade Republic): el efectivo va a la cuenta de siempre (la de los
+// extractos de movimientos) y los valores a «Trade Republic · Inversiones», con el detalle de la cartera.
+function aplicarPatrimonio(r){
+  const P=r.patrimonio,nv='Trade Republic · Inversiones';
+  let ca=S.cuentas.find(c=>norm(c.n)===norm('Trade Republic'));
+  if(!ca){ca={n:'Trade Republic',v:null,f:null,banco:1,inversion:1};S.cuentas.push(ca)}
+  let ci=S.cuentas.find(c=>c.cartera)||S.cuentas.find(c=>norm(c.n)===norm(nv));
+  if(!ci){ci={n:nv,v:null,f:null};S.cuentas.splice(S.cuentas.indexOf(ca)+1,0,ci)}
+  r.cuenta=ca.n;r.cuentaInv=ci.n;r.viejo=!!(ci.cartera&&ci.cartera.f>P.fecha);
+  if(!r.viejo){
+    ci.v=P.valores;ci.f=P.fecha;ci.cartera={f:P.fecha,pos:P.pos.map(x=>({n:x.n,u:x.u,v:x.v,isin:x.isin}))};
+    if(P.efectivo!=null&&!(ca.f&&ca.f>P.fecha)){ca.v=P.efectivo;ca.f=P.fecha}
+    save();
+  }
+}
+function htmlPatrimonio(r){
+  const P=r.patrimonio,pos=P.pos.slice().sort((a,b)=>b.v-a.v),tot=P.valores||1;
+  return `<div class="card pad" style="margin-top:14px"><div class="sumline">
+      <div class="it"><div class="l">Archivo</div><div class="v">${esc(r.archivo)}</div></div>
+      <div class="it"><div class="l">Patrimonio a</div><div class="v">${fFecha(P.fecha)}</div></div>
+      <div class="it"><div class="l">Inversiones</div><div class="v num">${eur(P.valores)}</div></div>
+      <div class="it"><div class="l">Efectivo</div><div class="v num">${P.efectivo!=null?eur(P.efectivo):'—'}</div></div>
+      <div class="it"><div class="l">Total</div><div class="v num"><b>${P.total!=null?eur(P.total):eur(P.valores+(P.efectivo||0))}</b></div></div>
+    </div>
+    <p class="small" style="margin:10px 0 0">${r.viejo?`<span class="ko">Este extracto es más antiguo que el último que importaste, así que no he cambiado nada.</span>`:
+      `<span class="ok">✓ Guardado en Patrimonio.</span> «${esc(r.cuentaInv)}» pasa a valer ${eur(P.valores)}${P.efectivo!=null?` y el efectivo de «${esc(r.cuenta)}», ${eur(P.efectivo)}`:''}. No cambia ningún movimiento: es solo lo que vale tu cartera ese día.`}
+      ${P.cuadra===false&&pos.length?' <span class="mut">(No he podido leer bien todos los valores, pero el total sí.)</span>':''}</p>
+    ${pos.length?`<details class="cartera" style="margin-top:10px"><summary>${pos.length} valores en cartera</summary>${carteraHtml(pos,tot)}</details>`:''}
+    <div class="row" style="margin-top:10px"><button class="btn sm" type="button" onclick="go('patri')">Ver Patrimonio</button></div></div>`;
+}
+function carteraHtml(pos,tot){
+  return `<div class="cartlist">${pos.map(x=>{const w=Math.max(0,x.v/tot*100);return `<div class="cartit"><div class="cnom"><span>${esc(x.n)}</span><span class="num">${eur(x.v)} <span class="mut">${fmt(w,w<10?1:0)}%</span></span></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}</div>`;
+}
 function buscarDobles(rows){
   const inv=new Set(S.cuentas.filter(c=>c.inversion).map(c=>c.n));
   rows.filter(x=>x.src.inversion).forEach(x=>inv.add(x.cuenta));
@@ -104,6 +138,7 @@ function rImport(){
     if(r.error==='cancelado')continue;
     const aviso=NUBE&&USER?' Se lo he anotado al administrador para que lo revise.':'';
     if(r.error){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no se ha podido leer (${esc(r.error)}).${aviso}</span></div>`;continue}
+    if(r.patrimonio){h+=htmlPatrimonio(r);continue}
     if(!r.movs.length){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no he encontrado movimientos. Si es un PDF escaneado (una foto), no tiene texto que leer.${aviso}</span></div>`;continue}
     const f=r.movs.map(m=>m.fecha).sort();
     h+=`<div class="card pad" style="margin-top:14px"><div class="sumline">

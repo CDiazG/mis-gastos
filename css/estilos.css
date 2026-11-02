@@ -533,3 +533,14 @@ body.bajando .rufobtn:not(.on),body.bajando .fab{transform:translateY(130%);opac
 /* Sin zoom con dos dedos: la pantalla y la barra de abajo no se mueven (las tablas anchas se desplazan dentro de su caja) */
 html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .tablewrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+
+/* Cartera de inversión (extracto de patrimonio) */
+details.cartera{margin-top:6px;font-size:13px}
+details.cartera summary{cursor:pointer;color:var(--acc);font-weight:550}
+.cartlist{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:8px;max-width:min(560px,calc(100vw - 64px))}
+.cartit .cnom{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.cartit .cnom>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cartit .cnom .num{white-space:nowrap}
+.cartit .bar{margin-top:3px}
+#patTable tr.cartrow td{padding-top:0;border-top:0}
+.cartit{min-width:0}

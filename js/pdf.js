@@ -134,8 +134,24 @@ function parseTradeRepublic({lines}){
   const cuadra=finCalc!=null&&finReal!=null?Math.abs(finCalc-finReal)<0.011:null;
   return {banco:'Trade Republic',inversion:true,movs,saldoIni,saldoFin:finReal,finCalc,cuadra,malos:movs.filter(m=>m.chk===false).length};
 }
+// Extracto del patrimonio neto de Trade Republic: no trae movimientos, sino lo que vale la cartera
+// (cada valor con sus unidades y su valor en euros) y el efectivo a una fecha.
+function parsePatrimonioTR(text){
+  const L=text.split('\n').map(s=>s.trim()),num='(?:\\d{1,3}(?:\\.\\d{3})+|\\d+),\\d{2,}';
+  const fe=(text.match(/PATRIMONIO NETO\s*\n?\s*a\s+(\d{2})\.(\d{2})\.(\d{4})/i)||text.match(/FECHA\s+(\d{2})\.(\d{2})\.(\d{4})/i));
+  const fecha=fe?`${fe[3]}-${fe[2]}-${fe[1]}`:hoy();
+  const val=re=>{const l=L.find(l=>re.test(l));const m=l&&l.match(new RegExp('('+num+')(?:\\s*EUR)?$'));return m?amt(m[1]):null};
+  const valores=val(/^Cuenta de valores\s+[\d.]+,\d{2}$/i),efectivo=val(/^Efectivo\s+[\d.]+,\d{2}$/i),total=val(/^TOTAL\s/i);
+  const pos=[],RP=new RegExp('^(\\d+(?:,\\d+)?)\\s+(?:unidades\\s+)?(.+?)\\s+('+num+')\\s+('+num+')$');
+  L.forEach((l,i)=>{const m=l.match(RP);if(!m||/^\d{4,}/.test(m[2]))return;
+    const isin=(L.slice(i+1,i+4).join(' ').match(/ISIN:\s*([A-Z]{2}[A-Z0-9]{10})/)||[])[1]||'';
+    pos.push({n:m[2].replace(/\s+/g,' '),u:+m[1].replace(',','.'),p:amt(m[3]),v:amt(m[4]),isin})});
+  const sumPos=r2(pos.reduce((a,x)=>a+x.v,0));
+  return {banco:'Trade Republic',inversion:true,movs:[],patrimonio:{fecha,total,valores:valores!=null?valores:sumPos,efectivo,pos,cuadra:valores!=null&&Math.abs(sumPos-valores)<0.05}};
+}
 function parseStatement({lines,text}){
   const T=norm(text);
+  if(T.includes(' TRADE REPUBLIC BANK')&&T.includes('PATRIMONIO NETO'))return parsePatrimonioTR(text);
   if(T.includes(' TRADE REPUBLIC BANK')||T.includes(' TRBKDEBB'))return parseTradeRepublic({lines,text});
   const res=parseStatementBase({lines,text});const info=detectarBanco(text);res.banco=res.banco||info.banco;res.iban=info.iban;return res;
 }

@@ -97,9 +97,10 @@ function rPatri(){
   rObjetivos();rPrestamos();
   $('#patTable').innerHTML=`<thead><tr><th>Cuenta</th><th class="r">Saldo</th><th>Actualizado</th><th></th></tr></thead><tbody>`+
     (S.cuentas.length?'':'<tr><td colspan="4" class="small mut" style="padding:14px">Aún no tienes cuentas. Se crean solas al importar un extracto, o añádelas aquí (por ejemplo, una cuenta de ahorro o el oro).</td></tr>')+
-    S.cuentas.map((c,i)=>`<tr data-i="${i}"><td><input type="text" class="pn" value="${esc(c.n)}" style="width:150px">${c.banco?' <span class="tag">con extracto</span>':''}</td>
+    S.cuentas.map((c,i)=>`<tr data-i="${i}"><td><input type="text" class="pn" value="${esc(c.n)}" style="width:150px">${c.banco||c.cartera?' <span class="tag">con extracto</span>':''}</td>
       <td class="r"><input type="text" class="pv num right" value="${c.v!=null?fmt(c.v):''}" placeholder="—" style="width:120px" inputmode="decimal"></td>
-      <td class="small mut">${c.f?fFecha(c.f):''}</td><td><button class="btn sm icon pd" title="Quitar">✕</button></td></tr>`).join('')+
+      <td class="small mut">${c.f?fFecha(c.f):''}</td><td><button class="btn sm icon pd" title="Quitar">✕</button></td></tr>`+
+      (c.cartera&&c.cartera.pos.length?`<tr class="cartrow"><td colspan="4"><details class="cartera"><summary>${c.cartera.pos.length} valores en cartera · ${fFecha(c.cartera.f)}</summary>${carteraHtml(c.cartera.pos.slice().sort((a,b)=>b.v-a.v),c.cartera.pos.reduce((a,x)=>a+x.v,0)||1)}</details></td></tr>`:'')).join('')+
     `</tbody><tfoot><tr><td colspan="4"><button class="btn sm" id="pAdd">+ Añadir cuenta</button></td></tr></tfoot>`;
   $$('#patTable tr[data-i]').forEach(tr=>{const c=S.cuentas[+tr.dataset.i];
     $('.pn',tr).onchange=e=>{const old=c.n;c.n=e.target.value.trim()||old;S.mov.forEach(x=>{if(x.cuenta===old)x.cuenta=c.n});save()};
