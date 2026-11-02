@@ -92,7 +92,7 @@ function tutorialInicial(){
 /* ============ Preguntas frecuentes ============ */
 // ir: a qué pestaña y elemento lleva el botón; g: lo que dice Rufo al enseñarlo
 const FAQ=[
-  {p:'¿Están seguros mis datos?',r:'Cada persona solo puede ver sus propias cuentas; ni siquiera los demás usuarios pueden verlas. Se guardan en la nube de Google (Firebase), con la conexión cifrada, y en tu dispositivo para que funcione rápido. Al pulsar «Salir» se borra la copia del dispositivo.'},
+  {p:'¿Están seguros mis datos? ¿Quién los ve?',r:'El extracto se lee en tu dispositivo y nunca se sube. Solo se guardan los movimientos que confirmas, en tu cuenta de la base de datos (Firebase, de Google), con la conexión cifrada. La app no deja que nadie vea las cuentas de otra persona, tampoco el administrador; aunque, como dueño de la base de datos, técnicamente podría verlas desde la consola de Firebase, y se compromete a no hacerlo. Lo tienes todo explicado en «Privacidad», arriba.',ir:{tab:'ayuda',sel:'#privCard',t:'Privacidad',g:'Aquí está todo lo que se guarda, dónde y quién lo ve.'}},
   {p:'¿Cómo meto los movimientos del banco?',r:'En «Importar extracto» sube el extracto en PDF (EVO, Revolut, Trade Republic y muchos otros), en Excel, en CSV o en Norma 43. El programa comprueba que cuadra con el saldo del banco, pone las categorías y te deja revisarlo antes de guardar. Si subes el mismo extracto dos veces, no se duplica.',ir:{tab:'importar',sel:'#drop',t:'Importar extracto',g:'Arrastra aquí el extracto o pulsa para elegirlo.'}},
   {p:'Un movimiento no tiene categoría, ¿qué hago?',r:'Ponle la categoría en «Movimientos» o al importar. La próxima vez que aparezca ese comercio se clasificará solo. Mientras no la tenga cuenta como «Sin categorizar» dentro de Ocio y caprichos, para que no se pierda ningún gasto.',ir:{tab:'movs',sel:'#fSinCat',card:false,t:'Movimientos',g:'Marca «Solo sin categoría» para ver los que faltan y elige la categoría en cada fila.'}},
   {p:'¿Por qué los Bizum no se clasifican solos?',r:'Porque la misma persona te puede mandar dinero por motivos distintos (una cena, un regalo, un préstamo). Cada Bizum se clasifica a mano. Si prefieres que aprenda por persona, actívalo en Ajustes → Clasificación automática.',ir:{tab:'ajustes',sel:'[data-pref="bizumReglas"]',t:'Ajustes',g:'Este interruptor hace que aprenda la categoría de los Bizum por persona.',padre:'.pref'}},
@@ -192,7 +192,7 @@ $('#foroF').onsubmit=async e=>{e.preventDefault();const texto=$('#foroTxt').valu
 
 function rAyuda(){
   $('#ayClara').innerHTML=mascota(88);$('#ayNombre').textContent=MASCOTA;
-  rFaq();escucharForo();rForo();rBuzon();cargarMias();
+  rPrivCard();rFaq();escucharForo();rForo();rBuzon();cargarMias();
   $('#verTag').textContent='Versión '+VERSION;$('#verList').innerHTML=cambiosHtml(null).replace('<div class="chlog">','');
   const on=NUBE&&USER;$('#foroGo').disabled=!on;$('#foroTxt').disabled=!on;$('#foroTit').disabled=!on;
 }

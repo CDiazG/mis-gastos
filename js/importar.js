@@ -27,6 +27,7 @@ function prepararRevision(res){
   for(const r of res){
     if(r.error)continue;
     // la cuenta: la recordada para este IBAN, la del banco reconocido o, si no, que la elija la persona
+    if(r.demo){r.cuenta='Ejemplo';r.movs.forEach((m,i)=>{const ac=autoCatR(m.concepto,m.detalle,m.importe);rows.push({...m,i,cuenta:'Ejemplo',cat:ac.c,nomina:false,mes:mesDe(m.fecha),key:'demo|'+i,src:r,sel:true,estado:'nuevo',auto:!!ac.c,regla:ac.r?ac.r.t:'',reglaU:false})});continue}
     const recordada=r.iban&&(S.aj.ibanCuenta||{})[r.iban];
     const porBanco=r.banco&&S.cuentas.find(c=>norm(c.n)===norm(r.banco));
     if(r.banco&&!porBanco&&!recordada)S.cuentas.push({n:r.banco,v:null,f:null,banco:1});
@@ -44,7 +45,7 @@ function prepararRevision(res){
   // meses con datos del Excel que el extracto puede sustituir (no con una cuenta de inversión)
   const sust={};
   for(const x of rows){
-    if(x.cat==='INGRESO'||x.src.inversion)continue;
+    if(x.cat==='INGRESO'||x.src.inversion||x.src.demo)continue;
     const m=mesDe(x.fecha);
     if(sust[m]===undefined){const n=S.mov.filter(y=>y.origen==='excel'&&y.mes===m&&y.metodo!=='efectivo'&&y.cat!=='INGRESO').length;sust[m]=n?{n,on:true}:null}
   }
@@ -107,12 +108,14 @@ function rImport(){
     const f=r.movs.map(m=>m.fecha).sort();
     h+=`<div class="card pad" style="margin-top:14px"><div class="sumline">
       <div class="it"><div class="l">Archivo</div><div class="v">${esc(r.archivo)}</div></div>
-      <div class="it"><div class="l">Cuenta${r.iban?` <span class="mut">(…${esc(r.iban)})</span>`:''}</div><div class="v"><select data-cuenta="${IMP.res.indexOf(r)}" class="${r.cuenta?'':'falta'}">${r.cuenta?'':'<option value="" selected>— Elige la cuenta —</option>'}${S.cuentas.map(c=>`<option${c.n===r.cuenta?' selected':''}>${esc(c.n)}</option>`).join('')}<option value="__nueva">＋ Otra cuenta…</option></select></div></div>
+      <div class="it"><div class="l">Cuenta${r.iban?` <span class="mut">(…${esc(r.iban)})</span>`:''}</div><div class="v">${r.demo?'<span class="mut">Ejemplo</span>':`<select data-cuenta="${IMP.res.indexOf(r)}" class="${r.cuenta?'':'falta'}">${r.cuenta?'':'<option value="" selected>— Elige la cuenta —</option>'}${S.cuentas.map(c=>`<option${c.n===r.cuenta?' selected':''}>${esc(c.n)}</option>`).join('')}<option value="__nueva">＋ Otra cuenta…</option></select>`}</div></div>
       <div class="it"><div class="l">Movimientos</div><div class="v">${r.movs.length} · ${fFecha(f[0])} – ${fFecha(f[f.length-1])}</div></div>
       <div class="it"><div class="l">Saldo inicial → final</div><div class="v num">${r.saldoIni!=null?eur(r.saldoIni):'?'} → ${r.saldoFin!=null?eur(r.saldoFin):'?'}</div></div>
       <div class="it"><div class="l">Comprobación</div><div class="v">${r.cuadra===true?'<span class="ok">✓ Cuadra con el saldo del banco</span>':r.cuadra===false?`<span class="ko">✗ No cuadra (calculado ${eur(r.finCalc)})</span>`:'<span class="mut">Sin saldo para comprobar</span>'}</div></div>
     </div>${r.inversion?`<p class="small mut" style="margin:8px 0 0">Cuenta de inversión: las compras de fondos cuentan como <b>Inversión</b> el día que se hacen, las ventas la reducen y el dinero que llega desde tus otras cuentas es un <b>traspaso</b>. El saldo es el dinero sin invertir, no el valor de los fondos.</p>`:''}${r.malos?`<p class="small ko" style="margin:8px 0 0">${r.malos} líneas no encajan con el saldo; revisa sus importes.</p>`:''}</div>`;
   }
+  const demo=IMP.res.some(r=>r.demo);
+  if(demo)h+=`<div class="alert" style="margin-top:14px"><span class="grow"><b>Esto es un ejemplo con movimientos inventados</b>: así verías tu extracto. Mira las categorías que pone solo (las etiquetas «auto») y cuáles deja para ti. No se guarda nada.</span><button class="btn sm" type="button" id="impDemoFin">Cerrar el ejemplo</button></div>`;
   const sinCuenta=IMP.res.filter(r=>!r.error&&r.movs.length&&!r.cuenta);
   if(sinCuenta.length)h+=`<div class="alert bad" style="margin-top:14px"><span class="grow">No reconozco el banco de <b>${sinCuenta.map(r=>esc(r.archivo)).join(', ')}</b>. Elige arriba a qué cuenta pertenece; la próxima vez lo recordaré${sinCuenta.some(r=>r.iban)?' (por el número de cuenta)':''}.</span></div>`;
   const oc=IMP.otraCta||[];
@@ -130,7 +133,7 @@ function rImport(){
     h+=`<div class="toolbar"><label class="pill small"><input type="checkbox" id="impPend" ${IMP.soloPend?'checked':''}> Ver solo los que no tienen categoría (${R.filter(x=>!x.cat).length})</label><span class="sp"></span>
       ${R.some(x=>!x.cat&&isBizum(x.concepto)&&x.importe>0)?`<label class="pill small">Bizum recibidos sin categoría → <select id="impBiz">${catOptions('',{blankText:'elige…'})}</select></label>`:''}
       <span class="small ${pend?'ko':'mut'}">${pend?pend+' marcados sin categoría':''}</span>
-      <button class="btn" id="impCancel">Cancelar</button><button class="btn pri" id="impGo" ${nsel&&!sinCuenta.length?'':'disabled'} ${sinCuenta.length?'title="Primero elige la cuenta"':''}>Guardar ${nsel} movimientos</button></div>
+      <button class="btn" id="impCancel">Cancelar</button><button class="btn pri ${demo?'hide':''}" id="impGo" ${nsel&&!sinCuenta.length&&!demo?'':'disabled'} ${sinCuenta.length?'title="Primero elige la cuenta"':''}>Guardar ${nsel} movimientos</button></div>
     <div class="card tablewrap"><table class="rtable"><thead><tr><th style="width:28px"><input type="checkbox" id="impAll" ${R.every(x=>x.sel||x.estado==='ya')?'checked':''}></th><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th>Estado</th></tr></thead><tbody>`+
     vis.map(x=>{const k=R.indexOf(x);
       const est=x.estado==='ya'?'<span class="tag">ya importado</span>':x.estado==='dup'?`<span class="tag bad" title="${esc(x.dupDe.concepto)} · ${fFecha(x.dupDe.fecha)}">¿repetido? ${esc(x.dupDe.concepto.slice(0,18))}</span>`:(x.cat&&x.auto?`<span class="tag good" title="${x.reglaU?'Regla aprendida':'Regla de serie'}: el concepto contiene «${esc(x.regla)}». Si no es correcta, cambia la categoría.">auto · ${esc(x.regla)}</span>`:'');
@@ -143,6 +146,7 @@ function rImport(){
   }
   o.innerHTML=h;
   const mv=$('#impMover');if(mv)mv.onclick=()=>moverDeCuenta();
+  const df=$('#impDemoFin');if(df)df.onclick=()=>{IMP=null;rImport()};
   $$('[data-cuenta]',o).forEach(s=>s.onchange=()=>{const r=IMP.res[+s.dataset.cuenta];
     if(s.value==='__nueva'){dialog('Otra cuenta',`<p class="small mut" style="margin-top:0">Nombre de la cuenta (por ejemplo «Santander» o «Cuenta nómina»). Aparecerá también en Patrimonio.</p><input type="text" id="impNC" style="width:100%" value="${esc(r.banco||'')}">`,
       [{t:'Cancelar',fn:()=>rImport()},{t:'Añadir',cls:'pri',fn:()=>{const n=$('#impNC').value.trim();if(!n){toast('Escribe un nombre',true);return false}
@@ -160,7 +164,7 @@ function rImport(){
     $('.icat',tr).onchange=e=>{
       x.cat=e.target.value;x.auto=false;
       marcarNomina(x);
-      if(x.cat){learn(x.concepto,x.cat);save();
+      if(x.cat&&!x.src.demo){learn(x.concepto,x.cat);save();
         const k=learnKey(x.concepto);let n=0;
         if(pref('aprender')&&(!isBizum(x.concepto)||pref('bizumReglas')))IMP.rows.forEach(y=>{if(y!==x&&!y.cat&&learnKey(y.concepto)===k){y.cat=x.cat;y.auto=true;y.regla=k;y.reglaU=true;marcarNomina(y);n++}});
         if(n)toast(`También aplicado a ${n} movimiento${n>1?'s':''} parecido${n>1?'s':''}`);

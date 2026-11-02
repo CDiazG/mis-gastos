@@ -178,4 +178,31 @@ module.exports = {
       assert.equal(await p.evaluate(() => S.mov.filter(m => m.cuenta === 'EVO').length), x.n, 'se puede deshacer');
     })();
   },
+  'extracto de ejemplo: se ve cómo clasifica y no se guarda nada'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => go('importar'));
+      assert.match(await p.textContent('#s-importar'), /nunca se sube/);
+      const antes = await p.evaluate(() => [S.mov.length, S.reglas.length, S.cuentas.length]);
+      await p.click('#impDemo');
+      assert.match(await p.textContent('#impOut'), /ejemplo con movimientos inventados/);
+      assert.ok(await p.evaluate(() => IMP.rows.some(x => x.concepto.startsWith('COMPRA MERCADONA') && x.cat === 'SUPERMERCADO')));
+      assert.ok(!(await p.isVisible('#impGo')), 'no se puede guardar');
+      const k = await p.evaluate(() => IMP.rows.findIndex(x => x.concepto.startsWith('COMERCIO DESCONOCIDO')));
+      await p.selectOption(`tr[data-k="${k}"] .icat`, 'PERSONAL');
+      await p.click('#impDemoFin');
+      assert.deepEqual(await p.evaluate(() => [S.mov.length, S.reglas.length, S.cuentas.length]), antes, 'ni movimientos, ni reglas, ni cuentas');
+    })();
+  },
+
+  'privacidad: se puede leer antes de entrar y en Ayuda'(browser, estado) {
+    return (async () => {
+      const ctx = await L.nuevoContexto(browser); (estado.contextos ||= []).push(ctx);
+      const p = await L.nuevaPagina(ctx); estado.paginas.push(p);
+      await L.abrir(p);
+      await p.click('#login [data-priv]');
+      const t = await p.textContent('#dlgB');
+      assert.match(t, /nunca se sube/); assert.match(t, /consola de Firebase/); assert.match(t, /github\.com|GitHub/);
+    })();
+  },
 };
