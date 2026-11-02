@@ -12,6 +12,11 @@ function can(path,op,data){
     if(op==='create')return !!u&&!!data&&data.uid===u.uid&&data.estado==='nueva'&&!d;
     return isAdmin();}
   const activoU=()=>{const pr=u&&db()['users/'+u.uid];return !!(pr&&pr.activo===true)};
+  if(p[0]==='mensajes'){const d=db()[path];const pr=u&&db()['users/'+u.uid];
+    if(op==='read')return isAdmin()||(!!u&&!!d&&d.uid===u.uid);
+    if(op==='create')return !!u&&!!data&&!d&&data.leido===false&&((data.uid===u.uid&&data.de==='usuario'&&pr&&pr.activo===true)||(isAdmin()&&data.de==='admin'));
+    return isAdmin()||(!!u&&!!d&&d.uid===u.uid);}
+  if(p[0]==='presencia'){if(op==='read'||op==='list')return !!u;return isAdmin();}
   if(p[0]==='errores'){const d=db()[path];if(op==='create')return !!u&&!!data&&data.uid===u.uid&&!d&&String(data.mensaje).length<=1000;return isAdmin();}
   if(p[0]==='foro'){const d=db()[path];
     if(op==='read'||op==='list')return activoU();
@@ -51,7 +56,7 @@ export function onSnapshot(ref,cb,errCb){
   const emit=()=>{
     const d=db();
     if(ref.col){const depth=ref.path.split('/').length+1;const cur={};
-      for(const k of Object.keys(d))if(k.startsWith(ref.path+'/')&&k.split('/').length===depth)cur[k.split('/').pop()]=d[k];
+      for(const k of Object.keys(d))if(k.startsWith(ref.path+'/')&&k.split('/').length===depth&&pasaFiltros(ref,d[k]))cur[k.split('/').pop()]=d[k];
       const ch=[];for(const id in cur)if(!prev||JSON.stringify(prev[id])!==JSON.stringify(cur[id]))ch.push({type:prev&&prev[id]?'modified':'added',doc:snap(ref.path+'/'+id,cur[id])});
       if(prev)for(const id in prev)if(!(id in cur))ch.push({type:'removed',doc:snap(ref.path+'/'+id,prev[id])});
       const first=prev===null;prev=cur;const docs=Object.keys(cur).map(id=>snap(ref.path+'/'+id,cur[id]));if(ch.length||first)cb({metadata:{hasPendingWrites:false},docChanges:()=>ch,docs,forEach:f=>docs.forEach(f)});

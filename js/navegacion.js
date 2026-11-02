@@ -27,6 +27,7 @@ function render(){
     const b=$('.mtHoy',el);if(b)b.onclick=()=>setMes(act)});
   $('#monthnav').classList.toggle('nomes',!(TAB==='resumen'||TAB==='movs'||TAB==='efectivo'));
   $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER)||!pref('fab'));
+  if(typeof rChatBtn==='function')rChatBtn();
   ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,inicio:rInicio,perfil:rPerfil})[TAB]();
 }
 

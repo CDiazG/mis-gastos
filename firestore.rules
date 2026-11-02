@@ -35,6 +35,26 @@ service cloud.firestore {
       allow read, delete: if esAdmin();
     }
 
+    // Chat con el administrador: cada conversación es de un usuario; solo la ven él y el administrador.
+    match /mensajes/{id} {
+      allow read: if esAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'de', 'texto', 'fecha', 'leido'])
+        && request.resource.data.texto is string && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 2000
+        && request.resource.data.leido == false
+        && ((request.resource.data.uid == request.auth.uid && request.resource.data.de == 'usuario' && activo(request.auth.uid))
+          || (esAdmin() && request.resource.data.de == 'admin'));
+      allow update: if (esAdmin() || (request.auth != null && resource.data.uid == request.auth.uid))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leido']);
+      allow delete: if esAdmin();
+    }
+
+    // Si el administrador está en línea (él decide si se muestra)
+    match /presencia/{id} {
+      allow read: if request.auth != null && activo(request.auth.uid);
+      allow write: if esAdmin();
+    }
+
     // Foro: lo leen y escriben los usuarios activos; cada uno borra lo suyo y el administrador, todo.
     match /foro/{id} {
       allow read: if request.auth != null && activo(request.auth.uid);

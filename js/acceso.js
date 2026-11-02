@@ -9,7 +9,7 @@ let usuarioGuardado=null;
 function mostrarContinuar(u){usuarioGuardado=u;mostrarLogin();modoContinuar(true);$('#lContMail').textContent=u.email;$('#lContAv').textContent=(u.email||'?').charAt(0).toUpperCase();$('#lContGo').focus()}
 $('#lContGo').onclick=()=>{const u=usuarioGuardado;usuarioGuardado=null;modoContinuar(false);lMsg('Entrando…');entrar(u)};
 $('#lContOtra').onclick=async()=>{usuarioGuardado=null;await fb.authM.signOut(fb.auth);modoContinuar(false);$('#lMail').value='';$('#lPass').value='';lMsg('');$('#lMail').focus()};
-function mostrarLogin(msg,err){$('#login').classList.remove('hide');modoContinuar(false);$('#fabCash').classList.add('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
+function mostrarLogin(msg,err){$('#login').classList.remove('hide');modoContinuar(false);$('#fabCash').classList.add('hide');$('#rufoBtn').classList.add('hide');$('#rufoPanel').classList.add('hide');$('#lPass').type='password';$('#lVer .tacha').style.display='none';$('#userbox').classList.add('hide');lMsg(msg,err);$('#lGo').disabled=false}
 const adminYaCreado=()=>{try{return localStorage.getItem('mg-admin-ok')==='1'}catch(_){return false}};
 $('#lMail').addEventListener('input',async()=>{$('#lAlta').classList.toggle('hide',adminYaCreado()||!(await esAdminMail($('#lMail').value)))});
 let modoSolicitud=false;

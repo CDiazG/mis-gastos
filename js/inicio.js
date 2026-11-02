@@ -55,6 +55,7 @@ function rInicio(){
   for(let k=0;k<=3;k++){const m=addMes(hoyM,-k),d=diezmoMes(m);if(d&&d.pendiente>0.5)pend.push([`Diezmo de ${nombreMes(m)}: faltan ${eur(d.pendiente,0)}`,'dz:'+m])}
   const pp=prestamosPendientes();if(pp>0.5)pend.push([`Te deben <b>${eur(pp,0)}</b> en préstamos`,'patri']);
   if(typeof fijosDelMes==='function')for(const f of fijosDelMes(hoyM).filter(x=>x.estado==='falta'||x.estado==='cambia'))pend.push([`Gasto fijo «${esc(f.f.nombre)}» ${f.estado==='falta'?'no ha llegado':'ha cambiado de importe'}`,'resumen']);
+  if(USER&&USER.admin&&typeof chNoLeidosAdmin==='function'&&chNoLeidosAdmin())pend.push([`<b>${chNoLeidosAdmin()}</b> mensaje${chNoLeidosAdmin()>1?'s':''} sin leer en el chat`,'chat']);
   if(USER&&USER.admin&&typeof ERR_TODOS!=='undefined'&&ERR_TODOS.length)pend.push([`<b>${ERR_TODOS.length}</b> error${ERR_TODOS.length>1?'es':''} registrado${ERR_TODOS.length>1?'s':''} (extractos que no se leen o fallos)`,'usuarios']);
   if(pref('avisoCopia')&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))pend.push(['Hace más de un mes que no guardas una copia de seguridad','copia']);
   html+=tarjeta('pend','Pendiente',pend.length?`<div class="ilist">${pend.map(([t,a])=>`<button type="button" class="iitem" data-acc="${a}"><span>${t}</span><span class="mut">→</span></button>`).join('')}</div>`:'<p class="pos" style="margin:0">✓ Todo al día. ¡Bien hecho!</p>',pend.length?`<span class="tag cash">${pend.length}</span>`:'');
@@ -79,7 +80,7 @@ function rInicio(){
   $$('#inicio .gbar').forEach(r=>r.onclick=()=>{if(!r.dataset.cat)return;F.cat=r.dataset.cat==='SINCAT'?'':r.dataset.cat;F.sinCat=r.dataset.cat==='SINCAT';F.todos=false;MES=hoyM;go('movs')});
   $$('#inicio .iitem').forEach(b=>b.onclick=()=>{const a=b.dataset.acc;
     if(a==='sincat'){F.sinCat=true;F.cat='';const m=[...st12].reverse().find(x=>x.sinCat);if(m)MES=m.m;go('movs')}
-    else if(a.startsWith('dz:')){MES=a.slice(3);go('resumen')}else if(a==='copia')exportar();else go(a)});
+    else if(a.startsWith('dz:')){MES=a.slice(3);go('resumen')}else if(a==='copia')exportar();else if(a==='chat'){CH_MODO='admin';abrirChat(true)}else go(a)});
   botonTodo();
 }
 function botonTodo(){const ds=$$('#inicio details.icard');const b=$('#iniTodo');if(!b)return;const todasAbiertas=ds.length&&ds.every(d=>d.open);b.textContent=todasAbiertas?'Plegar todo':'Desplegar todo';

@@ -219,6 +219,8 @@ const PREFS=[
   {k:'verObjetivos',g:'avisos',t:'Objetivos de ahorro en el Resumen',d:'Siguen disponibles en Patrimonio aunque lo desactives.'},
   {k:'fab',g:'apar',t:'Botón flotante «＋ Añadir»',d:'El botón redondo de abajo a la derecha.'},
   {k:'animaciones',g:'apar',t:'Animaciones',d:'Movimientos suaves al abrir pestañas y desplegables.'},
+  {k:'rufo',g:'apar',t:'Rufo en una esquina',d:'El botón del zorro, abajo a la izquierda, para preguntarle dudas o escribir al administrador.'},
+  {k:'enLinea',g:'avisos',admin:true,t:'Mostrar cuando estoy en línea',d:'En el chat, los usuarios ven «En línea» si tienes la app abierta, o cuándo fue la última vez.'},
 ];
 const pref=k=>S&&S.aj&&S.aj[k]!==false&&(k!=='bizumReglas'||S.aj[k]===true);
 const prefHtml=p=>`<label class="pref"><span class="sw"><input type="checkbox" data-pref="${p.k}" ${pref(p.k)?'checked':''}><i></i></span><span><b>${p.t}</b><span class="small mut">${p.d}</span></span></label>`;
@@ -227,14 +229,14 @@ function rPrefs(){
   const pal=S.aj.paleta||'verde',osc=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
   const palHtml=`<div class="pref" style="cursor:default;flex-direction:column;align-items:stretch;gap:0"><span><b>Colores</b><span class="small mut">Se ven bien en claro y en oscuro.</span></span><div class="palopts" id="palSel">${Object.entries(PALETAS).map(([k,p])=>`<button type="button" class="palopt${k===pal?' on':''}" data-pal="${k}"><span class="sw3">${p[osc?'d':'l'].map(c=>`<i style="background:${c}"></i>`).join('')}</span><b>${p.n}</b></button>`).join('')}</div></div>`;
   const temaHtml=`<div class="pref" style="cursor:default;align-items:center"><span style="flex:1"><b>Tema</b><span class="small mut">Automático: como tenga el dispositivo.</span></span><span class="seg" id="temaSeg">${[['claro','☀️ Claro'],['oscuro','🌙 Oscuro'],['auto','Auto']].map(([k,t])=>`<button type="button" data-v="${k}" class="${k===tema?'on':''}">${t}</button>`).join('')}</span></div>`;
-  const grupo=g=>PREFS.filter(p=>p.g===g).map(prefHtml).join('');
+  const grupo=g=>PREFS.filter(p=>p.g===g&&(!p.admin||(USER&&USER.admin))).map(prefHtml).join('');
   if($('#aparList'))$('#aparList').innerHTML=palHtml+temaHtml+grupo('apar');
   if($('#prefList'))$('#prefList').innerHTML=grupo('avisos');
   if($('#clasList'))$('#clasList').innerHTML=grupo('clas');
   const dz=$('#dzOn');if(dz)dz.checked=diezmoOn();
   $$('#palSel .palopt').forEach(b=>b.onclick=()=>{S.aj.paleta=b.dataset.pal;aplicarTema();save();rPrefs();toast('Colores: '+PALETAS[b.dataset.pal].n)});
   $$('#temaSeg button').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.v;aplicarTema();save();rPrefs()});
-  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab')render();if(k==='animaciones')aplicarTema()});
+  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab'||k==='rufo')render();if(k==='animaciones')aplicarTema();if(k==='enLinea'&&typeof presencia==='function')presencia()});
 }
 $('#verTuto').onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
 const PALETAS={"verde": {"n": "Verde", "l": ["#0f6b5c", "#e1f0eb", "#f5f4ef"], "d": ["#4db6a0", "#16332d", "#131615"]}, "lavanda": {"n": "Lavanda", "l": ["#6b4fbb", "#ece6fb", "#f6f4fa"], "d": ["#a58cf0", "#2b2445", "#15131c"]}, "oceano": {"n": "Océano", "l": ["#1f5fa8", "#e2edf8", "#f2f6f9"], "d": ["#6aa7ec", "#172b42", "#10151b"]}, "terracota": {"n": "Terracota", "l": ["#b9532f", "#f8e5dc", "#faf5ef"], "d": ["#e58a6b", "#3a241b", "#171311"]}, "frambuesa": {"n": "Frambuesa", "l": ["#ad2f5b", "#f9e1ea", "#fbf4f6"], "d": ["#ec7ca3", "#3d1f2b", "#181215"]}, "ciruela": {"n": "Ciruela", "l": ["#5b3a6e", "#efe7f3", "#f7f5f1"], "d": ["#b88fd0", "#33263b", "#151217"]}};

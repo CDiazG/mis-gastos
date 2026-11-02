@@ -450,3 +450,24 @@ button.who:hover{background:var(--soft)}
 .ucell{display:flex;gap:10px;align-items:center}
 select.falta{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)}
 .priv p{margin:0 0 10px;font-size:14px;line-height:1.5}
+
+/* Chat con Rufo y con el administrador */
+.rufobtn{position:fixed;left:18px;bottom:18px;z-index:45;width:60px;height:60px;border-radius:50%;border:1px solid var(--line);background:var(--card);box-shadow:0 6px 20px rgba(0,0,0,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.rufobtn:hover,.rufobtn.on{border-color:var(--acc)}
+.rufobtn #rufoN{position:absolute;top:-4px;right:-4px}
+#rufoPanel{position:fixed;left:18px;bottom:90px;z-index:46;width:min(380px,calc(100vw - 36px));height:min(560px,calc(100vh - 130px));background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;animation:subir .25s cubic-bezier(.2,.8,.3,1)}
+#rufoPanel.hide{display:none}
+.chead{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);line-height:1.2}
+.chead .sp{flex:1}
+.cbody{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.cm{display:flex;gap:8px;align-items:flex-end;max-width:100%}
+.cm .cb{background:var(--card);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 11px;font-size:14px;max-width:85%;white-space:pre-wrap;word-wrap:break-word}
+.cm.rufo .cb{white-space:normal}
+.cm.yo{justify-content:flex-end}.cm.yo .cb{background:var(--acc);color:var(--acc-ink);border-color:transparent;border-radius:14px 14px 4px 14px}
+.cm .ch{font-size:10.5px;opacity:.7;margin-top:3px}
+.cchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.cchips .chip{font-size:12.5px;padding:4px 10px}
+.cpie{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line)}.cpie input{flex:1;min-width:0}
+.cconv{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;color:var(--ink)}
+.cconv .cc{flex:1;min-width:0;display:flex;flex-direction:column}.cconv .cc .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.enlinea{color:var(--good);font-weight:600}.enlinea::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:5px}
+@media (max-width:640px){.rufobtn{left:12px;bottom:14px;width:54px;height:54px}#rufoPanel{left:8px;right:8px;width:auto;bottom:76px;height:calc(100vh - 150px)}}
