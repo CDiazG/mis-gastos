@@ -27,7 +27,7 @@ function colL(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(
 const dSerial=f=>{const [y,m,d]=f.split('-').map(Number);return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5};
 // ---- Estilos: se registran al usarlos y se escriben en styles.xml ----
 // st({b,sz,c:'RRGGBB',bg:'RRGGBB',fmt:'eur'|'eurneg'|'pct'|'date',al:'center'|'right'|'left',bd:'thin'|'none',wrap,i})
-const XLF={eur:'#,##0.00\\ "€"',eurneg:'#,##0.00\\ "€";[Red]\\-#,##0.00\\ "€"',pct:'0%',date:'dd/mm/yyyy',mes:'mmmm yyyy'};
+const XLF={num:'0.######',eur:'#,##0.00\\ "€"',eurneg:'#,##0.00\\ "€";[Red]\\-#,##0.00\\ "€"',pct:'0%',date:'dd/mm/yyyy',mes:'mmmm yyyy'};
 function nuevoLibroEstilos(){
   const fonts=['<font><sz val="11"/><color rgb="FF264540"/><name val="Calibri"/></font>'],fills=['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>'],
     borders=['<border><left/><right/><top/><bottom/><diagonal/></border>','<border><left style="thin"><color rgb="FFD9E5DF"/></left><right style="thin"><color rgb="FFD9E5DF"/></right><top style="thin"><color rgb="FFD9E5DF"/></top><bottom style="thin"><color rgb="FFD9E5DF"/></bottom><diagonal/></border>'],
@@ -115,18 +115,18 @@ function hojaMes(m,st){
     const extra=G.id==='VARIABLES'&&Math.abs(s.by.SINCAT||0)>0.009;
     H.set('A'+gr,G.n.toUpperCase(),g);H.set('B'+gr,'',g);
     const ini=gr+1,fin=gr+cs.length+(extra?1:0);
-    H.set('C'+gr,R(cs.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0))/100,gP);
+    H.set('C'+gr,R(cs.reduce((a,c)=>a+pctCat(c.id,s.base),0))/100,gP);
     for(const col of ['D','E','F','G'])H.set(col+gr,null,col==='G'?gT:gE,`SUM(${col}${ini}:${col}${fin})`);
-    const gv=cs.reduce((a,c)=>a+(s.by[c.id]||0),0)+(extra?s.by.SINCAT:0),gp=cs.reduce((a,c)=>a+(c.id==='AHORRO'?s.base*(+S.aj.pct[c.id]||0)/100:presupuestoCat(m,c.id,s).p),0);
+    const gv=cs.reduce((a,c)=>a+(s.by[c.id]||0),0)+(extra?s.by.SINCAT:0),gp=cs.reduce((a,c)=>a+presupuestoCat(m,c.id,s).p,0);
     H.c['G'+gr].v=R(gv);H.c['D'+gr].v=R(gp);
     const sumB=cs.filter(c=>c.id!=='AHORRO').reduce((a,c)=>a+banco(c.id),0)+(extra?banco(''):0),sumE=cs.filter(c=>c.id!=='AHORRO').reduce((a,c)=>a+efe(c.id),0)+(extra?efe(''):0);
     H.c['E'+gr].v=R(sumB);H.c['F'+gr].v=R(sumE);
     H.set('H'+gr,G.id==='AHORRO'?(gv>=gp-0.5?'CUMPLIDO':'POR DEBAJO'):(gv>gp+0.5?'SOBRE PRESUPUESTO':'DENTRO'),G.id==='AHORRO'?(gv>=gp-0.5?okS:warnS):(gv>gp+0.5?badS:okS));
-    for(const c of cs){r++;const p=c.id==='AHORRO'?R(s.base*(+S.aj.pct[c.id]||0)/100):presupuestoCat(m,c.id,s).p,v=R(s.by[c.id]||0);
-      H.set('A'+r,'',txt);H.set('B'+r,c.n+(c.id==='AHORRO'?' (lo que sobra)':''),txt);H.set('C'+r,(+S.aj.pct[c.id]||0)/100,pct);H.set('D'+r,p,pres);
+    for(const c of cs){r++;const p=presupuestoCat(m,c.id,s).p,v=R(s.by[c.id]||0);
+      H.set('A'+r,'',txt);H.set('B'+r,c.n+(c.id==='AHORRO'?' (lo que sobra)':''),txt);H.set('C'+r,R(pctCat(c.id,s.base))/100,pct);H.set('D'+r,p,pres);
       if(c.id==='AHORRO'){H.set('E'+r,'',txt);H.set('F'+r,'',txt)}else{H.set('E'+r,R(banco(c.id)),eur);H.set('F'+r,R(efe(c.id)),eur)}
       H.set('G'+r,v,totC,c.id==='AHORRO'?undefined:`E${r}+F${r}`);
-      let e,es;if(G.id==='AHORRO'){if(v>=p-0.5){e='CUMPLIDO';es=okS}else{e='FALTAN '+eurTxt(p-v);es=warnS}}
+      let e,es;if(G.id==='AHORRO'){if(p<=0.5&&Math.abs(v)<=0.5){e='';es=txt}else if(v>=p-0.5){e='CUMPLIDO';es=okS}else{e='FALTAN '+eurTxt(p-v);es=warnS}}
       else if(p<=0&&v<=0.5){e='';es=txt}else if(v>p+0.5){e='TE PASAS '+eurTxt(v-p);es=badS}else if(p>0&&v>=p*0.8){e='CERCA ('+Math.round(v/p*100)+'%)';es=warnS}else{e='OK';es=okS}
       H.set('H'+r,e,es);}
     if(extra){r++;H.set('A'+r,'',txt);H.set('B'+r,'Sin categorizar',st({bd:'thin',i:true,c:XC.bad}));H.set('C'+r,'',txt);H.set('D'+r,'',pres);H.set('E'+r,R(banco('')),eur);H.set('F'+r,R(efe('')),eur);H.set('G'+r,R(s.by.SINCAT),totC,`E${r}+F${r}`);H.set('H'+r,'PONLES CATEGORÍA',warnS)}
@@ -178,6 +178,32 @@ function hojaMovs(movs,st){
     H.set('I'+r,{extracto:'Extracto',excel:'Excel antiguo',manual:'A mano'}[x.origen]||x.origen||'',tx);H.set('J'+r,x.nota||'',tx);H.set('K'+r,tagsDe(x).join(', '),tx)});
   return {name:'Movimientos',H,opt:{widths:[11,10,36,34,22,18,13,12,13,22,20],freeze:1,filter:`A1:K${movs.length+1}`,tab:'76B59A'}};
 }
+// Hoja «Patrimonio»: cuentas, cartera de inversión, objetivos de ahorro y préstamos (cómo está todo hoy)
+function hojaPatrimonio(st){
+  const cs=S.cuentas||[],os=S.objetivos||[],ps=prestamosPorPersona().filter(x=>Math.abs(x.pendiente)>0.009);
+  const cart=cs.filter(c=>c.cartera&&c.cartera.pos&&c.cartera.pos.length);
+  if(!cs.length&&!os.length&&!ps.length)return null;
+  const H=hoja();const T=st({sz:20,b:true,c:XC.tit}),S2=st({sz:13,b:true,c:XC.tit}),hd=st({b:true,c:'FFFFFF',bg:XC.hdr,bd:'thin'}),tx=st({bd:'thin'}),dt=st({fmt:'date',bd:'thin',al:'center'}),
+    eu=st({fmt:'eurneg',bd:'thin'}),pc=st({fmt:'pct',bd:'thin',al:'center'}),num=st({bd:'thin',fmt:'num'}),totL=st({b:true,c:'FFFFFF',bg:XC.tot,bd:'thin'}),totS=st({b:true,c:'FFFFFF',bg:XC.tot,bd:'thin',fmt:'eurneg'}),
+    nota=st({i:true,c:XC.mut});
+  H.set('A1','Patrimonio a '+fFecha(hoy()),T);H.alto(1,30);let r=3;
+  const cab=(arr)=>{arr.forEach((t,i)=>H.set(colL(i)+r,t,hd));r++};
+  if(cs.length){H.set('A'+r,'Cuentas',S2);r++;cab(['CUENTA','SALDO','% DEL TOTAL','ACTUALIZADO','TIPO']);
+    const tot=cs.reduce((a,c)=>a+(c.v||0),0),ini=r;
+    cs.forEach(c=>{H.set('A'+r,c.n,tx);H.set('B'+r,c.v!=null?r2(c.v):'',eu);H.set('C'+r,tot&&c.v?r2(c.v/tot*1000)/1000:'',pc);H.set('D'+r,c.f?dSerial(c.f):'',c.f?dt:tx);
+      H.set('E'+r,c.cartera?'Inversiones':c.inversion?'Inversión':c.banco?'Con extracto':'A mano',tx);r++});
+    H.set('A'+r,'TOTAL',totL);H.set('B'+r,r2(tot),totS,`SUM(B${ini}:B${r-1})`);['C','D','E'].forEach(x=>H.set(x+r,'',totL));r+=2}
+  for(const c of cart){const pos=c.cartera.pos.slice().sort((a,b)=>b.v-a.v),t=pos.reduce((a,x)=>a+x.v,0);
+    H.set('A'+r,'Cartera de '+c.n+' a '+fFecha(c.cartera.f),S2);r++;cab(['VALOR','UNIDADES','VALOR EN €','% DE LA CARTERA','ISIN']);const ini=r;
+    pos.forEach(x=>{H.set('A'+r,x.n,tx);H.set('B'+r,x.u||'',num);H.set('C'+r,r2(x.v),eu);H.set('D'+r,t?r2(x.v/t*1000)/1000:'',pc);H.set('E'+r,x.isin||'',tx);r++});
+    H.set('A'+r,'TOTAL',totL);H.set('B'+r,'',totL);H.set('C'+r,r2(t),totS,`SUM(C${ini}:C${r-1})`);H.set('D'+r,'',totL);H.set('E'+r,'',totL);r+=2}
+  if(os.length){H.set('A'+r,'Objetivos de ahorro',S2);r++;cab(['OBJETIVO','META','AHORRADO','FALTA','PARA']);
+    os.forEach(o=>{const i=infoObj(o);H.set('A'+r,o.nombre+(i.falta<=0?' ✓':''),tx);H.set('B'+r,r2(o.meta),eu);H.set('C'+r,r2(i.ah),eu);H.set('D'+r,r2(i.falta),eu);H.set('E'+r,o.mesMeta?nombreMes(o.mesMeta):'',tx);r++});r++}
+  if(ps.length){H.set('A'+r,'Préstamos pendientes',S2);r++;cab(['PERSONA','PRESTADO','DEVUELTO','PENDIENTE','']);
+    ps.forEach(x=>{H.set('A'+r,x.persona,tx);H.set('B'+r,r2(x.prestado),eu);H.set('C'+r,r2(x.devuelto),eu);H.set('D'+r,r2(x.pendiente),eu);H.set('E'+r,'',tx);r++});r++}
+  H.set('A'+r,'Los saldos son los últimos que hay en la app (los de las cuentas con extracto se actualizan al importarlo).',nota);
+  return {name:'Patrimonio',H,opt:{widths:[44,14,14,14,16],grid:false,tab:'C9A227'}};
+}
 function exportarExcel(alcance){
   let meses;const all=mesesConDatos();
   if(alcance==='mes')meses=[MES];else if(alcance==='todo')meses=all;else meses=all.filter(m=>m.startsWith(alcance));
@@ -187,8 +213,9 @@ function exportarExcel(alcance){
   meses=meses.filter(m=>S.mov.some(x=>x.mes===m));
   const st=nuevoLibroEstilos();
   const hojas=[...(meses.length>1?[hojaResumen(meses,st)]:[]),...meses.map(m=>hojaMes(m,st)),hojaMovs(movs,st)];
+  const activa=meses.length>1?hojas.length-2:0;const hp=hojaPatrimonio(st);if(hp)hojas.push(hp);
   const nombre='Gastos '+(alcance==='mes'?nombreMes(MES):alcance==='todo'?'completo':alcance)+'.xlsx';
-  const a=document.createElement('a');a.href=URL.createObjectURL(libroXlsx(hojas,st,meses.length>1?hojas.length-2:0));a.download=nombre;document.body.appendChild(a);a.click();a.remove();
+  const a=document.createElement('a');a.href=URL.createObjectURL(libroXlsx(hojas,st,activa));a.download=nombre;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);toast('Descargado: '+nombre);
 }
 /* ============ Informe para imprimir ============ */

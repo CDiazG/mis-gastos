@@ -149,7 +149,7 @@ module.exports = {
       await p.$eval('#inicio details[data-ic="ahorro"]', e => e.scrollIntoView({ block: 'center' }));
       await p.hover('#inicio details[data-ic="ahorro"] .col:last-child');
       await p.waitForSelector('#tip.on', { timeout: 3000 });
-      assert.match(await p.textContent('#tip'), /ahorraste/);
+      assert.match(await p.textContent('#tip'), /Ahorrado/);
       await p.click('#iniTodo');
       assert.ok(await p.$('#inicio details[data-ic="gasto"][open]'));
     })();

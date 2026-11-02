@@ -103,7 +103,7 @@ function htmlPatrimonio(r){
     <div class="row" style="margin-top:10px"><button class="btn sm" type="button" onclick="go('patri')">Ver Patrimonio</button></div></div>`;
 }
 function carteraHtml(pos,tot){
-  return `<div class="cartlist">${pos.map(x=>{const w=Math.max(0,x.v/tot*100);return `<div class="cartit"><div class="cnom"><span>${esc(x.n)}</span><span class="num">${eur(x.v)} <span class="mut">${fmt(w,w<10?1:0)}%</span></span></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}</div>`;
+  return `<div class="cartlist">${pos.map(x=>{const w=Math.max(0,x.v/tot*100);return `<div class="cartit" data-tiph="${esc(tipHtml(esc(x.n),[['var(--acc)','Valor',eur(x.v)],['','De la cartera',fmt(w,1)+' %'],...(x.u?[['','Unidades',fmt(x.u,x.u%1?4:0)]]:[]),...(x.isin?[['','ISIN',esc(x.isin)]]:[])]))}"><div class="cnom"><span>${esc(x.n)}</span><span class="num">${eur(x.v)} <span class="mut">${fmt(w,w<10?1:0)}%</span></span></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}</div>`;
 }
 function buscarDobles(rows){
   const inv=new Set(S.cuentas.filter(c=>c.inversion).map(c=>c.n));

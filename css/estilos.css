@@ -647,3 +647,26 @@ h4.faqtema{margin:16px 0 4px;font-size:12px;text-transform:uppercase;letter-spac
 h4.faqtema:first-child{margin-top:4px}
 #groups{align-items:start}
 @media (max-width:640px){#s-hist>.toolbar{flex-wrap:nowrap;gap:6px}#s-hist>.toolbar .btn{padding:6px 10px;font-size:13px;white-space:nowrap}#s-hist>.toolbar h2{flex:none}}
+/* Unidad del presupuesto: % o € */
+.un{margin-left:4px;min-width:30px;height:30px;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:8px;font:inherit;font-weight:650;cursor:pointer}
+.un:hover{border-color:var(--acc);color:var(--ink)}
+.un.eur{background:var(--acc-soft);border-color:var(--acc);color:var(--acc)}
+.unf{display:inline-block;min-width:30px;margin-left:4px;text-align:center;color:var(--muted)}
+.unTodo{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:13px}
+/* Bocadillo de las gráficas: tarjeta que sigue al ratón */
+#tip{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.18);border-radius:12px;padding:8px 12px;font-size:13px;max-width:280px;transition:opacity .1s}
+#tip .tt{font-weight:650;margin-bottom:5px;font-size:13.5px}
+#tip .tr{display:flex;align-items:center;gap:8px;padding:2px 0;white-space:nowrap}
+#tip .tr i{width:10px;height:10px;border-radius:3px;flex:none}
+#tip .tr i.nada{background:none}
+#tip .tr span{flex:1;color:var(--muted)}
+#tip .tr b{font-variant-numeric:tabular-nums;font-weight:600}
+#tip .tr b.pos{color:var(--good)}#tip .tr b.neg{color:var(--bad)}
+svg .hz{fill:transparent;cursor:crosshair}
+svg .hz:hover{fill:var(--acc-soft);opacity:.7}
+.hchart .crece,.hchart .punto,.hchart polyline,.hchart polygon,.hchart text,#evoChart svg .crece,#evoChart svg line,#evoChart svg text{pointer-events:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #tip{box-shadow:0 10px 30px rgba(0,0,0,.5)}}
+:root[data-theme="dark"] #tip{box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#tip .tipir{color:var(--acc);font-weight:500;font-size:12px}
+svg .hz[data-ir],.cbars .col[data-ir]{cursor:pointer}
+#tip .tr:has(.tipir){margin-top:4px;padding-top:5px;border-top:1px solid var(--line)}#tip .tr:has(.tipir)>span,#tip .tr:has(.tipir)>i{display:none}#tip .tr:has(.tipir)>b{font-weight:500}

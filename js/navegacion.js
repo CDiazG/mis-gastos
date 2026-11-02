@@ -26,7 +26,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMas()});
 let _sy=0;
 addEventListener('scroll',()=>{const y=scrollY,d=y-_sy;if(Math.abs(d)<8)return;
   document.body.classList.toggle('bajando',d>0&&y>140);_sy=y},{passive:true});
-const sumaPct=()=>r2(CATS.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0));
+// lo repartido + el ahorro (lo que sobra): siempre 100 salvo que te pases
+const sumaPct=()=>{const b=baseRef();return r2(b>0?repartido(b)/b*100+pctAhorro(b):sumaOtrosPct()+pctAhorro(0))};
+// solo bloquea salir de Ajustes si, todo en %, te pasas del 100 %
+const presupuestoImposible=()=>!hayEur()&&sumaOtrosPct()>100.01;
 /* ---- Apartados de Ajustes y Ayuda: menú + un apartado cada vez (en el ordenador, el menú a la izquierda) ---- */
 const APARTADOS={
   ajustes:[
@@ -125,11 +128,11 @@ addEventListener('popstate',e=>{
   if(go(st.t,{sub:st.sub||'',hist:true})===false){history.pushState(NAV_CUR,'');return}
   NAV_CUR=st;
 });
-function avisoPct(){const s=sumaPct();
-  dialog('El presupuesto no suma 100%',`<p>Los porcentajes suman <b>${fmt(s,1)}%</b>. ${s>100?`Te pasas en <b>${fmt(s-100,1)} puntos</b>: baja alguna categoría.`:`Faltan <b>${fmt(100-s,1)} puntos</b> por repartir: súbelos a alguna categoría (por ejemplo, al ahorro).`}</p><p class="small mut">Hasta que no sumen 100% no puedes salir de Ajustes.</p>`,[{t:'Arreglarlo',cls:'pri',fn:()=>{irApartado('ajustes','presupuesto');setTimeout(()=>$('#pctTable').scrollIntoView({behavior:'smooth',block:'center'}),60)}}]);
+function avisoPct(){const s=sumaOtrosPct();
+  dialog('Te pasas del 100 %',`<p>Lo que has repartido suma <b>${fmt(s,1)}%</b>: te pasas en <b>${fmt(s-100,1)} puntos</b> y no queda nada para el ahorro. Baja alguna categoría.</p><p class="small mut">Hasta que no lo arregles no puedes salir de Ajustes.</p>`,[{t:'Arreglarlo',cls:'pri',fn:()=>{irApartado('ajustes','presupuesto');setTimeout(()=>$('#pctTable').scrollIntoView({behavior:'smooth',block:'center'}),60)}}]);
 }
 function go(t,{sub,hist=false}={}){
-  if(TAB==='ajustes'&&t!=='ajustes'&&Math.abs(sumaPct()-100)>0.01){avisoPct();return false}
+  if(TAB==='ajustes'&&t!=='ajustes'&&presupuestoImposible()){avisoPct();return false}
   if(APARTADOS[t])SUB[t]=sub!==undefined?sub:'';
   TAB=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
   const tp=$('#tip');if(tp)tp.classList.remove('on');

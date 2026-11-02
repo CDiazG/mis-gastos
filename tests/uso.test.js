@@ -39,18 +39,53 @@ module.exports = {
     })();
   },
 
-  'el presupuesto no deja salir de Ajustes si no suma 100'(browser, estado) {
+  'presupuesto: lo que no se reparte va al ahorro y solo bloquea si te pasas'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);
       await p.evaluate(() => go('ajustes'));
-      await p.fill('[data-p=OCIO]', '13');
+      const ah = () => p.evaluate(() => Math.round(pctAhorro(0) * 10) / 10);
+      assert.equal(await ah(), 10, 'de serie el ahorro es el 10 %');
+      await p.fill('[data-p=OCIO]', '5');
+      assert.equal(await ah(), 13, 'baja ocio 3 puntos y el ahorro sube 3');
+      assert.match(await p.textContent('#pctTable [data-ah]'), /13/);
       await p.evaluate(() => go('resumen'));
-      assert.equal(await p.evaluate(() => TAB), 'ajustes');
-      assert.match(await p.textContent('#dlgB'), /105/);
+      assert.equal(await p.evaluate(() => TAB), 'resumen', 'ya no hace falta cuadrar a mano');
+      await p.evaluate(() => go('ajustes'));
+      await p.fill('[data-p=OCIO]', '20');
+      assert.equal(await ah(), 0);
+      assert.match(await p.textContent('#pctAlert'), /Te pasas del 100/);
+      await p.evaluate(() => go('resumen'));
+      assert.equal(await p.evaluate(() => TAB), 'ajustes', 'si te pasas no deja salir');
+      assert.match(await p.textContent('#dlgB'), /102/);
       await p.click('#dlgF >> text=Arreglarlo');
       await p.fill('[data-p=OCIO]', '8');
       await p.evaluate(() => go('resumen'));
       assert.equal(await p.evaluate(() => TAB), 'resumen');
+    })();
+  },
+
+  'presupuesto en euros: una categoría con cantidad fija y todas de golpe'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const m = await p.evaluate(() => { const m = mesDe(hoy()); S.mov.push({ id: 'n', fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: 'c', fecha: m + '-03', mes: m, concepto: 'CENA', importe: -40, cat: 'OCIO', cuenta: 'EVO' }); MES = m; save(); go('ajustes'); return m; });
+      await p.click('#pctTable .un[data-u=OCIO]');
+      assert.equal(await p.inputValue('[data-e=OCIO]'), '160', 'el 8 % de 2.000 € pasa a 160 €');
+      await p.fill('[data-e=OCIO]', '50');
+      const r = await p.evaluate(m => { const st = stats(m); return { p: presupuestoCat(m, 'OCIO', st).p, ah: Math.round(pctAhorro(st.base) * 10) / 10 }; }, m);
+      assert.equal(r.p, 50, 'el presupuesto de restaurantes es 50 € cobres lo que cobres');
+      assert.equal(r.ah, 15.5, 'los 110 € que sobran van al ahorro');
+      await p.evaluate(() => go('resumen'));
+      assert.match(await p.textContent('#groups [data-cat=OCIO]'), /fijo · presupuesto 50/);
+      // con otros ingresos el presupuesto sigue en 50 €
+      await p.evaluate(m => { S.mov.find(x => x.id === 'n').importe = 3000; save(); }, m);
+      assert.equal(await p.evaluate(m => presupuestoCat(m, 'OCIO').p, m), 50);
+      // todas a euros y vuelta a porcentajes
+      await p.evaluate(() => go('ajustes'));
+      await p.click('#pctSum [data-todo=eur]');
+      assert.ok(await p.evaluate(() => ['VIVIENDA', 'SUPERMERCADO', 'INVERSION'].every(enEur) && !enEur('DIEZMO')), 'el diezmo sigue en %');
+      await p.click('#pctSum [data-todo=pct]');
+      assert.ok(await p.evaluate(() => !hayEur()));
+      assert.equal(await p.evaluate(() => Math.round(+S.aj.pct.OCIO * 10) / 10), 1.7, '50 € de 3.000 € es el 1,7 %');
     })();
   },
 
@@ -128,13 +163,21 @@ module.exports = {
     return (async () => {
       const { p } = await dentro(browser, estado);
       await anadir(p, { imp: '5', con: 'café', cat: 'OCIO' });
-      await p.evaluate(() => go('movs'));
+      await p.evaluate(() => { S.cuentas.push({ n: 'Banco Inventado', v: 1500, f: hoy(), banco: 1 }, { n: 'Broker · Inversiones', v: 300, f: hoy(), cartera: { f: hoy(), pos: [{ n: 'Oro Imaginario', u: 2.5, v: 300, isin: 'IE0000000003' }] } });
+        S.objetivos = [{ id: 'o', nombre: 'Viaje inventado', meta: 1000, aport: [{ f: hoy(), i: 250 }] }]; save(); go('movs'); });
       await p.click('#s-movs [data-export]'); await p.selectOption('#xAl', 'mes');
       const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#dlgF >> text=Descargar')]);
       const buf = require('fs').readFileSync(await dl.path());
       assert.equal(buf.slice(0, 2).toString(), 'PK', 'es un archivo zip/xlsx');
       assert.ok(buf.includes('xl/worksheets/sheet1.xml'));
       assert.match(dl.suggestedFilename(), /\.xlsx$/);
+      // hoja «Patrimonio» con cuentas, cartera y objetivos (se lee con el propio lector de la app)
+      const txt = await p.evaluate(async b64 => { const leer = await unzip(Uint8Array.from(atob(b64), c => c.charCodeAt(0)));
+        let t = (await leer('xl/workbook.xml')) + ((await leer('xl/sharedStrings.xml')) || '');
+        for (let i = 1; i <= 6; i++) t += (await leer(`xl/worksheets/sheet${i}.xml`)) || '';
+        return t; }, buf.toString('base64'));
+      assert.match(txt, /name="Patrimonio"/);
+      assert.match(txt, /Patrimonio a/); assert.match(txt, /Banco Inventado/); assert.match(txt, /Oro Imaginario/); assert.match(txt, /Viaje inventado/);
     })();
   },
 
@@ -202,11 +245,11 @@ module.exports = {
       await atras();
       assert.match(await p.textContent('#toast'), /otra vez atrás para salir/);
       assert.equal(await tab(), 'inicio/');
-      // con el presupuesto descuadrado no deja salir de Ajustes, tampoco con atrás
-      await p.evaluate(() => { go('ajustes', { sub: 'presupuesto' }); S.aj.pct.OCIO += 5; });
+      // si el presupuesto se pasa del 100 % no deja salir de Ajustes, tampoco con atrás
+      await p.evaluate(() => { go('ajustes', { sub: 'presupuesto' }); S.aj.pct.OCIO += 15; });
       await atras();
       assert.equal(await p.evaluate(() => TAB), 'ajustes');
-      assert.ok(await p.evaluate(() => $('#dlg').open), 'avisa de que no suma 100');
+      assert.ok(await p.evaluate(() => $('#dlg').open), 'avisa de que te pasas');
       await atras();
       assert.ok(!(await p.evaluate(() => $('#dlg').open)), 'atrás cierra el aviso');
       assert.equal(await p.evaluate(() => TAB), 'ajustes');
@@ -236,6 +279,32 @@ module.exports = {
       await p.click('#faqTemas [data-ft=categorias]');
       const n = (await p.$$('#faqList details')).length;
       assert.ok(n >= 3 && n <= 6, 'solo las de categorías: ' + n);
+    })();
+  },
+
+  'gráficas: bocadillo al pasar por un mes y clic para ir a sus movimientos'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const m = await p.evaluate(() => { const h = mesDe(hoy()), a = addMes(h, -2);
+        for (const mm of [addMes(h, -3), a, h]) S.mov.push({ id: uid(), fecha: mm + '-01', mes: mm, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: uid(), fecha: mm + '-04', mes: mm, concepto: 'TAXI', importe: mm === a ? -90 : -20, cat: 'TRANSPORTE', cuenta: 'EVO' }, { id: uid(), fecha: mm + '-05', mes: mm, concepto: 'CENA', importe: -30, cat: 'OCIO', cuenta: 'EVO' });
+        save(); EVO = 'TRANSPORTE'; go('hist'); return a; });
+      const banda = `#evoChart .hz[data-m="${m}"]`;
+      await p.$eval(banda, e => e.scrollIntoView({ block: 'center' })); await L.esperar(150);
+      await p.hover(banda);
+      await p.waitForSelector('#tip.on', { timeout: 2000 });
+      const t = await p.textContent('#tip');
+      assert.match(t, /Gastado\s*90/); assert.match(t, /Más que la media/); assert.match(t, /ver los movimientos/);
+      await p.click(banda);
+      const r = await p.evaluate(() => ({ tab: TAB, mes: MES, cat: F.cat }));
+      assert.deepEqual(r, { tab: 'movs', mes: m, cat: 'TRANSPORTE' });
+      assert.ok(!/CENA/.test(await p.textContent('#s-movs')), 'solo los de esa categoría');
+      // la gráfica principal lleva al resumen del mes
+      await p.evaluate(() => { F.cat = ''; go('hist'); });
+      await p.mouse.move(1, 1); await p.$eval(`#chart .hz[data-m="${m}"]`, e => e.scrollIntoView({ block: 'center' })); await L.esperar(150);
+      await p.hover(`#chart .hz[data-m="${m}"]`); await p.waitForSelector('#tip.on');
+      assert.match(await p.textContent('#tip'), /Ingresos\s*2\.000/);
+      await p.click(`#chart .hz[data-m="${m}"]`);
+      assert.deepEqual(await p.evaluate(() => [TAB, MES]), ['resumen', m]);
     })();
   },
 

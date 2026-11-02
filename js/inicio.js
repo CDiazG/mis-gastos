@@ -11,12 +11,14 @@ function columnas(items,{media=false,neg=false}={}){
   const max=Math.max(0,...items.map(i=>i.v)),min=Math.min(0,...items.map(i=>i.v)),rango=(max-min)||1,z=max/rango*100;
   const avg=items.reduce((a,i)=>a+i.v,0)/items.length;
   return `<div class="cplot"><div class="cbars" style="--z:${z}%">${media?`<div class="cmed" style="top:${(max-avg)/rango*100}%"><span>media ${eur(avg,0)}</span></div>`:''}
-    ${items.map(i=>{const h=Math.abs(i.v)/rango*100;return `<div class="col${i.actual?' act':''}" data-tip="${esc(i.tip)}" tabindex="0" aria-label="${esc(i.tip)}"><i class="${i.v<0?'n':neg?'p':media&&i.v>avg*1.2?'alto':''}" style="height:${Math.max(i.v?1.5:0,h)}%;${i.v>=0?`bottom:${100-z}%`:`top:${z}%`}"></i></div>`}).join('')}</div>
+    ${items.map(i=>{const h=Math.abs(i.v)/rango*100;return `<div class="col${i.actual?' act':''}" ${i.m?`data-m="${i.m}" data-ir="resumen"`:''} ${i.h?`data-tiph="${esc(i.h)}"`:`data-tip="${esc(i.tip)}"`} tabindex="0" aria-label="${esc(i.tip)}"><i class="${i.v<0?'n':neg?'p':media&&i.v>avg*1.2?'alto':''}" style="height:${Math.max(i.v?1.5:0,h)}%;${i.v>=0?`bottom:${100-z}%`:`top:${z}%`}"></i></div>`}).join('')}</div>
     <div class="clabels">${items.map((i,k)=>`<span>${items.length>8&&k%2?'':i.l}</span>`).join('')}</div></div>`}
+// Contenido del bocadillo: título y filas [color, nombre, valor, clase]
+function tipHtml(tit,filas){return `<div class="tt">${tit}</div>`+filas.map(([c,n,v,cl])=>`<div class="tr">${c?`<i style="background:${c}"></i>`:'<i class="nada"></i>'}<span>${n}</span><b class="${cl||''}">${v}</b></div>`).join('')}
 // Rosco de categorías con el total en el centro y la leyenda al lado (cada fila lleva a sus movimientos)
 function rosco(items){
   const tot=items.reduce((a,x)=>a+x.v,0)||1,R=40,L=2*Math.PI*R,hueco=items.length>1?1.2:0;let ac=0;
-  const segs=items.map((x,k)=>{const f=x.v/tot*L,s=`<circle class="rseg" r="${R}" cx="50" cy="50" fill="none" stroke="${x.id?`var(--c${k+1})`:'var(--muted)'}" stroke-width="15" stroke-dasharray="${Math.max(0.01,f-hueco).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-ac).toFixed(2)}" transform="rotate(-90 50 50)"><title>${esc(x.n)}: ${eur(x.v,0)} (${Math.round(x.v/tot*100)}%)</title></circle>`;ac+=f;return s}).join('');
+  const segs=items.map((x,k)=>{const f=x.v/tot*L,s=`<circle class="rseg" r="${R}" cx="50" cy="50" fill="none" stroke="${x.id?`var(--c${k+1})`:'var(--muted)'}" stroke-width="15" stroke-dasharray="${Math.max(0.01,f-hueco).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-ac).toFixed(2)}" transform="rotate(-90 50 50)" data-tiph="${esc(tipHtml(x.n,[[x.id?`var(--c${k+1})`:'var(--muted)','Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %']]))}"></circle>`;ac+=f;return s}).join('');
   return `<div class="rosco"><svg viewBox="0 0 100 100" role="img" aria-label="Reparto del gasto"><circle r="${R}" cx="50" cy="50" fill="none" stroke="var(--soft)" stroke-width="15"/>${segs}
       <text x="50" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${eur(tot,0)}</text><text x="50" y="60" text-anchor="middle" font-size="6.5" fill="var(--muted)">gastado</text></svg>
     <div class="rleyenda">${items.map((x,k)=>`<div class="gbar rfila" data-cat="${x.id}" ${x.id?'title="Ver movimientos"':''}><span class="gn"><i style="background:${x.id?`var(--c${k+1})`:'var(--muted)'}"></i>${esc(x.n)}</span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}</div></div>`}
@@ -37,7 +39,7 @@ function rInicio(){
   const st=stats(hoyM),pres=CATS.filter(c=>c.g!=='AHORRO').reduce((a,c)=>a+presupuestoCat(hoyM,c.id,st).p,0);
   const dia=+hoy().slice(8,10),diasMes=new Date(+anio,+hoyM.slice(5),0).getDate();
   const ritmo=dia>3&&st.consumo>0?st.consumo/dia*diasMes:null;
-  const pObj=(+S.aj.pct.AHORRO||0)+(+S.aj.pct.INVERSION||0),obj=st.base*pObj/100,okObj=obj>0&&st.ahorro>=obj-0.5;
+  const obj=presAhorro(st.base)+presFijo('INVERSION',st.base),pObj=obj>0?1:0,okObj=obj>0&&st.ahorro>=obj-0.5;
   let html='';
   // 1. Tu dinero
   html+=tarjeta('dinero','Tu dinero',`<div class="istats dos">
@@ -68,10 +70,12 @@ function rInicio(){
   html+=tarjeta('pend','Pendiente',pend.length?`<div class="ilist">${pend.map(([t,a])=>`<button type="button" class="iitem" data-acc="${a}"><span>${t}</span><span class="mut">→</span></button>`).join('')}</div>`:'<p class="pos" style="margin:0">✓ Todo al día. ¡Bien hecho!</p>',pend.length?`<span class="tag cash">${pend.length}</span>`:'');
   // 4. Gasto mes a mes
   const media=conDatos.length?conDatos.reduce((a,x)=>a+x.consumo,0)/conDatos.length:0;
-  html+=tarjeta('gasto','Gasto de los últimos 12 meses',columnas(st12.map(x=>({l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.consumo),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${eur(x.consumo)} gastado`})),{media:true})+
+  html+=tarjeta('gasto','Gasto de los últimos 12 meses',columnas(st12.map(x=>({m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.consumo),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${eur(x.consumo)} gastado`,
+      h:tipHtml(nombreMesCap(x.m)+(x.m===hoyM?' <span class="mut">(en curso)</span>':''),[['var(--acc)','Gastado',eur(x.consumo,0)],...(media?[['',x.consumo>=media?'▲ Más que la media':'▼ Menos que la media',eur(Math.abs(x.consumo-media),0),x.consumo>media*1.2?'neg':x.consumo<=media?'pos':'']]:[]),['','',IR_TXT('el resumen del mes')]])})),{media:true})+
     `<p class="small mut" style="margin:8px 0 0">La línea discontinua es tu gasto medio (${eur(media,0)} al mes). La columna más clara es el mes en curso, que aún no ha terminado.</p>`);
   // 5. Ahorro mes a mes
-  html+=tarjeta('ahorro','Ahorro de los últimos 12 meses',columnas(st12.map(x=>({l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.ahorro),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${x.ahorro<0?'gastaste '+eur(-x.ahorro)+' más de lo que entró':'ahorraste '+eur(x.ahorro)}${x.ingresos?' ('+Math.round(x.ahorro/x.ingresos*100)+'%)':''}`})),{neg:true})+
+  html+=tarjeta('ahorro','Ahorro de los últimos 12 meses',columnas(st12.map(x=>({m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.ahorro),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${x.ahorro<0?'gastaste '+eur(-x.ahorro)+' más de lo que entró':'ahorraste '+eur(x.ahorro)}${x.ingresos?' ('+Math.round(x.ahorro/x.ingresos*100)+'%)':''}`,
+      h:tipHtml(nombreMesCap(x.m)+(x.m===hoyM?' <span class="mut">(en curso)</span>':''),[['var(--good)','Ingresos',eur(x.ingresos,0)],['var(--acc)','Gastado',eur(x.consumo,0)],[x.ahorro<0?'var(--bad)':'var(--good)',x.ahorro<0?'Gastaste de más':'Ahorrado',eur(x.ahorro,0)+(x.ingresos?` · ${Math.round(x.ahorro/x.ingresos*100)} %`:''),x.ahorro<0?'neg':'pos'],['','',IR_TXT('el resumen del mes')]])})),{neg:true})+
     `<p class="small mut" style="margin:8px 0 0">Lo que no gastas cada mes. En rojo, los meses en los que salió más de lo que entró.</p>`);
   // 6. En qué se va el dinero este año
   const cats=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].map(c=>({n:c.n,id:c.id,v:delAnio.reduce((a,x)=>a+(x.by[c.id]||0),0)})).filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
@@ -95,11 +99,18 @@ function botonTodo(){const ds=$$('#inicio details.icard');const b=$('#iniTodo');
 
 /* ---- Bocadillo con la cifra al pasar el ratón o tocar una columna ---- */
 (()=>{const tip=document.createElement('div');tip.id='tip';document.body.appendChild(tip);
-  const ver=(el,x,y)=>{tip.textContent=el.dataset.tip;tip.classList.add('on');const r=tip.getBoundingClientRect();
-    tip.style.left=Math.max(8,Math.min(window.innerWidth-r.width-8,x-r.width/2))+'px';tip.style.top=Math.max(8,y-r.height-12)+'px'};
-  document.addEventListener('pointerover',e=>{const el=e.target.closest('[data-tip]');if(el)ver(el,e.clientX,e.clientY)});
-  document.addEventListener('pointermove',e=>{const el=e.target.closest('[data-tip]');if(el)ver(el,e.clientX,e.clientY);else tip.classList.remove('on')});
-  document.addEventListener('focusin',e=>{const el=e.target.closest&&e.target.closest('[data-tip]');if(el){const r=el.getBoundingClientRect();ver(el,r.left+r.width/2,r.top)}});
-  document.addEventListener('focusout',()=>tip.classList.remove('on'));
-  document.addEventListener('scroll',()=>tip.classList.remove('on'),{passive:true,capture:true});
+  // sigue al ratón (o al dedo): a la derecha y debajo del puntero, y se da la vuelta si no cabe
+  let ult=null;
+  const ver=(el,x,y)=>{if(ult!==el){if(el.dataset.tiph!==undefined)tip.innerHTML=el.dataset.tiph;else tip.textContent=el.dataset.tip;ult=el}
+    tip.classList.add('on');const r=tip.getBoundingClientRect(),W=window.innerWidth,H=window.innerHeight;
+    let l=x+16,t=y+16;if(l+r.width>W-8)l=x-r.width-16;if(t+r.height>H-8)t=y-r.height-16;
+    tip.style.left=Math.max(8,l)+'px';tip.style.top=Math.max(8,t)+'px'};
+  const quitar=()=>{tip.classList.remove('on');ult=null};
+  const sel='[data-tip],[data-tiph]';
+  document.addEventListener('pointerover',e=>{const el=e.target.closest(sel);if(el)ver(el,e.clientX,e.clientY)});
+  document.addEventListener('pointermove',e=>{const el=e.target.closest(sel);if(el)ver(el,e.clientX,e.clientY);else if(ult)quitar()});
+  document.addEventListener('pointerleave',quitar);
+  document.addEventListener('focusin',e=>{const el=e.target.closest&&e.target.closest(sel);if(el){const r=el.getBoundingClientRect();ver(el,r.left+r.width/2,r.top)}});
+  document.addEventListener('focusout',quitar);
+  document.addEventListener('scroll',quitar,{passive:true,capture:true});
 })();

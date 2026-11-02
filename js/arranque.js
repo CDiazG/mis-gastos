@@ -20,7 +20,7 @@ $('#verBtn').textContent='v'+VERSION;
 $('#verBtn').onclick=()=>dialog('Novedades',cambiosHtml(null),[{t:'Cerrar',cls:'pri'}]);
 window.addEventListener('beforeunload',e=>{
   if(NUBE&&pendiente)flush();
-  if(Math.abs(sumaPct()-100)>0.01||(NUBE&&pendiente)){e.preventDefault();e.returnValue=''}});
+  if(presupuestoImposible()||(NUBE&&pendiente)){e.preventDefault();e.returnValue=''}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&NUBE&&pendiente)flush();if(document.visibilityState==='visible')buscarVersion()});
 window.addEventListener('online',()=>{if(NUBE&&USER)setSync('ok')});
 window.addEventListener('offline',()=>{if(NUBE&&USER)setSync('offline')});

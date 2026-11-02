@@ -10,9 +10,9 @@ function rAjustes(){
   $('#caGrupo').innerHTML=gOpts('VARIABLES');
   $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id&&(c.id!=='DIEZMO'||diezmoOn()));
     return `<tr><td colspan="4" class="small mut" style="padding-top:12px"><b>${g.n}</b></td></tr>`+cs.map((c,k)=>`<tr data-cid="${c.id}">
-      <td><div class="cnw"><button type="button" class="asa" title="Arrastra para cambiar el orden (o usa las flechas del teclado)" aria-label="Mover ${esc(c.n)}">⠿</button><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:150px"></div>${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que no gastas ni inviertes</div>':''}</td>
+      <td><div class="cnw"><button type="button" class="asa" title="Arrastra para cambiar el orden (o usa las flechas del teclado)" aria-label="Mover ${esc(c.n)}">⠿</button><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:150px"></div>${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que queda sin repartir</div>':''}</td>
       <td><select class="cg" style="max-width:118px;font-size:13px" ${FIJAS.has(c.id)?'disabled title="Esta categoría no se puede mover de grupo"':''}>${gOpts(c.g)}</select></td>
-      <td class="r" style="white-space:nowrap"><input type="number" min="0" max="100" step="0.5" data-p="${c.id}" value="${S.aj.pct[c.id]??0}" style="width:72px" class="right"> %</td>
+      <td class="r" style="white-space:nowrap">${valorCelda(c)}</td>
       <td style="white-space:nowrap">${c.g==='AHORRO'?'':`<button type="button" class="btn sm icon ac${S.aj.acumula&&S.aj.acumula[c.id]?' on':''}" title="${S.aj.acumula&&S.aj.acumula[c.id]?'Acumula: lo que sobra pasa al mes siguiente (pulsa para quitarlo)':'Pulsa para que lo que sobre pase al mes siguiente'}">↻</button>`}${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
   $$('#pctTable tr[data-cid]').forEach(tr=>{const id=tr.dataset.cid;const c=S.cats.find(x=>x.id===id);
     $('.cn',tr).onchange=e=>{const n=e.target.value.trim();if(!n){e.target.value=c.n;return}
@@ -31,11 +31,17 @@ function rAjustes(){
     const g=$('#caGrupo').value;const ult=S.cats.map((x,i)=>x.g===g?i:-1).filter(i=>i>=0).pop();
     S.cats.splice(ult==null?S.cats.length:ult+1,0,{id,n,g});S.aj.pct[id]=0;save();$('#caNombre').value='';rAjustes();
     toast('Categoría «'+n+'» añadida con 0%. Dale un porcentaje si quieres presupuesto.')};
-  const sumUI=()=>{const s=sumaPct();const ok=Math.abs(s-100)<0.01;
-    $('#pctSum').innerHTML=GROUPS.map(g=>`${g.n}: <b>${fmt(CATS.filter(c=>c.g===g.id).reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0),1)}%</b>`).join(' · ')+`<br>Total: <b class="${ok?'ok':'ko'}" style="font-size:16px">${fmt(s,1)}%</b>`;
-    $('#pctAlert').innerHTML=ok?'':`<div class="alert bad" style="margin-bottom:14px"><span class="grow"><b>Los porcentajes suman ${fmt(s,1)}%.</b> ${s>100?`Te pasas en ${fmt(s-100,1)} puntos.`:`Faltan ${fmt(100-s,1)} puntos por repartir.`} Tienen que sumar exactamente 100% para poder salir de Ajustes.</span><button class="btn sm" onclick="document.getElementById('pctTable').scrollIntoView({behavior:'smooth',block:'center'})">Ir a los porcentajes</button></div>`;
-    $$('[data-p]').forEach(i=>i.style.borderColor=ok?'':'var(--bad)');};
-  $$('[data-p]').forEach(i=>i.oninput=()=>{S.aj.pct[i.dataset.p]=parseFloat(String(i.value).replace(',','.'))||0;save();sumUI()});sumUI();
+  $$('#pctTable .un').forEach(b=>b.onclick=()=>{cambiarUnidad(b.dataset.u,!enEur(b.dataset.u));save();rAjustes()});
+  const sumUI=()=>{const b=baseRef(),rep=b>0?repartido(b)/b*100:sumaOtrosPct(),ah=pctAhorro(b),pasa=b>0?repartido(b)>b+0.5:sumaOtrosPct()>100.01;
+    const pg=g=>CATS.filter(c=>c.g===g.id).reduce((a,c)=>a+pctCat(c.id,b),0);
+    $('#pctSum').innerHTML=GROUPS.map(g=>`${g.n}: <b>${fmt(pg(g),1)}%</b>`).join(' · ')+`<br>Repartido: <b class="${pasa?'ko':''}">${fmt(rep,1)}%</b> · Ahorro (lo que sobra): <b class="ok" style="font-size:16px">${fmt(ah,1)}%</b>${hayEur()&&b>0?` <span class="mut">· con ${eur(b,0)} de base este mes</span>`:''}
+      <div class="unTodo"><span class="mut">Poner todas en</span><button type="button" class="btn sm" data-todo="eur">€</button><button type="button" class="btn sm" data-todo="pct">%</button></div>`;
+    $$('#pctSum [data-todo]').forEach(x=>x.onclick=()=>{const aEur=x.dataset.todo==='eur';catsReparto().filter(c=>c.id!=='DIEZMO').forEach(c=>cambiarUnidad(c.id,aEur));save();rAjustes();toast(aEur?'Presupuesto en euros: cada categoría con su cantidad fija':'Presupuesto en porcentajes')});
+    const ahc=$('#pctTable [data-ah]');if(ahc)ahc.innerHTML=ahorroCelda(b);
+    $('#pctAlert').innerHTML=!pasa?'':`<div class="alert bad" style="margin-bottom:14px"><span class="grow"><b>Te pasas del 100 %.</b> Lo repartido suma ${fmt(rep,1)}%${hayEur()&&b>0?` de los ${eur(b,0)} de este mes`:''}, así que no queda nada para el ahorro. Baja alguna categoría.</span></div>`;
+    $$('[data-p],[data-e]').forEach(i=>i.style.borderColor=pasa?'var(--bad)':'');};
+  $$('[data-e]').forEach(i=>i.oninput=()=>{(S.aj.eur||(S.aj.eur={}))[i.dataset.e]=Math.max(0,parseFloat(String(i.value).replace(',','.'))||0);syncAhorro();save();sumUI()});
+  $$('[data-p]').forEach(i=>i.oninput=()=>{S.aj.pct[i.dataset.p]=parseFloat(String(i.value).replace(',','.'))||0;syncAhorro();save();sumUI()});sumUI();
   rSug();
   $('#diaNomina').value=S.aj.diaNomina;$('#diaNomina').onchange=e=>{S.aj.diaNomina=Math.min(31,Math.max(1,+e.target.value||25));save();toast('Guardado. Se aplica a las nóminas nuevas')};
   $('#dzAuto').checked=!!S.aj.diezmoAuto;
@@ -62,8 +68,8 @@ function borrarCat(c){
      const d=$('#bcDest').value;
      S.mov.forEach(x=>{if(x.cat===c.id)x.cat=d});
      S.reglas=S.reglas.filter(r=>r.c!==c.id||d).map(r=>r.c===c.id?{...r,c:d}:r);
-     if(d)S.aj.pct[d]=r2((+S.aj.pct[d]||0)+pc);
-     delete S.aj.pct[c.id];S.cats=S.cats.filter(x=>x!==c);save();rAjustes();toast('Categoría borrada')}}]);
+     if(d){if(enEur(c.id)&&enEur(d))S.aj.eur[d]=r2(S.aj.eur[d]+S.aj.eur[c.id]);else if(!enEur(c.id)&&!enEur(d))S.aj.pct[d]=r2((+S.aj.pct[d]||0)+pc)}
+     delete S.aj.pct[c.id];if(S.aj.eur)delete S.aj.eur[c.id];syncAhorro();S.cats=S.cats.filter(x=>x!==c);save();rAjustes();toast('Categoría borrada')}}]);
 }
 const mediana=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0};
 function sugerencia(){
@@ -78,7 +84,7 @@ function sugerencia(){
   const base=fija?+S.aj.baseFija:baseSug;
   const filas=CATS.map(c=>{
     const v=sts.map(s=>s.by[c.id]||0);const mean=v.reduce((a,b)=>a+b,0)/v.length,md=mediana(v);
-    const hab=(mean+md)/2,habP=hab/base*100,obj=+S.aj.pct[c.id]||0;
+    const hab=(mean+md)/2,habP=hab/base*100,obj=r2(pctCat(c.id,base));
     const over=v.filter(x=>x>base*obj/100+0.5).length;
     const sinDatos=v.every(x=>Math.abs(x)<0.5);
     let sug=c.g==='AHORRO'||(sinDatos&&obj>0)?obj:Math.max(0,Math.ceil(habP-0.05));
@@ -136,7 +142,7 @@ function rSug(){
    ${tabla()}`;
   $('#sugLuego').onclick=()=>{S.aj.sugOculta=mesDe(hoy());save();rSug();toast('Vale, te lo vuelvo a enseñar en '+sigMes)};
   $('#sugApply').onclick=()=>confirmar('Aplicar sugerencia',`Se cambiarán los porcentajes${g.fija?'':' y la base pasará a una cantidad fija de '+eur(g.baseSug,0)}. Luego puedes retocarlos a mano.`,'Aplicar',()=>{
-    g.filas.forEach(f=>S.aj.pct[f.c.id]=f.sug);if(!g.fija){S.aj.base='fija';S.aj.baseFija=g.baseSug}save();rAjustes();toast('Presupuesto actualizado')});
+    const bs=g.fija?+S.aj.baseFija:g.baseSug;g.filas.forEach(f=>{if(f.c.id==='AHORRO')return;if(enEur(f.c.id))S.aj.eur[f.c.id]=Math.round(bs*f.sug/100);else S.aj.pct[f.c.id]=f.sug});if(!g.fija){S.aj.base='fija';S.aj.baseFija=g.baseSug}syncAhorro();save();rAjustes();toast('Presupuesto actualizado')});
 }
 function rFijosAj(){
   const fs=S.fijos||(S.fijos=[]);
@@ -255,8 +261,8 @@ function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.pal
 function ponerDiezmo(on){
   const p=S.aj.pct;
   if(!on){p.AHORRO=r2((+p.AHORRO||0)+(+p.DIEZMO||0));p.DIEZMO=0;S.aj.diezmo=false;S.aj.diezmoAuto=false;toast('Diezmo desactivado: su porcentaje pasa al ahorro')}
-  else{const d=Math.min(10,+p.AHORRO||0);p.DIEZMO=d;p.AHORRO=r2((+p.AHORRO||0)-d);S.aj.diezmo=true;toast(d?'Diezmo activado con el '+d+' %, que sale del ahorro':'Diezmo activado: ponle su porcentaje en el presupuesto')}
-  save();refreshCats();if(TAB==='ajustes')rAjustes();else render();
+  else{const d=Math.min(10,Math.floor(pctAhorro(baseRef())*10)/10);p.DIEZMO=d;p.AHORRO=r2((+p.AHORRO||0)-d);S.aj.diezmo=true;toast(d?'Diezmo activado con el '+d+' %, que sale del ahorro':'Diezmo activado: ponle su porcentaje en el presupuesto')}
+  refreshCats();syncAhorro();save();if(TAB==='ajustes')rAjustes();else render();
 }
 
 /* ---- Más categorías: sugerencias que se añaden con un toque, con sus palabras para clasificar solas ---- */
@@ -287,6 +293,20 @@ function rCatSug(){
   $$('#catSug [data-sug]').forEach(b=>b.onclick=()=>anadirCatSug(CAT_SUG.find(c=>c.n===b.dataset.sug)));
 }
 // Reordenar categorías arrastrando el asa ⠿ (ratón o dedo), dentro de su grupo
+// Celda del presupuesto: % o € con su botón para cambiar; el Ahorro se calcula solo
+function valorCelda(c){
+  if(c.id==='AHORRO')return `<span data-ah>${ahorroCelda(baseRef())}</span>`;
+  const e=enEur(c.id),un=c.id==='DIEZMO'?'<span class="unf">%</span>':`<button type="button" class="un${e?' eur':''}" data-u="${c.id}" title="${e?'En euros fijos al mes. Pulsa para pasarlo a porcentaje':'En porcentaje de la base. Pulsa para poner una cantidad fija en euros'}">${e?'€':'%'}</button>`;
+  return e?`<input type="number" min="0" step="1" data-e="${c.id}" value="${+S.aj.eur[c.id]||0}" style="width:84px" class="right" inputmode="decimal">${un}`
+    :`<input type="number" min="0" max="100" step="0.5" data-p="${c.id}" value="${S.aj.pct[c.id]??0}" style="width:72px" class="right" inputmode="decimal">${un}`}
+function ahorroCelda(b){return `<b class="num">${fmt(pctAhorro(b),1)}%</b>${b>0?`<div class="small mut">≈ ${eur(presAhorro(b),0)} este mes</div>`:''}`}
+// Pasa una categoría de % a € (o al revés) con la base de este mes, para no empezar de cero
+function cambiarUnidad(id,aEur){
+  if(id==='AHORRO'||id==='DIEZMO')return;const b=baseRef();
+  if(aEur&&!enEur(id)){(S.aj.eur||(S.aj.eur={}))[id]=Math.round(b*(+S.aj.pct[id]||0)/100)}
+  else if(!aEur&&enEur(id)){S.aj.pct[id]=b>0?Math.round(S.aj.eur[id]/b*1000)/10:0;delete S.aj.eur[id]}
+  syncAhorro();
+}
 function arrastrarCat(e,tr,c){
   if(e.button>0)return;e.preventDefault();
   const filas=[...$$('#pctTable tr[data-cid]')].filter(t=>S.cats.find(x=>x.id===t.dataset.cid).g===c.g);

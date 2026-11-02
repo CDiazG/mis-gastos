@@ -11,7 +11,7 @@ function rResumen(){
   const st=stats(MES);
   const libre=st.ahorro;
   const tasa=st.ingresos>0?libre/st.ingresos:null;
-  const pObj=(+S.aj.pct.AHORRO||0)+(+S.aj.pct.INVERSION||0),obj=r2(st.base*pObj/100);
+  const obj=r2(presAhorro(st.base)+presFijo('INVERSION',st.base)),pObj=st.base>0?Math.round(obj/st.base*100):0;
   const logrado=obj>0&&libre>=obj-0.5,esteMes=MES===mesDe(hoy());
   $('#kpis').innerHTML=`
    <div class="card pad kpi"><div class="l">Ingresos</div><div class="v num pos">${eur(st.ingresos)}</div><div class="s">${st.ms.filter(x=>x.cat==='INGRESO').map(x=>(x.nomina||/n[oó]mina/i.test(x.concepto))?'Nómina':esc(verConcepto(x))).slice(0,2).join(' · ')||'Sin ingresos apuntados'}</div></div>
@@ -27,7 +27,7 @@ function rResumen(){
   if(pref('avisoCopia')&&S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'} Descárgala y guárdala en tu ordenador o en Drive: si algo se borra por error, se puede recuperar con ella.</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
   if(NUBE&&USER&&USER.admin&&pendientesN())al.push(`<div class="alert"><span class="grow"><b>${pendientesN()} solicitud${pendientesN()>1?'es':''} de acceso</b> esperando tu aprobación.</span><button class="btn sm" data-act="usu">Revisar</button></div>`);
   if(NUBE&&USER&&USER.admin&&bzNuevas())al.push(`<div class="alert info"><span class="grow"><b>${bzNuevas()} sugerencia${bzNuevas()>1?'s':''} nueva${bzNuevas()>1?'s':''}</b> en el buzón.</span><button class="btn sm" data-act="bz">Leer</button></div>`);
-  if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
+  if(st.base>0&&repartido(st.base)>st.base+0.5)al.push(`<div class="alert bad"><span class="grow">Este mes el presupuesto reparte <b>${eur(repartido(st.base),0)}</b> y la base es de ${eur(st.base,0)}: te pasas en ${eur(repartido(st.base)-st.base,0)} y no queda nada para el ahorro.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
   else{const sg=sugerencia();if(sg&&sg.cambia&&!sg.aplicada&&S.aj.sugOculta!==mesDe(hoy()))al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sugno">Ahora no</button><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
   if(pref('aviso80')&&MES===mesDe(hoy())&&st.base>0){
     const cerca=CATS.filter(c=>c.g!=='AHORRO').map(c=>({c,p:presupuestoCat(MES,c.id,st).p,v:st.by[c.id]||0})).filter(x=>x.p>0&&x.v>=x.p*0.8&&x.v<=x.p+0.5);
@@ -60,9 +60,9 @@ function rResumen(){
     return ` · <span class="${d>0?'neg':'pos'}" title="Comparado con ${nombreMes(mAnt)}">${d>0?'▲':'▼'} ${eur(Math.abs(d),0)} vs ${MESES[+mAnt.slice(5)-1].slice(0,3)}</span>`};
   $('#groups').innerHTML=GROUPS.map(g=>{
     const cs=CATS.filter(c=>c.g===g.id);
-    const gp=cs.reduce((a,c)=>a+(c.id==='AHORRO'?st.base*(S.aj.pct[c.id]||0)/100:presupuestoCat(MES,c.id,st).p),0);
+    const gp=cs.reduce((a,c)=>a+presupuestoCat(MES,c.id,st).p,0);
     const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
-    const pctG=cs.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0);
+    const pctG=Math.round(cs.reduce((a,c)=>a+pctCat(c.id,st.base),0)*10)/10;
     return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span></button>`+
       cs.map(c=>{
         const pc=presupuestoCat(MES,c.id,st),p=pc.p, v=st.by[c.id]||0, rest=p-v;
@@ -74,7 +74,7 @@ function rResumen(){
         if(c.id==='AHORRO'){const wa=p>0?Math.max(0,Math.min(100,v/p*100)):0;
           return `<div class="crow" data-cat="AHORRO"><div class="a"><span>${c.n} <span class="tag" title="Se calcula solo: ingresos − gastos − inversión − diezmo">automático</span></span><span class="num ${v<0?'neg':''}"><b>${eur(v)}</b></span></div>
             <div class="bar ${rest>0.5?'':'ok'}"><i style="width:${wa}%"></i></div>
-            <div class="b"><span>Lo que no gastas ni inviertes · ${S.aj.pct[c.id]||0}% · objetivo ${eur(p,0)}</span><span class="num ${rest>0.5?'mut':'pos'}">${rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'}</span></div></div>`}
+            <div class="b"><span>Lo que no gastas ni inviertes · lo que sobra del presupuesto (${fmt(pctAhorro(st.base),1)}%) · objetivo ${eur(p,0)}</span><span class="num ${rest>0.5?'mut':'pos'}">${rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'}</span></div></div>`}
         if(c.id==='DIEZMO'&&dz){
           const w2=dz.debido>0?Math.min(100,dz.pagado/dz.debido*100):0;
           return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n} ${dz.pendiente>0.5?'<span class="tag cash">pendiente</span>':dz.debido>0?'<span class="tag good">al día</span>':''}</span><span class="num"><b>${eur(dz.pagado)}</b> <span class="mut small">de ${eur(dz.debido,0)}</span></span></div>
@@ -82,7 +82,7 @@ function rResumen(){
             <div class="b"><span>${dz.pct}% de los ingresos del mes</span>${dz.pendiente>0.5?`<button class="btn sm dzpag" type="button">Marcar ${eur(dz.pendiente,0)} pagado</button>`:'<span class="pos">pagado</span>'}</div></div>`}
         return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
           <div class="bar ${isSave?'':over?'over':p>0&&v>=p*0.8?'warn':'ok'}"><i style="width:${w}%"></i></div>
-          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}${pc.extra?` <span class="tag acc" title="Lo que no gastaste los meses anteriores">↻ ${eur(pc.extra,0)} acumulado</span>`:''}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(p<=0.5&&v<=0.5?'':rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
+          <div class="b"><span>${enEur(c.id)?'fijo':fmt(+S.aj.pct[c.id]||0,1)+'%'} · presupuesto ${eur(p,0)}${pc.extra?` <span class="tag acc" title="Lo que no gastaste los meses anteriores">↻ ${eur(pc.extra,0)} acumulado</span>`:''}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(p<=0.5&&v<=0.5?'':rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
       }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
           <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
   }).join('');
@@ -103,10 +103,10 @@ function rResumen(){
 
 /* ---- Gráfico del mes ---- */
 function barrasHtml(items){if(!items.length)return '';const tot=items.reduce((a,x)=>a+x.v,0),max=Math.max(...items.map(x=>x.v));
-  return items.map(x=>`<div class="gbar" data-cat="${x.id}" title="Ver movimientos"><span class="gn">${esc(x.n)}</span><span class="gt"><i style="width:${Math.max(1,x.v/max*100)}%"></i></span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}
+  return items.map(x=>`<div class="gbar" data-cat="${x.id}" data-tiph="${esc(tipHtml(esc(x.n),[['var(--acc)','Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %'],...(x.p?[['','Presupuesto',eur(x.p,0)],['',x.v>x.p+0.5?'Te pasas':'Queda',eur(Math.abs(x.p-x.v),0),x.v>x.p+0.5?'neg':'pos']]:[]),...(x.id?[['','','<span class="mut" style="font-weight:400">Toca para ver los movimientos</span>']]:[])]))}"><span class="gn">${esc(x.n)}</span><span class="gt"><i style="width:${Math.max(1,x.v/max*100)}%"></i></span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}
 function rGrafico(st){
   const el=$('#grafCard');
-  const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
+  const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0,p:presupuestoCat(MES,c.id,st).p})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
   if(!items.length||!pref('verGrafico')){el.classList.add('hide');el.innerHTML='';return}
   el.classList.remove('hide');
   const tot=items.reduce((a,x)=>a+x.v,0);

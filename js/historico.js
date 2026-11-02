@@ -4,6 +4,19 @@
 let YEAR=null;
 let EVO='OCIO';
 const pasoRedondo=x=>{const e=Math.pow(10,Math.floor(Math.log10(x||1))),f=x/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
+const IR_TXT=q=>`<span class="tipir">${matchMedia('(hover:none)').matches?'Toca otra vez':'Haz clic'} para ver ${q} →</span>`;
+// Al pulsar un mes de una gráfica: el Resumen de ese mes o sus movimientos (con la categoría de la gráfica).
+// En el móvil el primer toque enseña el bocadillo y el segundo lleva al sitio.
+let _toque=null;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ir][data-m]');if(!b)return;
+  if(matchMedia('(hover:none)').matches&&_toque!==b){_toque=b;return}
+  _toque=null;const m=b.dataset.m;if(!S.mov.some(x=>x.mes===m))return;
+  MES=m;$('#tip')&&$('#tip').classList.remove('on');
+  if(b.dataset.ir==='resumen'){go('resumen');return}
+  const c=b.dataset.cat!==undefined?b.dataset.cat:EVO;
+  F.todos=false;F.q='';F.tag='';F.sinCat=c==='SINCAT';F.cat=c==='__ING'?'INGRESO':c==='__TOTAL'||c==='SINCAT'?'':c;
+  go('movs');scrollTo(0,0)});
+const nombreMesCap=m=>{const n=nombreMes(m);return n.charAt(0).toUpperCase()+n.slice(1)};
 function rEvol(data){
   const opts=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'},{id:'__TOTAL',n:'Todo lo gastado'},{id:'__ING',n:'Ingresos'}];
   if(!opts.some(o=>o.id===EVO))EVO='__TOTAL';
@@ -18,8 +31,10 @@ function rEvol(data){
   // color según la media: en gastos, por debajo verde, algo por encima ámbar y bastante por encima rojo (en ingresos al revés)
   const esIng=EVO==='__ING',color=v=>{if(!media)return 'var(--acc)';const r=v/media;return esIng?(r>=0.97?'var(--good)':r>=0.85?'var(--warn)':'var(--bad)'):(r<=1.03?'var(--good)':r<=1.2?'var(--warn)':'var(--bad)')};
   for(let v=0;v<=max+0.01;v+=pasoE){svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${v>=1000?fmt(v/1000,1)+'k':fmt(v,0)}</text>`}
+  d.forEach((x,i)=>{const cx=pl+step*i+step/2,v=vs[i],dm=v-media;
+    svg+=`<rect class="hz" data-m="${x.m}" data-ir="movs" x="${(cx-step/2).toFixed(1)}" y="${pt}" width="${step.toFixed(1)}" height="${H-pt-pb}" rx="6" data-tiph="${esc(x.vacio?tipHtml(nombreMesCap(x.m),[['','Sin datos este mes','']]):tipHtml(nombreMesCap(x.m),[[color(v),esIng?'Ingresos':'Gastado',eur(v,0)],...(media?[['','Media',eur(media,0)],['',dm>=0?'▲ Más que la media':'▼ Menos que la media',eur(Math.abs(dm),0),(esIng?dm<0:dm>0)&&Math.abs(dm)>=1?'neg':'pos']]:[]),['','',IR_TXT('los movimientos')]]))}"/>`});
   d.forEach((x,i)=>{const cx=pl+step*i+step/2,v=vs[i];
-    if(!x.vacio)svg+=`<rect class="crece" x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${Math.max(0,y(0)-y(v))}" rx="3" fill="${color(v)}" opacity=".85"><title>${nombreMes(x.m)} · ${eur(v)}${media?` · ${v>=media?'▲':'▼'} ${eur(Math.abs(v-media),0)} ${v>=media?'más':'menos'} que la media`:''}</title></rect>`;
+    if(!x.vacio)svg+=`<rect class="crece" x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${Math.max(0,y(0)-y(v))}" rx="3" fill="${color(v)}" opacity=".85"/>`;
     if(i%2===0||d.length<14)svg+=`<text x="${cx}" y="${H-8}" font-size="11" text-anchor="middle" fill="var(--muted)">${nombreMesC(x.m)}</text>`});
   if(media>0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(media)}" y2="${y(media)}" stroke="var(--ink)" opacity=".55" stroke-dasharray="6 5" stroke-width="1.5"/><text x="${W-8}" y="${y(media)<20?y(media)+14:y(media)-5}" font-size="11" text-anchor="end" fill="var(--ink)" paint-order="stroke" stroke="var(--card)" stroke-width="3">media ${eur(media,0)}</text>`;
   svg+='</svg>';
@@ -47,9 +62,12 @@ function rHist(){
     <clipPath id="cpPos"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="cpNeg"><rect x="0" y="${y0}" width="${W}" height="${Hh}"/></clipPath></defs>`;
   for(let v=min;v<=max+0.01;v+=paso){svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${Math.abs(v)>=1000?fmt(v/1000,Math.abs(v)%1000?1:0)+'k':fmt(v,0)}</text>`}
   if(min<0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1.2"/>`;
+  // franjas por mes: al pasar por encima se resaltan y sale el bocadillo con el detalle
+  d.forEach((x,i)=>{const cx=pl+step*i+step/2,am=x.ahorroMes;
+    svg+=`<rect class="hz" data-m="${x.m}" data-ir="resumen" x="${(cx-step/2).toFixed(1)}" y="${pt}" width="${step.toFixed(1)}" height="${Hh-pt-pb}" rx="6" data-tiph="${esc(x.vacio?tipHtml(nombreMesCap(x.m),[['','Sin datos este mes','']]):tipHtml(nombreMesCap(x.m),[['var(--good)','Ingresos',eur(x.ingresos,0)],['var(--acc)','Gastado',eur(x.consumo,0)],[am<0?'var(--bad)':'var(--good)',am<0?'Gastaste de más':'Ahorro',eur(am,0)+(x.ingresos?` · ${Math.round(am/x.ingresos*100)} %`:''),am<0?'neg':'pos'],['','',IR_TXT('el resumen del mes')]]))}"/>`});
   d.forEach((x,i)=>{const cx=pl+step*i+step/2;
-    svg+=`<rect class="crece" x="${cx-bw-1}" y="${y(x.ingresos)}" width="${bw}" height="${Math.max(0,y(0)-y(x.ingresos))}" rx="3" fill="url(#gIng)"><title>${nombreMes(x.m)} · ingresos ${eur(x.ingresos)}</title></rect>`;
-    svg+=`<rect class="crece" x="${cx+1}" y="${y(x.consumo)}" width="${bw}" height="${Math.max(0,y(0)-y(x.consumo))}" rx="3" fill="url(#gGas)"><title>${nombreMes(x.m)} · gastado ${eur(x.consumo)}</title></rect>`;
+    svg+=`<rect class="crece" x="${cx-bw-1}" y="${y(x.ingresos)}" width="${bw}" height="${Math.max(0,y(0)-y(x.ingresos))}" rx="3" fill="url(#gIng)"></rect>`;
+    svg+=`<rect class="crece" x="${cx+1}" y="${y(x.consumo)}" width="${bw}" height="${Math.max(0,y(0)-y(x.consumo))}" rx="3" fill="url(#gGas)"></rect>`;
     if(i%2===0||d.length<14)svg+=`<text x="${cx}" y="${Hh-8}" font-size="11" text-anchor="middle" fill="var(--muted)">${nombreMesC(x.m)}</text>`});
   // línea del ahorro del mes, sobre el mismo eje en euros (los meses sin datos cortan la línea)
   // verde por encima de cero (ahorras) y rojo por debajo (sale más de lo que entra), con el área sombreada
@@ -59,12 +77,12 @@ function rHist(){
       const lin=`<polyline class="traza" pathLength="1" points="${pts}" fill="none" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"`;
       lineas+=`${lin} stroke="var(--good)" clip-path="url(#cpPos)"/>${lin} stroke="var(--bad)" clip-path="url(#cpNeg)"/>`}tramo=[]};
   d.forEach((x,i)=>{if(x.vacio){cerrarTramo();return}const cx=pl+step*i+step/2,cy=y(x.ahorroMes);tramo.push(`${cx.toFixed(1)},${cy.toFixed(1)}`);
-    puntos+=`<circle class="punto" cx="${cx}" cy="${cy}" r="4.5" fill="${x.ahorroMes<0?'var(--bad)':'var(--good)'}" stroke="var(--card)" stroke-width="2"><title>${nombreMes(x.m)} · ahorro ${eur(x.ahorroMes)}${x.ingresos?' ('+Math.round(x.ahorroMes/x.ingresos*100)+'% de lo ingresado)':''}</title></circle>`});
+    puntos+=`<circle class="punto" cx="${cx}" cy="${cy}" r="4.5" fill="${x.ahorroMes<0?'var(--bad)':'var(--good)'}" stroke="var(--card)" stroke-width="2"/>`});
   cerrarTramo();svg+=areas+lineas+puntos;
   const ult=[...d].reverse().find(x=>!x.vacio);
   if(ult){const i=d.indexOf(ult),cx=pl+step*i+step/2;svg+=`<text x="${Math.min(cx,W-60)}" y="${Math.max(12,y(ult.ahorroMes)-10)}" font-size="12" font-weight="650" text-anchor="middle" fill="${ult.ahorroMes<0?'var(--bad)':'var(--good)'}" paint-order="stroke" stroke="var(--card)" stroke-width="4">${eur(ult.ahorroMes,0)}</text>`}
   svg+='</svg>';
-  $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.45"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span><span><i class="lin" style="background:var(--good)"></i>Ahorro del mes</span><span><i class="lin" style="background:var(--bad)"></i>Mes en negativo</span><span class="mut">Pasa el dedo o el ratón por encima para ver las cifras</span></div>`;
+  $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.45"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span><span><i class="lin" style="background:var(--good)"></i>Ahorro del mes</span><span><i class="lin" style="background:var(--bad)"></i>Mes en negativo</span><span class="mut">Toca o pasa el ratón por un mes para ver el detalle</span></div>`;
   // años
   const years=[...new Set(all.map(m=>m.slice(0,4)))].reverse();
   $('#years').innerHTML=years.map(yr=>{const xs=data.filter(x=>x.m.startsWith(yr)&&!x.vacio);if(!xs.length)return '';
@@ -78,7 +96,7 @@ function rHist(){
   const xs=(YEAR==='12m'?data.slice(-12):data.filter(x=>x.m.startsWith(YEAR))).filter(x=>!x.vacio);
   const n=xs.length||1;const ingM=xs.reduce((a,x)=>a+x.ingresos,0)/n;
   $('#catAvg').innerHTML=`<table><thead><tr><th>Categoría</th><th class="r">Media al mes</th><th class="r">% de ingresos</th><th class="r">Objetivo</th></tr></thead><tbody>`+
-    [...CATS,{id:'SINCAT',n:'Sin categorizar',g:'VARIABLES'}].map(c=>{const v=xs.reduce((a,x)=>a+(x.by[c.id]||0),0)/n;if(c.id==='SINCAT'&&v<0.5)return '';const p=ingM?v/ingM*100:0;const o=+S.aj.pct[c.id]||0;
+    [...CATS,{id:'SINCAT',n:'Sin categorizar',g:'VARIABLES'}].map(c=>{const v=xs.reduce((a,x)=>a+(x.by[c.id]||0),0)/n;if(c.id==='SINCAT'&&v<0.5)return '';const p=ingM?v/ingM*100:0;const o=Math.round(pctCat(c.id,ingM)*10)/10;
       const bad=c.g!=='AHORRO'?p>o+0.5:false;
       return `<tr><td>${c.n}</td><td class="r num">${eur(v,0)}</td><td class="r num ${bad?'neg':''}">${fmt(p,1)}%</td><td class="r num mut">${o}%</td></tr>`}).join('')+
     `</tbody></table><p class="small mut" style="margin:8px 0 0">${xs.length} meses. En los meses antiguos del Excel, lo que estaba como «Caprichos» o «Necesidades» se ha repartido por el concepto; lo que no se ha podido identificar está en «Otros».</p>`;
@@ -127,7 +145,7 @@ function rPatri(){
   const pp=prestamosPendientes();
   $('#patTotal').innerHTML=`<div class="mut small">Total</div><div style="font-size:30px;font-weight:650;letter-spacing:-.02em" class="num">${eur(tot)}</div>
     ${Math.abs(pp)>0.009?`<p class="small" style="margin:8px 0 0">${pp>0?'Más':'Menos'} ${eur(Math.abs(pp))} de préstamos pendientes de devolver.</p>`:''}
-    <div style="margin-top:14px">${S.cuentas.filter(c=>c.v).map(c=>{const w=tot>0?Math.max(0,c.v/tot*100):0;return `<div class="small" style="display:flex;justify-content:space-between;margin-top:8px"><span>${esc(c.n)}</span><span class="num">${Math.round(w)}%</span></div><div class="bar"><i style="width:${w}%"></i></div>`}).join('')}</div>
+    <div style="margin-top:14px">${S.cuentas.filter(c=>c.v).map(c=>{const w=tot>0?Math.max(0,c.v/tot*100):0;return `<div class="patb" data-tiph="${esc(tipHtml(esc(c.n),[['var(--acc)','Saldo',eur(c.v)],['','Del total',fmt(w,1)+' %'],...(c.f?[['','Actualizado',fFecha(c.f)]]:[])]))}"><div class="small" style="display:flex;justify-content:space-between;margin-top:8px"><span>${esc(c.n)}</span><span class="num">${Math.round(w)}%</span></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}</div>
     <p class="small mut" style="margin-top:14px">Para las cuentas sin extracto (inversión, oro…), pon el valor a mano cuando lo mires; se guarda con la fecha de hoy.</p>`;
 }
 

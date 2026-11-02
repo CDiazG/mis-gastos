@@ -67,9 +67,24 @@ function prestamosPendientes(){return r2(-S.mov.filter(x=>x.cat==='PRESTAMO').re
 
 // Presupuesto de una categoría en un mes. Si la categoría «acumula», lo que no se gastó en los meses
 // anteriores (desde que se activó) se suma; si un mes te pasas, se resta de lo acumulado (nunca baja de 0).
+// Cada categoría va en % (de la base del mes) o en € fijos; el Ahorro es lo que queda sin repartir.
+const enEur=id=>!!(S.aj.eur&&S.aj.eur[id]!=null&&id!=='AHORRO'&&id!=='DIEZMO');
+const hayEur=()=>CATS.some(c=>enEur(c.id));
+const catsReparto=()=>CATS.filter(c=>c.id!=='AHORRO'&&(c.id!=='DIEZMO'||diezmoOn()));
+function presFijo(id,base){return enEur(id)?(+S.aj.eur[id]||0):base*(+S.aj.pct[id]||0)/100}
+function repartido(base){return catsReparto().reduce((a,c)=>a+presFijo(c.id,base),0)}
+const sumaOtrosPct=()=>r2(catsReparto().filter(c=>!enEur(c.id)).reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0));
+function presAhorro(base){return Math.max(0,base-repartido(base))}
+function pctAhorro(base){return base>0?presAhorro(base)/base*100:Math.max(0,100-sumaOtrosPct())}
+const pctCat=(id,base)=>id==='AHORRO'?pctAhorro(base):enEur(id)?(base>0?(+S.aj.eur[id]||0)/base*100:0):(+S.aj.pct[id]||0);
+// base de referencia para convertir entre % y € (la del mes en curso o, si aún no hay, la cantidad fija o los últimos ingresos)
+function baseRef(){const b=stats(mesDe(hoy())).base;if(b>0)return b;if(S.aj.base==='fija'&&S.aj.baseFija>0)return +S.aj.baseFija;
+  for(let k=1;k<=3;k++){const s=stats(addMes(mesDe(hoy()),-k));if(s.base>0)return s.base}return 0}
+// guarda el % de ahorro (lo que sobra) para que el resto del programa lo tenga a mano
+function syncAhorro(){S.aj.pct.AHORRO=r2(pctAhorro(baseRef()))}
 function presupuestoCat(m,id,st){
-  st=st||stats(m);const base=r2(st.base*(+S.aj.pct[id]||0)/100);
+  st=st||stats(m);const base=r2(id==='AHORRO'?presAhorro(st.base):presFijo(id,st.base));
   const desde=S.aj.acumula&&S.aj.acumula[id];if(!desde||m<=desde)return {p:base,base,extra:0};
-  let carry=0;for(let k=desde;k<m;k=addMes(k,1)){const s=stats(k);carry=Math.max(0,carry+s.base*(+S.aj.pct[id]||0)/100-(s.by[id]||0))}
+  let carry=0;for(let k=desde;k<m;k=addMes(k,1)){const s=stats(k);carry=Math.max(0,carry+presFijo(id,s.base)-(s.by[id]||0))}
   carry=r2(carry);return {p:r2(base+carry),base,extra:carry};
 }
