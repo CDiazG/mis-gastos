@@ -132,7 +132,46 @@ module.exports = {
         const w = await p.evaluate(() => document.documentElement.scrollWidth);
         assert.ok(w <= 391, `la pestaña ${t} se sale (${w}px)`);
       }
-      assert.ok(await p.isVisible('#fabCash') || await p.evaluate(() => TAB === 'efectivo'));
+      // barra de abajo: Inicio, Resumen, Añadir, Movimientos y Más
+      await p.evaluate(() => go('resumen'));
+      const bar = await p.evaluate(() => { const r = $('#tabs').getBoundingClientRect(); return { abajo: Math.round(r.bottom), vis: [...$$('#tabs .tab')].filter(b => b.offsetParent).map(b => b.textContent.trim()) }; });
+      assert.equal(bar.abajo, 844, 'la barra va pegada abajo');
+      assert.deepEqual(bar.vis, ['Inicio', 'Resumen', 'Añadir', 'Movimientos', 'Más']);
+      assert.ok(!(await p.isVisible('#fabCash')), 'en el móvil Añadir va en la barra');
+      await p.tap('#tabMas'); await p.waitForSelector('#masSheet.on');
+      const opc = await p.$$eval('#masSheet .msit', b => b.map(x => x.textContent.trim()));
+      assert.ok(opc.includes('Histórico') && opc.includes('Ajustes') && opc.some(x => x.endsWith('Mi perfil')), opc.join());
+      await p.tap('#masSheet .msit[data-t="hist"]'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => TAB), 'hist');
+      assert.ok(await p.evaluate(() => $('#tabMas').classList.contains('on')), 'Más queda marcado');
+      assert.equal(await p.$('#masSheet'), null);
+      // al bajar se apartan los botones flotantes y al subir vuelven
+      await p.evaluate(() => go('movs'));
+      await p.evaluate(() => { document.body.style.minHeight = '3000px'; scrollTo(0, 0); });
+      await L.esperar(50); await p.evaluate(() => scrollTo(0, 600)); await L.esperar(100);
+      assert.ok(await p.evaluate(() => document.body.classList.contains('bajando')));
+      await p.evaluate(() => scrollTo(0, 300)); await L.esperar(100);
+      assert.ok(!(await p.evaluate(() => document.body.classList.contains('bajando'))));
+    })();
+  },
+
+  'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const r = await p.evaluate(() => [
+        conceptoCorto('Compra En Glovo, Barcelona, Tarj. :*123456789015218, Comisión 0,00'),
+        conceptoCorto('Bizum A Favor De Laura Concepto: Merienda'),
+        ocultarNumeros('Pago con 4111 1111 1111 5218 ok'),
+        conceptoCorto('RECIB /IBERDROLA CLIENTES, S.A'),
+      ]);
+      assert.equal(r[0], 'Glovo · Barcelona');
+      assert.equal(r[1], 'Bizum a Laura · Merienda');
+      assert.equal(r[2], 'Pago con …5218 ok');
+      assert.ok(!/\d{8}/.test(r[3]) && /IBERDROLA/.test(r[3]));
+      await p.evaluate(() => { S.mov.push({ id: 'q', fecha: hoy(), mes: mesDe(hoy()), concepto: 'Compra En Glovo, Barcelona, Tarj. :*123456789015218', importe: -12, cat: 'ACTIVIDADES', cuenta: 'EVO' }); MES = mesDe(hoy()); save(); go('movs'); });
+      const t = await p.textContent('#s-movs');
+      assert.match(t, /Glovo · Barcelona/);
+      assert.ok(!/123456789015218/.test(t), 'no se ve el número de tarjeta');
     })();
   },
 

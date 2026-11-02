@@ -144,7 +144,7 @@ function hojaMes(m,st){
   const L=['J','K','L','M','N'];const mv=s.ms.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)||(a.orden??0)-(b.orden??0));
   ['FECHA','CONCEPTO','€','CATEGORÍA','PAGADO CON'].forEach((t,i)=>H.set(L[i]+'7',t,i===1||i===3||i===4?hdL:hd));
   const dt=st({fmt:'date',bd:'thin',al:'center'}),sinC=st({bd:'thin',i:true,c:XC.bad}),ingS=st({fmt:'eurneg',bd:'thin',bg:XC.ingBg,c:XC.blue,b:true});
-  mv.forEach((x,k)=>{const rr=8+k;H.set('J'+rr,dSerial(x.fecha),dt);H.set('K'+rr,x.concepto+(x.nota?' · '+x.nota:''),txt);H.set('L'+rr,R(x.importe),x.cat==='INGRESO'?ingS:eur);
+  mv.forEach((x,k)=>{const rr=8+k;H.set('J'+rr,dSerial(x.fecha),dt);H.set('K'+rr,verConcepto(x)+(x.nota?' · '+x.nota:''),txt);H.set('L'+rr,R(x.importe),x.cat==='INGRESO'?ingS:eur);
     H.set('M'+rr,x.cat?catN(x.cat):'Sin categoría',x.cat?txt:sinC);H.set('N'+rr,x.metodo==='efectivo'?'Efectivo':(x.cuenta||''),txt)});
   if(!mv.length)H.set('K8','Sin movimientos',mut);
   return {name:nombreHoja(m),H,opt:{widths:[22,26,11,13,12,12,13,20,3,11,40,12,22,13],grid:false,filter:mv.length?`J7:N${7+mv.length}`:'',tab:XC.hdr}};
@@ -173,7 +173,7 @@ function hojaResumen(meses,st){
 function hojaMovs(movs,st){
   const H=hoja();const hd=st({b:true,c:'FFFFFF',bg:XC.hdr,bd:'thin'}),dt=st({fmt:'date',bd:'thin',al:'center'}),tx=st({bd:'thin'}),eu=st({fmt:'eurneg',bd:'thin'}),sinC=st({bd:'thin',i:true,c:XC.bad});
   ['FECHA','MES','CONCEPTO','DETALLE DEL BANCO','CATEGORÍA','GRUPO','PAGADO CON','IMPORTE','ORIGEN','NOTA','ETIQUETAS'].forEach((t,i)=>H.set(colL(i)+'1',t,hd));
-  movs.forEach((x,k)=>{const r=2+k;H.set('A'+r,dSerial(x.fecha),dt);H.set('B'+r,nombreMesC(x.mes),tx);H.set('C'+r,x.concepto,tx);H.set('D'+r,x.detalle||'',tx);
+  movs.forEach((x,k)=>{const r=2+k;H.set('A'+r,dSerial(x.fecha),dt);H.set('B'+r,nombreMesC(x.mes),tx);H.set('C'+r,ocultarNumeros(x.concepto),tx);H.set('D'+r,ocultarNumeros(x.detalle||''),tx);
     H.set('E'+r,x.cat?catN(x.cat):'Sin categoría',x.cat?tx:sinC);H.set('F'+r,x.cat==='AHORRO'?'':grupoN(x.cat),tx);H.set('G'+r,x.metodo==='efectivo'?'Efectivo':(x.cuenta||''),tx);H.set('H'+r,r2(x.importe),eu);
     H.set('I'+r,{extracto:'Extracto',excel:'Excel antiguo',manual:'A mano'}[x.origen]||x.origen||'',tx);H.set('J'+r,x.nota||'',tx);H.set('K'+r,tagsDe(x).join(', '),tx)});
   return {name:'Movimientos',H,opt:{widths:[11,10,36,34,22,18,13,12,13,22,20],freeze:1,filter:`A1:K${movs.length+1}`,tab:'76B59A'}};
@@ -202,7 +202,7 @@ function informeMes(m){
   return `<section><div class="kp"><div>Ingresos<b>${eur(st.ingresos)}</b></div><div>Gastado<b>${eur(st.consumo)}</b></div><div>Ahorro del mes<b>${eur(libre)}</b>${st.ingresos?Math.round(libre/st.ingresos*100)+'% de lo ingresado':''}</div>${st.by.INVERSION?`<div>Invertido<b>${eur(st.by.INVERSION)}</b></div>`:''}${st.diezmo||dz?`<div>Diezmo<b>${eur(st.diezmo)}</b>${dz&&dz.pendiente>0.5?'pendiente '+eur(dz.pendiente,0):''}</div>`:''}</div></section>
    <section><h2>Presupuesto por categoría</h2><table><thead><tr><th>Categoría</th><th class="r">Presupuesto</th><th class="r">Gastado</th><th class="r">Queda</th><th class="r">vs mes anterior</th></tr></thead><tbody>${filas}</tbody></table></section>
    ${items.length?`<section><h2>En qué se ha ido el dinero</h2>${barrasHtml(items)}</section>`:''}
-   ${top.length?`<section><h2>Mayores gastos</h2><table><tbody>${top.map(x=>`<tr><td>${fFecha(x.fecha)}</td><td>${esc(x.concepto)}</td><td>${catN(x.cat)}</td><td class="r">${eur(-x.importe)}</td></tr>`).join('')}</tbody></table></section>`:''}
+   ${top.length?`<section><h2>Mayores gastos</h2><table><tbody>${top.map(x=>`<tr><td>${fFecha(x.fecha)}</td><td>${esc(verConcepto(x))}</td><td>${catN(x.cat)}</td><td class="r">${eur(-x.importe)}</td></tr>`).join('')}</tbody></table></section>`:''}
    ${fx.length?`<section><h2>Gastos fijos</h2><table><tbody>${fx.map(x=>`<tr><td>${esc(x.f.nombre)}</td><td>${{ok:'pagado',cambia:'ha cambiado',pendiente:'pendiente',falta:'no ha llegado'}[x.estado]}</td><td class="r">${eur(x.cands.length?x.pagado:x.f.importe)}</td></tr>`).join('')}</tbody></table></section>`:''}
    ${ps.length?`<section><h2>Préstamos pendientes</h2><table><tbody>${ps.map(p=>`<tr><td>${esc(p.persona)}</td><td class="r">${p.pendiente>0?'te debe ':'le debes '}${eur(Math.abs(p.pendiente))}</td></tr>`).join('')}</tbody></table></section>`:''}
    ${os.length?`<section><h2>Objetivos de ahorro</h2><table><tbody>${os.map(o=>{const i=infoObj(o);return `<tr><td>${esc(o.nombre)}</td><td class="r">${eur(i.ah,0)} de ${eur(o.meta,0)}</td><td class="r">${i.falta>0?'faltan '+eur(i.falta,0):'conseguido'}</td></tr>`}).join('')}</tbody></table></section>`:''}`;

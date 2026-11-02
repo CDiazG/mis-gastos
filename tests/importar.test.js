@@ -149,6 +149,7 @@ module.exports = {
   'si no reconoce el banco pregunta la cuenta, y la recuerda'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
+      await p.evaluate(() => { S.cuentas.push({ n: 'EVO', v: null, f: null, banco: 1 }, { n: 'Santander', v: null, f: null }); save(); });
       const c = csv();
       await subir(p, [{ name: 'movimientos.csv', mimeType: 'text/csv', buffer: Buffer.from(c.texto) }]);
       assert.equal(await p.evaluate(() => IMP.res[0].cuenta), '', 'no la mete en EVO');
@@ -164,6 +165,7 @@ module.exports = {
   'un extracto guardado en la cuenta equivocada se puede pasar a la buena'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
+      await p.evaluate(() => { S.cuentas.push({ n: 'EVO', v: null, f: null, banco: 1 }, { n: 'Santander', v: null, f: null }); save(); });
       const x = xlsSantander();
       await subir(p, [{ name: 'transactions.xls', mimeType: 'application/vnd.ms-excel', buffer: x.buffer }]);
       await p.selectOption('[data-cuenta="0"]', 'EVO'); await p.click('#impGo'); await L.esperar(300);

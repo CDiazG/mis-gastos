@@ -109,7 +109,7 @@ module.exports = {
   'aviso de extracto pendiente y último acceso'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
-      await p.evaluate(() => { const c = S.cuentas.find(c => c.n === 'EVO'); c.f = addMes(mesDe(hoy()), -2) + '-28'; c.v = 100; MES = mesDe(hoy()); save(); render(); });
+      await p.evaluate(() => { S.cuentas.push({ n: 'EVO', v: null, f: null, banco: 1 }); const c = S.cuentas[0]; c.f = addMes(mesDe(hoy()), -2) + '-28'; c.v = 100; MES = mesDe(hoy()); save(); render(); });
       assert.match(await p.textContent('#alerts'), /Extracto pendiente/);
       await p.evaluate(() => go('usuarios')); await L.esperar(300);
       assert.match(await p.textContent('#uTable'), /entró hoy/);

@@ -2,14 +2,14 @@
 "use strict";
 /* ============ Resumen ============ */
 function rResumen(){
-  const h=$('#hola');h.innerHTML=NUBE&&USER?`${avatarHtml(USER.uid,USER.nombre,USER.foto||'',26)}<span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b> · ${esc(USER.email)}</span>`:'';
+  const h=$('#hola');h.innerHTML=NUBE&&USER?`${avatarHtml(USER.uid,USER.nombre,USER.foto||'',26)}<span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b><span class="hmail"> · ${esc(USER.email)}</span></span>`:'';
   const st=stats(MES);
   const libre=st.ahorro;
   const tasa=st.ingresos>0?libre/st.ingresos:null;
   const pObj=(+S.aj.pct.AHORRO||0)+(+S.aj.pct.INVERSION||0),obj=r2(st.base*pObj/100);
   const logrado=obj>0&&libre>=obj-0.5,esteMes=MES===mesDe(hoy());
   $('#kpis').innerHTML=`
-   <div class="card pad kpi"><div class="l">Ingresos</div><div class="v num pos">${eur(st.ingresos)}</div><div class="s">${st.ms.filter(x=>x.cat==='INGRESO').map(x=>esc(x.concepto)).slice(0,2).join(' · ')||'Sin ingresos apuntados'}</div></div>
+   <div class="card pad kpi"><div class="l">Ingresos</div><div class="v num pos">${eur(st.ingresos)}</div><div class="s">${st.ms.filter(x=>x.cat==='INGRESO').map(x=>(x.nomina||/n[oó]mina/i.test(x.concepto))?'Nómina':esc(verConcepto(x))).slice(0,2).join(' · ')||'Sin ingresos apuntados'}</div></div>
    <div class="card pad kpi"><div class="l">Gastado</div><div class="v num">${eur(st.consumo)}</div><div class="s">${st.base>0?Math.round(st.consumo/st.base*100)+'% de la base del presupuesto':'&nbsp;'}</div></div>
    <div class="card pad kpi"><div class="l">Ahorro del mes</div><div class="v num ${libre<0?'neg':''}">${eur(libre)}</div><div class="s">${tasa!==null?Math.round(tasa*100)+'% de lo ingresado · ':''}lo que no has gastado${st.by.INVERSION?` <br>${eur(st.by.INVERSION,0)} invertidos · ${eur(st.by.AHORRO,0)} en cuenta`:''}</div></div>
    <div class="card pad kpi ${logrado?'kok':''}" id="kObj"><div class="l">Objetivo de ahorro ${pObj?`<span class="mut">· ${pObj}%</span>`:''}</div>${!pObj?'<div class="v mut" style="font-size:16px">Sin objetivo</div><div class="s">Ponlo en Ajustes (Ahorro + Inversión)</div>':!st.base?'<div class="v mut" style="font-size:16px">Sin ingresos</div><div class="s">Aún no hay ingresos este mes</div>':logrado?`<div class="v num pos">✓ Conseguido</div><div class="s">${eur(obj,0)} de objetivo · te sobran ${eur(libre-obj,0)}${esteMes?' (de momento)':''}</div>`:`<div class="v num">${eur(obj)}</div><div class="s">Te faltan ${eur(obj-libre,0)} · llevas ${Math.max(0,Math.round(libre/obj*100))}%</div><div class="bar" style="margin-top:8px"><i style="width:${Math.max(0,Math.min(100,libre/obj*100))}%"></i></div>`}</div>`;
@@ -23,7 +23,7 @@ function rResumen(){
   if(NUBE&&USER&&USER.admin&&pendientesN())al.push(`<div class="alert"><span class="grow"><b>${pendientesN()} solicitud${pendientesN()>1?'es':''} de acceso</b> esperando tu aprobación.</span><button class="btn sm" data-act="usu">Revisar</button></div>`);
   if(NUBE&&USER&&USER.admin&&bzNuevas())al.push(`<div class="alert info"><span class="grow"><b>${bzNuevas()} sugerencia${bzNuevas()>1?'s':''} nueva${bzNuevas()>1?'s':''}</b> en el buzón.</span><button class="btn sm" data-act="bz">Leer</button></div>`);
   if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
-  else{const sg=sugerencia();if(sg&&sg.cambia&&!sg.aplicada&&S.aj.sugOculta!==mesDe(hoy()))al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
+  else{const sg=sugerencia();if(sg&&sg.cambia&&!sg.aplicada&&S.aj.sugOculta!==mesDe(hoy()))al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sugno">Ahora no</button><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
   if(pref('aviso80')&&MES===mesDe(hoy())&&st.base>0){
     const cerca=CATS.filter(c=>c.g!=='AHORRO').map(c=>({c,p:presupuestoCat(MES,c.id,st).p,v:st.by[c.id]||0})).filter(x=>x.p>0&&x.v>=x.p*0.8&&x.v<=x.p+0.5);
     if(cerca.length)al.push(`<div class="alert"><span class="grow"><b>Cerca del límite:</b> ${cerca.map(x=>`${esc(x.c.n)} (${Math.round(x.v/x.p*100)}%, quedan ${eur(x.p-x.v,0)})`).join(' · ')}</span></div>`);
@@ -36,13 +36,14 @@ function rResumen(){
   {const fx=fijosDelMes(MES).filter(f=>f.estado==='falta'||f.estado==='cambia');
    if(fx.length)al.push(`<div class="alert"><span class="grow"><b>Gastos fijos:</b> ${fx.map(f=>f.estado==='falta'?`${esc(f.f.nombre)} no ha llegado`:`${esc(f.f.nombre)} ha cambiado (${eur(f.pagado)} en vez de ${eur(f.f.importe)})`).join(' · ')}</span></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
-  $('#alerts').innerHTML=al.join('');
+  $('#alerts').innerHTML=al.length>2?al.slice(0,1).join('')+`<details class="masav"><summary>${al.length-1} avisos más</summary><div class="alerts" style="margin-top:8px">${al.slice(1).join('')}</div></details>`:al.join('');
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
     if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
     if(a==='copia')exportar();
     if(a==='imp')go('importar');
     if(a==='aj'||a==='sug')go('ajustes');
+    if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
     if(a==='usu')go('usuarios');
     if(a==='bz'){go('usuarios');setTimeout(()=>$('#bzAdmin').scrollIntoView({behavior:'smooth'}),80)}
     if(a==='dz'){MES=b.dataset.m;render()}

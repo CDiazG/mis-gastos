@@ -42,3 +42,21 @@ const tagsDe=x=>Array.isArray(x.tags)?x.tags:[];
 function todasEtiquetas(){const m=new Map();for(const x of S.mov)for(const t of tagsDe(x)){const k=norm(t).trim();if(!m.has(k))m.set(k,t)}return [...m.values()].sort((a,b)=>a.localeCompare(b,'es'))}
 const parseTags=s=>[...new Set(String(s||'').split(',').map(t=>t.trim().replace(/^#/,'')).filter(Boolean).map(t=>t.slice(0,40)))];
 function pintarTagList(){const d=$('#tagList');if(d)d.innerHTML=todasEtiquetas().map(t=>`<option value="${esc(t)}">`).join('')}
+/* ---- Conceptos del banco más legibles (sin tocar lo guardado) ---- */
+// Oculta números de tarjeta y de cuenta largos: deja solo las 4 últimas cifras
+const ocultarNumeros=s=>String(s||'').replace(/\b\d(?:[ -]?\d){11,18}\b/g,m=>'…'+m.replace(/\D/g,'').slice(-4));
+function conceptoCorto(c){
+  let s=ocultarNumeros(c);const orig=s;
+  s=s.replace(/,?\s*Comisi[oó]n\s*[\d.,]+\s*$/i,'')
+    .replace(/,?\s*Tarj(?:eta)?\.?\s*:?\s*\*?…?\d{4,}\s*,?/gi,'')
+    .replace(/^(Compra Internet En|Compra En|Compra|Transacci[oó]n Contactless En|Transaccion Contactless En|Pago M[oó]vil En|Pago Con Tarjeta En|Pago En|Recibo|Adeudo De|Cargo Por)\s+/i,'')
+    .replace(/^Devoluci[oó]n Pago M[oó]vil En\s+/i,'Devolución · ')
+    .replace(/^Bizum A Favor De\s+(.+?)\s+Concepto:\s*(.+)$/i,'Bizum a $1 · $2').replace(/^Bizum De\s+(.+?)\s+Concepto:\s*(.+)$/i,'Bizum de $1 · $2')
+    .replace(/^Transferencia De\s+(.+?),\s*Concepto\s+(.+)$/i,'De $1 · $2').replace(/^Transferencia A Favor De\s+(.+?)(,\s*Concepto\s+(.+))?$/i,(m,a,b,cn)=>'A '+a+(cn?' · '+cn:''))
+    .replace(/\b\d{1,2}(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic|jan|apr|aug|dec)\b/gi,'')
+    .replace(/\b(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Za-z])[A-Za-z0-9]{7,}\b/g,'')
+    .replace(/\s*,\s*,/g,',').replace(/\s{2,}/g,' ').replace(/^[\s,·.-]+|[\s,·.-]+$/g,'').replace(/\s+,/g,',');
+  s=s.replace(/\*+(?=\s|,|$)/g,'').replace(/,\s*(?!S\.?\s?[AL]\.?\b|SL\b|SA\b|SAU\b)(?=\S{3,})/,' · ');
+  return s.length>=3?s:orig;
+}
+const verConcepto=x=>conceptoCorto(x&&x.concepto!==undefined?x.concepto:x);

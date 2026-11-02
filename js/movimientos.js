@@ -26,7 +26,7 @@ function rMovs(){
     for(const t of tagsDe(x))tags.push(`<span class="tag tg" data-tag="${esc(t)}" title="Ver todo lo de «${esc(t)}»">#${esc(t)}</span>`);
     return `<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''}></td>
       <td class="num">${fFecha(x.fecha)}</td>
-      <td><div>${esc(x.concepto)}${tags.join('')}</div>${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
+      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div>${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
       <td><select class="cat">${catOptions(x.cat)}</select></td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
@@ -131,7 +131,7 @@ function rEfectivo(){
   const gas=-ms.filter(x=>x.importe<0).reduce((a,x)=>a+x.importe,0),ent=ms.filter(x=>x.importe>0).reduce((a,x)=>a+x.importe,0);
   $('#cashKpis').innerHTML=`<div class="card pad kpi"><div class="l">Gastos apuntados a mano</div><div class="v num">${eur(gas)}</div><div class="s" style="text-transform:capitalize">${nombreMes(MES)}</div></div>
     <div class="card pad kpi"><div class="l">Ingresos apuntados a mano</div><div class="v num pos">${eur(ent)}</div><div class="s" style="text-transform:capitalize">${nombreMes(MES)}</div></div>`;
-  $('#cashList').innerHTML=ms.length?ms.map(x=>`<div class="it" data-id="${x.id}"><span class="num small mut">${fFecha(x.fecha)}</span><div class="c"><div>${esc(x.concepto)}</div><div class="det">${catN(x.cat)} · ${x.metodo==='efectivo'?'efectivo':esc(x.cuenta||'')}</div></div><span class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</span><button class="btn sm icon edit" title="Editar">✎</button></div>`).join('')
+  $('#cashList').innerHTML=ms.length?ms.map(x=>`<div class="it" data-id="${x.id}"><span class="num small mut">${fFecha(x.fecha)}</span><div class="c"><div>${esc(verConcepto(x))}</div><div class="det">${catN(x.cat)} · ${x.metodo==='efectivo'?'efectivo':esc(x.cuenta||'')}</div></div><span class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</span><button class="btn sm icon edit" title="Editar">✎</button></div>`).join('')
     :`<div class="empty">Aún no has apuntado nada a mano en ${nombreMes(MES)}.</div>`;
   $$('#cashList .edit').forEach(b=>b.onclick=()=>editar(S.mov.find(m=>m.id===b.closest('.it').dataset.id)));
 }

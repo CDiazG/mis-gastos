@@ -18,7 +18,7 @@ function rEvol(data){
   d.forEach((x,i)=>{const cx=pl+step*i+step/2,v=vs[i];
     if(!x.vacio)svg+=`<rect x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${Math.max(0,y(0)-y(v))}" rx="2" fill="var(--acc)"><title>${nombreMes(x.m)} · ${eur(v)}</title></rect>`;
     if(i%2===0||d.length<14)svg+=`<text x="${cx}" y="${H-8}" font-size="11" text-anchor="middle" fill="var(--muted)">${nombreMesC(x.m)}</text>`});
-  if(media>0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(media)}" y2="${y(media)}" stroke="var(--warn)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-8}" y="${y(media)-5}" font-size="11" text-anchor="end" fill="var(--warn)">media ${eur(media,0)}</text>`;
+  if(media>0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(media)}" y2="${y(media)}" stroke="var(--warn)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-8}" y="${y(media)<20?y(media)+14:y(media)-5}" font-size="11" text-anchor="end" fill="var(--warn)" paint-order="stroke" stroke="var(--card)" stroke-width="3">media ${eur(media,0)}</text>`;
   svg+='</svg>';
   const ult=d.filter(x=>!x.vacio).slice(-1)[0];
   $('#evoChart').innerHTML=svg+`<p class="small mut" style="margin:6px 0 0">${ult?`${nombreMes(ult.m)}: ${eur(val(ult),0)} · media de estos meses: ${eur(media,0)}`:''}</p>`;
@@ -68,12 +68,12 @@ function rHist(){
       return `<tr><td>${c.n}</td><td class="r num">${eur(v,0)}</td><td class="r num ${bad?'neg':''}">${fmt(p,1)}%</td><td class="r num mut">${o}%</td></tr>`}).join('')+
     `</tbody></table><p class="small mut" style="margin:8px 0 0">${xs.length} meses. En los meses antiguos del Excel, lo que estaba como «Caprichos» o «Necesidades» se ha repartido por el concepto; lo que no se ha podido identificar está en «Otros».</p>`;
   // tabla
-  $('#histTable').innerHTML=`<thead><tr><th>Mes</th><th class="r">Ingresos</th><th class="r">Gastado</th><th class="r">Ahorro e inversión</th><th class="r">Diezmo</th><th class="r">Ahorro del mes</th><th>Mayor gasto</th></tr></thead><tbody>`+
+  $('#histTable').innerHTML=`<thead><tr><th>Mes</th><th class="r">Ingresos</th><th class="r">Gastado</th><th class="r">Invertido</th><th class="r">Diezmo</th><th class="r">Ahorro del mes</th><th>Mayor gasto</th></tr></thead><tbody>`+
     data.slice().reverse().map(x=>{
       if(x.vacio)return `<tr><td style="text-transform:capitalize">${nombreMes(x.m)}</td><td colspan="6" class="mut small">${notas[x.m]?esc(notas[x.m]):'Sin datos'}</td></tr>`;
       const top=CONSUMO.map(c=>[c,x.by[c]||0]).sort((a,b)=>b[1]-a[1])[0];
       const t=x.ingresos?Math.round(x.ahorroMes/x.ingresos*100):null;
-      return `<tr data-m="${x.m}" style="cursor:pointer"><td><span style="text-transform:capitalize">${nombreMes(x.m)}</span>${notas[x.m]?` <span class="tag">${esc(notas[x.m])}</span>`:''}</td><td class="r num">${eur(x.ingresos,0)}</td><td class="r num">${eur(x.consumo,0)}</td><td class="r num">${x.ahorro?eur(x.ahorro,0):'–'}</td><td class="r num">${x.diezmo?eur(x.diezmo,0):'–'}</td>
+      return `<tr data-m="${x.m}" style="cursor:pointer"><td><span style="text-transform:capitalize">${nombreMes(x.m)}</span>${notas[x.m]?` <span class="tag">${esc(notas[x.m])}</span>`:''}</td><td class="r num">${eur(x.ingresos,0)}</td><td class="r num">${eur(x.consumo,0)}</td><td class="r num">${x.by.INVERSION?eur(x.by.INVERSION,0):'–'}</td><td class="r num">${x.diezmo?eur(x.diezmo,0):'–'}</td>
         <td class="r num ${x.ahorroMes<0?'neg':''}">${eur(x.ahorroMes,0)}${t!==null?` <span class="mut small">${t}%</span>`:''}</td><td class="small">${top&&top[1]>0?catN(top[0])+' · '+eur(top[1],0):''}</td></tr>`}).join('')+'</tbody>';
   $$('#histTable tr[data-m]').forEach(tr=>tr.onclick=()=>{MES=tr.dataset.m;go('resumen')});
   rEvol(data);rVsAnio();rTagsCard();
@@ -96,6 +96,7 @@ function rPrestamos(){
 function rPatri(){
   rObjetivos();rPrestamos();
   $('#patTable').innerHTML=`<thead><tr><th>Cuenta</th><th class="r">Saldo</th><th>Actualizado</th><th></th></tr></thead><tbody>`+
+    (S.cuentas.length?'':'<tr><td colspan="4" class="small mut" style="padding:14px">Aún no tienes cuentas. Se crean solas al importar un extracto, o añádelas aquí (por ejemplo, una cuenta de ahorro o el oro).</td></tr>')+
     S.cuentas.map((c,i)=>`<tr data-i="${i}"><td><input type="text" class="pn" value="${esc(c.n)}" style="width:150px">${c.banco?' <span class="tag">con extracto</span>':''}</td>
       <td class="r"><input type="text" class="pv num right" value="${c.v!=null?fmt(c.v):''}" placeholder="—" style="width:120px" inputmode="decimal"></td>
       <td class="small mut">${c.f?fFecha(c.f):''}</td><td><button class="btn sm icon pd" title="Quitar">✕</button></td></tr>`).join('')+

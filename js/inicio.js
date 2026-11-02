@@ -33,7 +33,7 @@ function rInicio(){
   const pObj=(+S.aj.pct.AHORRO||0)+(+S.aj.pct.INVERSION||0),obj=st.base*pObj/100,okObj=obj>0&&st.ahorro>=obj-0.5;
   let html='';
   // 1. Tu dinero
-  html+=tarjeta('dinero','Tu dinero',`<div class="istats">
+  html+=tarjeta('dinero','Tu dinero',`<div class="istats dos">
     <div><small>Patrimonio</small><b class="num">${eur(patr,0)}</b><span>${nC?`en ${nC} cuenta${nC>1?'s':''}`:'Pon los saldos en Patrimonio'}</span></div>
     <div><small>Ahorrado en ${anio}</small><b class="num ${A<0?'neg':'pos'}">${eur(A,0)}</b><span>${I?Math.round(A/I*100)+'% de lo ingresado':'&nbsp;'}</span></div>
     <div><small>Invertido en ${anio}</small><b class="num">${eur(Inv,0)}</b><span>dentro del ahorro</span></div>

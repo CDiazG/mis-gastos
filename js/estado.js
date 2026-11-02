@@ -8,7 +8,7 @@ function defState(){
     cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
     aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente',
       bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true},
-    cuentas:[{n:'EVO',v:null,f:null,banco:1},{n:'Revolut',v:null,f:null,banco:1},{n:'Trade Republic',v:null,f:null},{n:'Santander',v:null,f:null},{n:'Oro',v:null,f:null}],
+    cuentas:[],
     fijos:[],objetivos:[],mig:{actividades:true,inversion:true,ahorroAuto:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};
 }
