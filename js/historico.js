@@ -126,7 +126,7 @@ function rVsAnio(){
   const fila=(n,v1,v0,bueno,b)=>`<tr${b?' style="font-weight:650"':''}><td>${n}</td><td class="r num">${eur(v0,0)}</td><td class="r num">${eur(v1,0)}</td><td class="r num">${dif(v1,v0,bueno)}</td></tr>`;
   const cats=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].filter(c=>Math.abs(a.by[c.id]||0)>0.5||Math.abs(b.by[c.id]||0)>0.5);
   el.innerHTML=`<div class="toolbar" style="margin:0 0 8px"><h3>Frente al año pasado</h3><span class="sp"></span><select id="vsSel">${ms.slice().reverse().map(m=>`<option value="${m}"${m===VS_MES?' selected':''}>${nombreMes(m)}</option>`).join('')}</select></div>
-    <div class="tablewrap"><table><thead><tr><th></th><th class="r">${MESES[+VS_MES.slice(5)-1]} ${yb}</th><th class="r">${MESES[+VS_MES.slice(5)-1]} ${ya}</th><th class="r">Diferencia</th></tr></thead><tbody>
+    <div class="tablewrap"><table class="vstab"><thead><tr><th></th><th class="r">${MESES[+VS_MES.slice(5)-1].slice(0,3)} ${yb}</th><th class="r">${MESES[+VS_MES.slice(5)-1].slice(0,3)} ${ya}</th><th class="r">Dif.</th></tr></thead><tbody>
     ${fila('Ingresos',a.ingresos,b.ingresos,'mas',1)}${fila('Gastado',a.consumo,b.consumo,'menos',1)}${fila('Ahorro',a.ahorro,b.ahorro,'mas',1)}
     ${cats.map(c=>fila(c.n,a.by[c.id]||0,b.by[c.id]||0,'menos')).join('')}</tbody></table></div>
     <p class="small mut" style="margin:8px 0 0">▼ en verde = gastas menos que hace un año; ▲ en rojo = gastas más.</p>`;

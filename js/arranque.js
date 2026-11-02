@@ -38,3 +38,5 @@ window.addEventListener('offline',()=>{if(NUBE&&USER)setSync('offline')});
       if(!mismaPestana){mostrarContinuar(u);return}}
     if(u)entrar(u);else{pararEscucha();USER=null;S=defState();mostrarLogin()}});
 })();
+/* iPhone ignora user-scalable=no: frenamos el gesto de pellizcar */
+['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));

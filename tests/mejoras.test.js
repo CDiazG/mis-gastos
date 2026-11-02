@@ -97,7 +97,7 @@ module.exports = {
       await meter(p, [['2025-10-01', 'NOMINA', 2000, 'INGRESO'], ['2025-10-02', 'CENAS', -300, 'OCIO'], ['2026-09-01', 'NOMINA', 2000, 'INGRESO'], ['2026-10-01', 'NOMINA', 2100, 'INGRESO'], ['2026-10-02', 'CENAS', -200, 'OCIO']]);
       await p.evaluate(() => go('hist')); await L.esperar(200);
       const t = await p.textContent('#vsAnio');
-      assert.match(t, /octubre 2025/i); assert.match(t, /▼ 100/);
+      assert.match(t, /oct 2025/i); assert.match(t, /▼ 100/);
       assert.ok(await p.$('#chart polyline'), 'línea del ahorro');
       assert.match(await p.textContent('#chart .legend'), /Ahorro del mes/);
     })();

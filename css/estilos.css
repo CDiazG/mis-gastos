@@ -129,6 +129,7 @@ tr.off td{opacity:.45}
 .ok{color:var(--good);font-weight:600}
 .ko{color:var(--bad);font-weight:600}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row2>#vsAnio,.row2>#tagsCard{min-width:0}
 .formgrid{display:grid;grid-template-columns:150px 1fr;gap:10px 12px;align-items:center}
 dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--card);color:var(--ink);max-width:520px;width:calc(100% - 32px);box-shadow:0 10px 40px rgba(0,0,0,.2)}
 dialog::backdrop{background:rgba(10,15,12,.35)}
@@ -520,3 +521,15 @@ body.bajando .rufobtn:not(.on),body.bajando .fab{transform:translateY(130%);opac
 }
 .tabMas.aviso .ti{overflow:visible}
 @media (max-width:640px){.tabs .tabMas.aviso::after{content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:var(--bad,#d33);margin:0 0 22px 22px}.tabs .tabMas{position:relative}}
+
+.vstab td.num{white-space:nowrap}
+@media (max-width:640px){
+  html,body{overflow-x:clip}
+  .vstab th,.vstab td{padding-left:4px;padding-right:4px}
+  .vstab td:first-child{padding-left:0}
+  .vstab td,.vstab th{font-size:13px}
+  .vstab th{white-space:nowrap}
+}
+/* Sin zoom con dos dedos: la pantalla y la barra de abajo no se mueven (las tablas anchas se desplazan dentro de su caja) */
+html{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.tablewrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
