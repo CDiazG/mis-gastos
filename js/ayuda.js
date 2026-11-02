@@ -1,25 +1,26 @@
-// Cuentas Claras · Pestaña Ayuda: Clara (la mascota), tutorial, preguntas frecuentes, foro y foto de perfil
+// Cuentas Claras · Pestaña Ayuda: la mascota (un zorro), tutorial, preguntas frecuentes, foro y foto de perfil
 "use strict";
-/* ============ Clara, la mascota ============ */
+/* ============ La mascota: un zorro ============ */
+const MASCOTA='Rufo';
 function mascota(px=72,saluda=true){
-  return `<svg class="clara" width="${px}" height="${px}" viewBox="0 0 120 120" aria-hidden="true">
-  <ellipse cx="60" cy="113" rx="28" ry="4.5" fill="#000" opacity=".1"/>
-  <path d="M60 30V15" stroke="#2c7a4b" stroke-width="4" stroke-linecap="round"/>
-  <path d="M60 19C49 7 35 9 32 15c9 9 21 10 28 4z" fill="#5DA68A"/>
-  <path d="M60 17c9-13 25-12 29-6-8 10-21 12-29 6z" fill="#8CCFAC"/>
-  <path class="${saluda?'brazo':''}" d="M23 72C13 66 11 56 15 49" stroke="#0f6b5c" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <path d="M97 72c8 6 10 12 7 18" stroke="#0f6b5c" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <circle cx="60" cy="68" r="40" fill="#0f6b5c"/>
-  <circle cx="60" cy="68" r="33" fill="#1b8a72"/>
-  <ellipse cx="47" cy="65" rx="5.5" ry="7" fill="#fff"/><circle cx="48" cy="66.5" r="3.2" fill="#14211d"/><circle cx="49.2" cy="64.8" r="1" fill="#fff"/>
-  <ellipse cx="73" cy="65" rx="5.5" ry="7" fill="#fff"/><circle cx="74" cy="66.5" r="3.2" fill="#14211d"/><circle cx="75.2" cy="64.8" r="1" fill="#fff"/>
-  <circle cx="39" cy="78" r="5" fill="#f5a8a0" opacity=".75"/><circle cx="81" cy="78" r="5" fill="#f5a8a0" opacity=".75"/>
-  <path d="M50 80q10 10 20 0" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  return `<svg class="mascota" width="${px}" height="${px}" viewBox="0 0 120 120" aria-hidden="true">
+  <ellipse cx="60" cy="113" rx="30" ry="4.5" fill="#000" opacity=".1"/>
+  <path d="M86 104c20-4 28-26 18-40-6 14-14 18-22 20z" fill="#e2733a"/><path d="M98 76c-2 10-8 16-14 18 8 0 14-4 17-12z" fill="#fff4e8"/>
+  <ellipse cx="56" cy="88" rx="24" ry="22" fill="#e2733a"/><ellipse cx="56" cy="94" rx="13" ry="14" fill="#fff4e8"/>
+  <ellipse cx="44" cy="108" rx="7" ry="4" fill="#5a3324"/><ellipse cx="68" cy="108" rx="7" ry="4" fill="#5a3324"/>
+  <g class="${saluda?'brazo':''}"><path d="M40 90C31 84 27 76 28 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="28" cy="67" r="4.6" fill="#5a3324"/></g>
+  <path d="M72 92c4 4 5 9 3 13" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M32 50l-4-28 22 16zM80 50l4-28-22 16z" fill="#e2733a"/><path d="M33 42l-2-13 10 8zM79 42l2-13-10 8z" fill="#5a3324"/>
+  <path d="M56 34c-20 0-28 12-28 22 0 10 12 22 28 26 16-4 28-16 28-26 0-10-8-22-28-22z" fill="#e2733a"/>
+  <path d="M56 82c-10-3-20-10-24-20 8 4 16 4 24 8 8-4 16-4 24-8-4 10-14 17-24 20z" fill="#fff4e8"/>
+  <circle cx="46" cy="56" r="4.2" fill="#1c1a19"/><circle cx="66" cy="56" r="4.2" fill="#1c1a19"/><circle cx="47.4" cy="54.5" r="1.3" fill="#fff"/><circle cx="67.4" cy="54.5" r="1.3" fill="#fff"/>
+  <circle cx="38" cy="64" r="3.6" fill="#f29b8c" opacity=".6"/><circle cx="74" cy="64" r="3.6" fill="#f29b8c" opacity=".6"/>
+  <ellipse cx="56" cy="70" rx="4" ry="3" fill="#2a1d18"/><path d="M52 74q4 3 8 0" stroke="#2a1d18" stroke-width="1.6" fill="none" stroke-linecap="round"/>
 </svg>`}
 
 /* ============ Tutorial por tarjetas ============ */
 const TUTO=[
-  {t:'¡Hola! Soy Clara 👋',d:'Te enseño Cuentas Claras en un minuto. Puedes saltártelo cuando quieras y volver a verlo desde Ayuda o Ajustes.'},
+  {t:'¡Hola! Soy '+MASCOTA+' 👋',d:'Te enseño Cuentas Claras en un minuto. Puedes saltártelo cuando quieras y volver a verlo desde Ayuda o Ajustes.'},
   {tab:'resumen',sel:'.mesTit',t:'El mes que estás viendo',d:'Aquí pone siempre en qué mes estás. Para cambiar de mes usa las flechas ‹ › de arriba; «Hoy» te devuelve al mes actual.'},
   {tab:'resumen',sel:'#kpis',t:'Tu mes de un vistazo',d:'Lo que ha entrado, lo que has gastado, lo que ahorras (todo lo que no gastas) y si llegas a tu objetivo de ahorro.'},
   {tab:'resumen',sel:'#groups',t:'Tu presupuesto',d:'Tres columnas: Necesidades, Ocio y caprichos, y Ahorro y donativos. Pulsa una categoría para ver sus movimientos.'},
@@ -157,7 +158,7 @@ $('#foroF').onsubmit=async e=>{e.preventDefault();const texto=$('#foroTxt').valu
   $('#foroGo').disabled=true;if(await publicarForo({titulo:$('#foroTit').value.trim(),texto})){$('#foroTxt').value='';$('#foroTit').value=''}$('#foroGo').disabled=false};
 
 function rAyuda(){
-  $('#ayClara').innerHTML=mascota(88);
+  $('#ayClara').innerHTML=mascota(88);$('#ayNombre').textContent=MASCOTA;
   rFaq();escucharForo();rForo();
   const on=NUBE&&USER;$('#foroGo').disabled=!on;$('#foroTxt').disabled=!on;$('#foroTit').disabled=!on;
 }

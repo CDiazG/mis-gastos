@@ -140,6 +140,7 @@ module.exports = {
     return (async () => {
       const ctx = await browser.newContext(); (estado.contextos ||= []).push(ctx);
       await ctx.route('**/js/config.js*', r => r.fulfill({ contentType: 'text/javascript', body: 'window.MG_CONFIG={firebase:null};' }));
+      await ctx.addInitScript(() => { try { localStorage.setItem('mg-sin-tuto', '1'); } catch (e) {} });
       const p = await L.nuevaPagina(ctx); estado.paginas.push(p);
       await p.goto(L.URL_APP); await L.esperar(400);
       assert.equal(await p.textContent('#dlgT'), 'Bienvenida');

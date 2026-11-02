@@ -89,8 +89,8 @@ module.exports = {
     return (async () => {
       const p = await dentro(browser, estado, { conTutorial: true });
       await p.waitForSelector('#tuto:not(.hide)', { timeout: 5000 });
-      assert.match(await p.textContent('#tuto'), /Soy Clara/);
-      assert.ok(await p.$('#tuto svg.clara'));
+      assert.match(await p.textContent('#tuto'), /Soy /);
+      assert.ok(await p.$('#tuto svg.mascota'));
       await p.click('#tutoSig'); await L.esperar(150);
       assert.match(await p.textContent('#tuto'), /mes que estás viendo/);
       assert.ok(await p.isVisible('#tutoSpot'));

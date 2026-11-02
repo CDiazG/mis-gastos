@@ -10,13 +10,13 @@
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<script>try{var t=localStorage.getItem('mg-tema');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark'}catch(e){}</script>
+<script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p}catch(e){}</script>
 <link rel="stylesheet" href="css/estilos.css?v=2.11.0">
 </head>
 <body>
 <header>
   <div class="top">
-    <div class="brand"><img src="icons/logo.svg" alt="">Cuentas Claras <button class="ver" id="verBtn" title="Ver novedades"></button></div>
+    <div class="brand"><svg class="logoapp" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="var(--acc)"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="var(--acc-ink)" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="var(--acc-ink)" stroke-opacity=".7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuentas Claras <button class="ver" id="verBtn" title="Ver novedades"></button></div>
     <div class="monthnav" id="monthnav">
       <button class="btn icon" id="mPrev" title="Mes anterior">‹</button>
       <div class="m" id="mLabel"></div>
@@ -249,7 +249,7 @@
   </section>
   <!-- USUARIOS (solo administrador) -->
   <section id="s-ayuda">
-    <div class="ayHead card pad"><span id="ayClara"></span><div style="flex:1;min-width:200px"><h2 style="margin:0">¿En qué te ayudo?</h2><p class="small mut" style="margin:4px 0 10px">Soy Clara. Aquí tienes las dudas más habituales y un foro para preguntar a los demás usuarios.</p><button class="btn sm pri" type="button" id="ayTuto">Ver el tutorial</button></div></div>
+    <div class="ayHead card pad"><span id="ayClara"></span><div style="flex:1;min-width:200px"><h2 style="margin:0">¿En qué te ayudo?</h2><p class="small mut" style="margin:4px 0 10px">Soy <span id="ayNombre"></span>. Aquí tienes las dudas más habituales y un foro para preguntar a los demás usuarios.</p><button class="btn sm pri" type="button" id="ayTuto">Ver el tutorial</button></div></div>
     <div class="row2" style="margin-top:14px;align-items:start">
       <div class="card">
         <div class="ghead"><span class="t">Preguntas frecuentes</span></div>
@@ -289,7 +289,7 @@
 </main>
 
 <div id="login" class="hide"><div class="box card pad">
-  <h1><img src="icons/logo.svg" alt="" style="width:34px;height:34px;border-radius:9px">Cuentas Claras</h1>
+  <h1><svg class="logoapp" viewBox="0 0 512 512" aria-hidden="true" style="width:34px;height:34px"><rect width="512" height="512" rx="112" fill="var(--acc)"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="var(--acc-ink)" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="var(--acc-ink)" stroke-opacity=".7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuentas Claras</h1>
   <div class="small mut" id="lSub">Entra con tu correo y tu contraseña.</div>
   <div id="lCont" class="hide" style="margin-top:16px">
     <div style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px"><span class="avatar" id="lContAv" style="width:34px;height:34px;font-size:15px"></span><div style="min-width:0"><div class="small mut">Sesión guardada en este dispositivo</div><div id="lContMail" style="font-weight:600;overflow-wrap:anywhere"></div></div></div>
