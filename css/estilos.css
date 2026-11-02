@@ -471,3 +471,6 @@ select.falta{border-color:var(--bad);box-shadow:0 0 0 2px var(--bad-soft)}
 .cconv .cc{flex:1;min-width:0;display:flex;flex-direction:column}.cconv .cc .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .enlinea{color:var(--good);font-weight:600}.enlinea::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--good);margin-right:5px}
 @media (max-width:640px){.rufobtn{left:12px;bottom:14px;width:54px;height:54px}#rufoPanel{left:8px;right:8px;width:auto;bottom:76px;height:calc(100vh - 150px)}}
+.utable .uinfo{min-width:0}.utable .un{font-weight:600;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.utable td:last-child{text-align:right;white-space:nowrap}
+@media (max-width:640px){.utable td:last-child{white-space:normal}.utable td:last-child .btn{margin:3px 0 0 4px}}

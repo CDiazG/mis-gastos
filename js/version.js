@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.15.0';
+const VERSION='2.15.1';
 const CAMBIOS=[
+ {v:'2.15.1',f:'2026-11-02',c:['Usuarios: la lista ocupa todo el ancho, con el estado junto al nombre y el correo sin partirse.']},
  {v:'2.15.0',f:'2026-11-02',c:['Chat con Rufo: pulsa el zorro de abajo a la izquierda y pregúntale tus dudas. Responde con las preguntas frecuentes y te lleva al sitio o te lo enseña.','Si Rufo no sabe la respuesta, te pasa con el administrador: le escribes por el chat y te avisa cuando contesta. Se ve si está en línea.','El administrador tiene una bandeja con los mensajes de cada usuario, y un aviso de los que no ha leído.','Pruebas internas más rápidas: publicar una versión tarda menos de la mitad.']},
  {v:'2.14.0',f:'2026-11-02',c:['Nueva sección «Privacidad» (en Ayuda y en la pantalla de entrada): qué se guarda, dónde y quién lo ve, explicado con claridad.','Importar lo deja claro: el extracto se lee en tu dispositivo y el archivo nunca se sube; solo se guardan los movimientos que confirmas.','«Probar con un extracto de ejemplo»: mira cómo clasifica la app con movimientos inventados antes de subir los tuyos. No se guarda nada.']},
  {v:'2.13.1',f:'2026-11-02',c:['La barra de abajo del móvil (la de Android) ya no es verde: ahora es neutra para que encaje con cualquier paleta. Puede tardar un día o dos en cambiar, o al volver a instalar la app.']},
