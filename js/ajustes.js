@@ -10,17 +10,18 @@ function rAjustes(){
   $('#caGrupo').innerHTML=gOpts('VARIABLES');
   $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id&&(c.id!=='DIEZMO'||diezmoOn()));
     return `<tr><td colspan="4" class="small mut" style="padding-top:12px"><b>${g.n}</b></td></tr>`+cs.map((c,k)=>`<tr data-cid="${c.id}">
-      <td><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:170px">${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que no gastas ni inviertes</div>':''}</td>
+      <td><div class="cnw"><button type="button" class="asa" title="Arrastra para cambiar el orden (o usa las flechas del teclado)" aria-label="Mover ${esc(c.n)}">⠿</button><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:150px"></div>${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que no gastas ni inviertes</div>':''}</td>
       <td><select class="cg" style="max-width:118px;font-size:13px" ${FIJAS.has(c.id)?'disabled title="Esta categoría no se puede mover de grupo"':''}>${gOpts(c.g)}</select></td>
       <td class="r" style="white-space:nowrap"><input type="number" min="0" max="100" step="0.5" data-p="${c.id}" value="${S.aj.pct[c.id]??0}" style="width:72px" class="right"> %</td>
-      <td style="white-space:nowrap"><button type="button" class="btn sm icon cu" title="Subir" ${k===0?'disabled':''}>↑</button><button type="button" class="btn sm icon cd" title="Bajar" ${k===cs.length-1?'disabled':''}>↓</button>${c.g==='AHORRO'?'':`<button type="button" class="btn sm icon ac${S.aj.acumula&&S.aj.acumula[c.id]?' on':''}" title="${S.aj.acumula&&S.aj.acumula[c.id]?'Acumula: lo que sobra pasa al mes siguiente (pulsa para quitarlo)':'Pulsa para que lo que sobre pase al mes siguiente'}">↻</button>`}${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
+      <td style="white-space:nowrap">${c.g==='AHORRO'?'':`<button type="button" class="btn sm icon ac${S.aj.acumula&&S.aj.acumula[c.id]?' on':''}" title="${S.aj.acumula&&S.aj.acumula[c.id]?'Acumula: lo que sobra pasa al mes siguiente (pulsa para quitarlo)':'Pulsa para que lo que sobre pase al mes siguiente'}">↻</button>`}${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
   $$('#pctTable tr[data-cid]').forEach(tr=>{const id=tr.dataset.cid;const c=S.cats.find(x=>x.id===id);
     $('.cn',tr).onchange=e=>{const n=e.target.value.trim();if(!n){e.target.value=c.n;return}
       if(S.cats.some(x=>x!==c&&norm(x.n)===norm(n))){toast('Ya hay una categoría con ese nombre',true);e.target.value=c.n;return}
       c.n=n;save();refreshCats();toast('Nombre cambiado')};
     $('.cg',tr).onchange=e=>{c.g=e.target.value;save();rAjustes();toast('Movida a '+GROUPS.find(g=>g.id===c.g).n)};
     const mover=d=>{const cs=S.cats.filter(x=>x.g===c.g);const k=cs.indexOf(c),o=cs[k+d];if(!o)return;const i=S.cats.indexOf(c),j=S.cats.indexOf(o);[S.cats[i],S.cats[j]]=[S.cats[j],S.cats[i]];save();rAjustes()};
-    $('.cu',tr).onclick=()=>mover(-1);$('.cd',tr).onclick=()=>mover(1);
+    const asa=$('.asa',tr);asa.onkeydown=e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();mover(e.key==='ArrowUp'?-1:1);const b=$(`#pctTable tr[data-cid="${id}"] .asa`);if(b)b.focus()}};
+    asa.onpointerdown=e=>arrastrarCat(e,tr,c);
     const cx=$('.cx',tr);if(cx)cx.onclick=()=>borrarCat(c);
     const ac=$('.ac',tr);if(ac)ac.onclick=()=>{const a=S.aj.acumula||(S.aj.acumula={});if(a[id]){delete a[id];toast(c.n+': ya no acumula')}else{a[id]=mesDe(hoy());toast(c.n+': lo que sobre de '+nombreMes(a[id])+' pasará al mes siguiente')}save();rAjustes()};
   });
@@ -284,6 +285,29 @@ function rCatSug(){
   el.innerHTML=xs.length?`<div style="margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--line)"><b>Más categorías</b><p class="small mut" style="margin:2px 0 8px">Añade las que te encajen con un toque. Ya traen sus palabras para clasificar solas (por ejemplo, Netflix o Spotify en Suscripciones). Empiezan con 0 %: luego les pones su parte del presupuesto.</p>
     <div class="chips">${xs.map(c=>`<button type="button" class="chip" data-sug="${esc(c.n)}">${c.e} ${esc(c.n)}</button>`).join('')}</div></div>`:'';
   $$('#catSug [data-sug]').forEach(b=>b.onclick=()=>anadirCatSug(CAT_SUG.find(c=>c.n===b.dataset.sug)));
+}
+// Reordenar categorías arrastrando el asa ⠿ (ratón o dedo), dentro de su grupo
+function arrastrarCat(e,tr,c){
+  if(e.button>0)return;e.preventDefault();
+  const filas=[...$$('#pctTable tr[data-cid]')].filter(t=>S.cats.find(x=>x.id===t.dataset.cid).g===c.g);
+  if(filas.length<2)return;
+  const asa=e.currentTarget;asa.setPointerCapture(e.pointerId);
+  const y0=e.clientY,cajas=filas.map(t=>t.getBoundingClientRect()),k0=filas.indexOf(tr),h=cajas[k0].height;
+  let k=k0;tr.classList.add('arrastrando');document.body.classList.add('arrastrando-cat');
+  const mov=ev=>{const dy=ev.clientY-y0;
+    tr.style.transform=`translateY(${dy}px)`;
+    const centro=cajas[k0].top+h/2+dy;
+    k=cajas.findIndex(b=>centro<b.bottom);if(k<0)k=cajas.length-1;
+    filas.forEach((t,i)=>{if(t===tr)return;const d=i>k0&&i<=k?-h:i<k0&&i>=k?h:0;t.style.transform=d?`translateY(${d}px)`:''});
+    // se desplaza la página si llegas al borde
+    if(ev.clientY<70)scrollBy(0,-8);else if(ev.clientY>innerHeight-90)scrollBy(0,8);
+  };
+  const fin=()=>{asa.removeEventListener('pointermove',mov);asa.removeEventListener('pointerup',fin);asa.removeEventListener('pointercancel',fin);
+    document.body.classList.remove('arrastrando-cat');
+    if(k!==k0){const grupo=S.cats.filter(x=>x.g===c.g),resto=grupo.filter(x=>x!==c);resto.splice(k,0,c);
+      const pos=S.cats.map((x,i)=>x.g===c.g?i:-1).filter(i=>i>=0);pos.forEach((p,i)=>S.cats[p]=resto[i]);save();refreshCats()}
+    rAjustes()};
+  asa.addEventListener('pointermove',mov);asa.addEventListener('pointerup',fin);asa.addEventListener('pointercancel',fin);
 }
 function anadirCatSug(sg,{silencio=false}={}){
   if(!sg||S.cats.some(x=>norm(x.n)===norm(sg.n)))return null;

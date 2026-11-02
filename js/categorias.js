@@ -16,6 +16,7 @@ const CATS_DEF=[
  {id:'AHORRO',n:'Ahorro',g:'AHORRO',p:10},
  {id:'INVERSION',n:'Inversión',g:'AHORRO',p:10},
  {id:'DIEZMO',n:'Diezmo',g:'AHORRO',p:10},
+ {id:'DONATIVOS',n:'Donativos',g:'AHORRO',p:0},
 ];
 const SPECIAL=[
  {id:'INGRESO',n:'Ingreso'},
@@ -42,6 +43,8 @@ const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','
 const MABR={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,sept:9,set:9,oct:10,nov:11,dic:12};
 
 const SEED_RULES=[
+ // donativos
+ ...['UNICEF','CARITAS','CRUZ ROJA','MEDICOS SIN FRONTERAS','ACNUR','SAVE THE CHILDREN','DONATIVO','DONACION'].map(t=>[t,'DONATIVOS']),
  // supermercado
  ['MERCADONA','SUPERMERCADO'],['LIDL','SUPERMERCADO'],['CONSUM','SUPERMERCADO'],['CARREFOUR','SUPERMERCADO'],['ALDI','SUPERMERCADO'],['SUPER ASIA','SUPERMERCADO'],['SUPERASIA','SUPERMERCADO'],['MISUPER','SUPERMERCADO'],['HIPERCOR','SUPERMERCADO'],['ALCAMPO','SUPERMERCADO'],['EROSKI','SUPERMERCADO'],['AHORRAMAS','SUPERMERCADO'],['SUPERMERCADO','SUPERMERCADO'],['SUPERMACADOS','SUPERMERCADO'],['LA DESPENSA','SUPERMERCADO'],['CARNICERIA','SUPERMERCADO'],['FRUTERIA','SUPERMERCADO'],['PESCADERIA','SUPERMERCADO'],
  // vivienda

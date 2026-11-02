@@ -544,3 +544,12 @@ details.cartera summary{cursor:pointer;color:var(--acc);font-weight:550}
 .cartit .bar{margin-top:3px}
 #patTable tr.cartrow td{padding-top:0;border-top:0}
 .cartit{min-width:0}
+
+/* Asa para arrastrar categorías */
+.cnw{display:flex;align-items:center;gap:4px}
+.asa{border:0;background:none;color:var(--muted);cursor:grab;font-size:18px;line-height:1;padding:6px 4px;border-radius:6px;touch-action:none;user-select:none;-webkit-user-select:none;flex:none}
+.asa:hover,.asa:focus-visible{color:var(--ink);background:var(--acc-soft)}
+body.arrastrando-cat,body.arrastrando-cat *{cursor:grabbing!important;user-select:none!important}
+#pctTable tr[data-cid]{transition:transform .15s ease}
+#pctTable tr.arrastrando{transition:none;position:relative;z-index:2;background:var(--card);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.sinanim #pctTable tr[data-cid]{transition:none}

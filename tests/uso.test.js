@@ -54,6 +54,30 @@ module.exports = {
     })();
   },
 
+  'categorías: Donativos de serie y reordenar arrastrando'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const d = await p.evaluate(() => ({ c: S.cats.find(c => c.id === 'DONATIVOS'), cat: autoCat('Transferencia a CARITAS Valencia', '', -20), pct: sumaPct() }));
+      assert.deepEqual(d.c, { id: 'DONATIVOS', n: 'Donativos', g: 'AHORRO' });
+      assert.equal(d.cat, 'DONATIVOS');
+      assert.equal(d.pct, 100, 'el presupuesto sigue sumando 100');
+      await p.evaluate(() => go('ajustes'));
+      assert.ok(await p.isVisible('tr[data-cid=DONATIVOS] .cx'), 'se puede borrar');
+      // arrastrar Transporte (5.º de Necesidades) hasta arriba del todo
+      const orden = () => p.evaluate(() => S.cats.filter(c => c.g === 'FIJOS').map(c => c.id));
+      const antes = await orden();
+      const a = await p.locator('tr[data-cid=TRANSPORTE] .asa').boundingBox(), b = await p.locator('tr[data-cid=VIVIENDA] .asa').boundingBox();
+      await p.mouse.move(a.x + a.width / 2, a.y + a.height / 2); await p.mouse.down();
+      for (let k = 1; k <= 10; k++) await p.mouse.move(a.x + a.width / 2, a.y + a.height / 2 + (b.y - a.y - 8) * k / 10);
+      await p.mouse.up(); await L.esperar(200);
+      assert.deepEqual(await orden(), ['TRANSPORTE', ...antes.filter(x => x !== 'TRANSPORTE')]);
+      // y con el teclado
+      await p.focus('tr[data-cid=TRANSPORTE] .asa'); await p.keyboard.press('ArrowDown');
+      assert.deepEqual((await orden()).slice(0, 2), [antes[0], 'TRANSPORTE']);
+      assert.equal(await p.evaluate(() => document.activeElement.closest('tr').dataset.cid), 'TRANSPORTE', 'el foco sigue en la categoría');
+    })();
+  },
+
   'categorías: crear, renombrar y borrar pasando los movimientos'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);
