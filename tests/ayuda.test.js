@@ -103,7 +103,7 @@ module.exports = {
       const r = await p.evaluate(() => { S.reglas.unshift({ t: 'BIZUM DE AMPARO', c: 'OCIO', u: 1 }); learn('PAGO BIZUM DE LUCIA', 'REGALOS');
         return { cat: autoCat('PAGO BIZUM DE AMPARO', '', 10), aprendida: S.reglas.some(r => r.t.includes('LUCIA')) }; });
       assert.equal(r.cat, ''); assert.equal(r.aprendida, false);
-      await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => go('ajustes', { sub: 'clasif' }));
       await p.click('label.pref:has([data-pref="bizumReglas"])');
       assert.equal(await p.evaluate(() => autoCat('PAGO BIZUM DE AMPARO', '', 10)), 'OCIO');
       // quitar el gráfico y el botón flotante
@@ -212,7 +212,7 @@ module.exports = {
       assert.equal(f.u, 'data:image/jpeg'); assert.ok(f.pub > 100 && f.pub < 60000);
       assert.ok(await p.$('#fotoAj img.avatar'));
       // el administrador pregunta en el foro
-      await p.evaluate(() => go('ayuda'));
+      await p.evaluate(() => go('ayuda', { sub: 'foro' }));
       await p.fill('#foroTit', '¿Cómo pongo el gimnasio?'); await p.fill('#foroTxt', 'No sé en qué categoría va.'); await p.click('#foroGo'); await L.esperar(400);
       assert.match(await p.textContent('#foroList'), /gimnasio/);
       // da de alta a su hermana, que responde
@@ -221,7 +221,7 @@ module.exports = {
       await p.click('#dlgF >> text=Entendido');
       await L.salir(p); await L.ponerClave(p, 'hermana@prueba.test', 'hermana1');
       await L.entrar(p, 'hermana@prueba.test', 'hermana1'); await L.cerrarBienvenida(p);
-      await p.evaluate(() => go('ayuda')); await L.esperar(300);
+      await p.evaluate(() => go('ayuda', { sub: 'foro' })); await L.esperar(300);
       assert.match(await p.textContent('#foroList'), /gimnasio/, 'la ve otro usuario');
       assert.ok(await p.$('#foroList img.avatar'), 'con la foto de quien pregunta');
       assert.equal(await p.$('#foroList .hilo .pX'), null, 'no puede borrar lo de otros');

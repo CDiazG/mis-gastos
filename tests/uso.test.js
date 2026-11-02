@@ -179,6 +179,40 @@ module.exports = {
     })();
   },
 
+  'móvil: Ajustes por apartados y el botón atrás'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      const atras = async () => { await p.evaluate(() => history.back()); await L.esperar(250); };
+      const tab = () => p.evaluate(() => TAB + '/' + (SUB[TAB] || ''));
+      await p.evaluate(() => go('ajustes'));
+      assert.ok(await p.isVisible('.apmenu[data-menu=ajustes]'), 'sale el menú de apartados');
+      assert.ok(!(await p.isVisible('#pctTable')), 'sin bajar por todo');
+      await p.click('.apmenu[data-menu=ajustes] .apit[data-ap=reglas]');
+      assert.ok(await p.isVisible('#rTable')); assert.ok(!(await p.isVisible('.apmenu[data-menu=ajustes]')));
+      assert.match(await p.textContent('#s-ajustes .migas'), /Ajustes\s*›\s*Reglas de categorías/);
+      await atras(); assert.equal(await tab(), 'ajustes/', 'atrás vuelve al menú de Ajustes');
+      await p.click('.apmenu[data-menu=ajustes] .apit[data-ap=nomina]'); await p.click('#s-ajustes .migas [data-mg]');
+      assert.equal(await tab(), 'ajustes/', 'las migas también vuelven');
+      await atras(); assert.equal(await tab(), 'inicio/', 'y luego a Inicio');
+      // atrás cierra primero lo que esté abierto
+      await p.evaluate(() => go('movs')); await p.tap('#tabMas'); await p.waitForSelector('#masSheet');
+      await atras(); assert.equal(await p.$('#masSheet'), null); assert.equal(await tab(), 'movs/');
+      await atras(); assert.equal(await tab(), 'inicio/');
+      // desde Inicio avisa antes de salir
+      await atras();
+      assert.match(await p.textContent('#toast'), /otra vez atrás para salir/);
+      assert.equal(await tab(), 'inicio/');
+      // con el presupuesto descuadrado no deja salir de Ajustes, tampoco con atrás
+      await p.evaluate(() => { go('ajustes', { sub: 'presupuesto' }); S.aj.pct.OCIO += 5; });
+      await atras();
+      assert.equal(await p.evaluate(() => TAB), 'ajustes');
+      assert.ok(await p.evaluate(() => $('#dlg').open), 'avisa de que no suma 100');
+      await atras();
+      assert.ok(!(await p.evaluate(() => $('#dlg').open)), 'atrás cierra el aviso');
+      assert.equal(await p.evaluate(() => TAB), 'ajustes');
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

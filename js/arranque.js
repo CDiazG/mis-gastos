@@ -4,7 +4,7 @@
 let uiLista=false;
 function iniciarUI(){
   if(HAY_MIGRACION){HAY_MIGRACION=false;save()}
-  refreshCats();aplicarTema();MES=mesDe(hoy());go(window.__TAB_INICIAL||'inicio');recogerCompartidos();
+  refreshCats();aplicarTema();MES=mesDe(hoy());navInit();go(window.__TAB_INICIAL||'inicio');recogerCompartidos();
   if(uiLista&&!NUBE)return;uiLista=true;tutorialInicial();
   if(S.histOfrecido&&cmpV(VERSION,S.verVista||'1.0')>0){
     const desde=S.verVista||'1.0';S.verVista=VERSION;save();

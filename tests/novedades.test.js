@@ -34,7 +34,7 @@ module.exports = {
   'diezmo automático: pendiente y marcar pagado'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado); const m = await p.evaluate(() => MES);
-      await p.evaluate(() => go('ajustes')); await p.check('#dzAuto');
+      await p.evaluate(() => go('ajustes', { sub: 'diezmo' })); await p.check('#dzAuto');
       await mov(p, { fecha: m + '-02', concepto: 'Nómina', importe: 2000, cat: 'INGRESO' });
       await p.evaluate(() => go('resumen'));
       assert.match(await p.textContent('#groups .crow[data-cat=DIEZMO]'), /pendiente/);

@@ -137,14 +137,14 @@ function fijosDelMes(m){
 function rFijosCard(){
   const el=$('#fijosCard');const fs=fijosDelMes(MES);
   if(!(S.fijos||[]).length){el.innerHTML=`<div class="ghead"><span class="t">Gastos fijos previstos</span></div><div class="pad small mut">Apunta el alquiler, el garaje, las suscripciones… y el programa te avisará si alguno no llega o cambia de importe.<div class="toolbar" style="margin:10px 0 0"><button class="btn sm pri" id="fjDet">Detectarlos automáticamente</button><button class="btn sm" id="fjAj">Configurar</button></div></div>`;
-    $('#fjDet').onclick=detectarFijos;$('#fjAj').onclick=()=>{go('ajustes');setTimeout(()=>$('#fijosAj').scrollIntoView({behavior:'smooth'}),50)};return}
+    $('#fjDet').onclick=detectarFijos;$('#fjAj').onclick=()=>{go('ajustes',{sub:'fijos'})};return}
   const prev=fs.reduce((a,x)=>a+x.f.importe,0),pag=fs.reduce((a,x)=>a+x.pagado,0);
   const tag={ok:'<span class="tag good">pagado</span>',cambia:'<span class="tag bad">ha cambiado</span>',pendiente:'<span class="tag">pendiente</span>',falta:'<span class="tag bad">no ha llegado</span>'};
   el.innerHTML=`<div class="ghead"><span class="t">Gastos fijos previstos</span><span class="r num">${eur(pag,0)} de ${eur(prev,0)}</span></div>`+
     (fs.length?fs.map(x=>`<div class="crow" style="cursor:default"><div class="a"><span>${esc(x.f.nombre)} ${tag[x.estado]}</span><span class="num">${x.cands.length?eur(x.pagado):eur(x.f.importe)}</span></div>
       <div class="b"><span>${x.estado==='cambia'?'Previsto '+eur(x.f.importe):x.estado==='ok'?fFecha(x.cands[0].fecha):(x.f.dia?'Sobre el día '+x.f.dia:'Durante el mes')}</span><span>${(+x.f.cada||1)>1?'cada '+x.f.cada+' meses':'mensual'}</span></div></div>`).join('')
     :'<div class="pad small mut">Este mes no toca ninguno.</div>')+`<div class="pad small" style="padding-top:8px"><button class="link" id="fjAj2">Editar gastos fijos</button></div>`;
-  $('#fjAj2').onclick=()=>{go('ajustes');setTimeout(()=>$('#fijosAj').scrollIntoView({behavior:'smooth'}),50)};
+  $('#fjAj2').onclick=()=>{go('ajustes',{sub:'fijos'})};
 }
 function detectarFijos(){
   const hoyM=mesDe(hoy());const desde=addMes(hoyM,-6);

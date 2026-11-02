@@ -106,7 +106,7 @@ module.exports = {
   'diezmo opcional: al quitarlo su porcentaje pasa al ahorro'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
-      await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => go('ajustes', { sub: 'diezmo' }));
       const antes = await p.evaluate(() => [S.aj.pct.AHORRO, S.aj.pct.DIEZMO]);
       await p.click('label.pref:has([data-pref="diezmo"])');
       const r = await p.evaluate(() => ({ pa: S.aj.pct.AHORRO, pd: S.aj.pct.DIEZMO, suma: sumaPct(), opt: catOptions('').includes('DIEZMO'), fila: !!document.querySelector('#pctTable tr[data-cid="DIEZMO"]') }));
@@ -114,7 +114,7 @@ module.exports = {
       assert.ok(await p.isHidden('#dzAuto'));
       await p.evaluate(() => go('resumen'));
       assert.ok(!/Diezmo/.test(await p.textContent('#groups')));
-      await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => go('ajustes', { sub: 'diezmo' }));
       await p.click('label.pref:has([data-pref="diezmo"])');
       assert.deepEqual(await p.evaluate(() => [S.aj.pct.AHORRO, S.aj.pct.DIEZMO, sumaPct()]), [antes[0], antes[1], 100]);
     })();

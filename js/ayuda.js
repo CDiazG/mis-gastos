@@ -70,6 +70,7 @@ function pintarTuto(){
   const p=PASOS[tutoI];if(!p){cerrarTuto();return}
   if(p.tab&&TAB!==p.tab)go(p.tab);
   let el=p.sel&&$(p.sel);if(el&&p.card)el=el.closest('.card')||el;
+  if(el)revelar(el);
   if(el)el.scrollIntoView({block:el.offsetHeight>window.innerHeight*0.45?'start':'center',behavior:'instant'});
   const ult=p.ult||tutoI===PASOS.length-1,uno=PASOS.length===1;
   $('#tuto').innerHTML=`<div class="tcard">${mascota(76,tutoI===0||ult)}<div class="tbody"><div class="tt">${p.t}</div><div class="td">${p.d}</div>${p.html?p.html():''}
@@ -119,7 +120,7 @@ let faqQ='';
 function rFaq(){
   const q=norm(faqQ).trim();const xs=FAQ.filter(f=>!q||norm(f.p+' '+f.r).includes(q));
   $('#faqList').innerHTML=xs.length?xs.map(f=>`<details class="faq"><summary>${esc(f.p)}</summary><p>${esc(f.r)}</p>${f.ir?`<div class="faqir"><button class="btn sm" type="button" data-ir="${FAQ.indexOf(f)}">Ir a ${esc(f.ir.t)} →</button><button class="btn sm pri" type="button" data-guia="${FAQ.indexOf(f)}">${mascota(18,false)} Que ${MASCOTA} me lo enseñe</button></div>`:''}</details>`).join(''):'<p class="small mut pad">No encuentro nada con eso. Pregúntalo en el foro.</p>';
-  $$('#faqList [data-ir]').forEach(b=>b.onclick=()=>{const ir=FAQ[+b.dataset.ir].ir;go(ir.tab);setTimeout(()=>{let el=$(ir.sel);if(el&&ir.card)el=el.closest('.card')||el;if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('resalta');setTimeout(()=>el.classList.remove('resalta'),1600)}},60)});
+  $$('#faqList [data-ir]').forEach(b=>b.onclick=()=>{const ir=FAQ[+b.dataset.ir].ir;go(ir.tab);setTimeout(()=>{let el=$(ir.sel);revelar(el);if(el&&ir.card)el=el.closest('.card')||el;if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('resalta');setTimeout(()=>el.classList.remove('resalta'),1600)}},60)});
   $$('#faqList [data-guia]').forEach(b=>b.onclick=()=>{const f=FAQ[+b.dataset.guia];const ir=f.ir;
     guia({tab:ir.tab,sel:ir.padre?null:ir.sel,card:ir.card,t:f.p,d:ir.g||f.r,_padre:ir.padre?[ir.sel,ir.padre]:null});
     if(ir.padre){const el=$(ir.sel);const pe=el&&el.closest(ir.padre);if(pe){pe.id=pe.id||'guiaPadre';PASOS[0].sel='#'+pe.id;tutoI=0;pintarTuto()}}});

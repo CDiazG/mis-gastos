@@ -582,3 +582,43 @@ svg .crece{transform-box:fill-box;transform-origin:bottom}
 .sinanim svg *,.sinanim .rosco svg{animation:none!important}
 @media (prefers-reduced-motion: reduce){svg .crece,svg .traza,svg .punto,.rosco svg{animation:none!important;stroke-dashoffset:0!important}}
 .sinanim svg .traza{stroke-dashoffset:0!important;stroke-dasharray:none!important}
+/* ===== Apartados de Ajustes y Ayuda ===== */
+.apwrap{display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px;align-items:start}
+.apizq{position:sticky;top:96px;display:grid;gap:12px}
+.apmenu{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px;display:grid;gap:2px}
+.apit{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);text-align:left;padding:10px 10px;border-radius:10px;cursor:pointer;font:inherit}
+.apit:hover{background:var(--soft)}
+.apit.on{background:var(--acc-soft)}
+.apit svg{width:22px;height:22px;flex:none;color:var(--muted)}
+.apit.on svg{color:var(--acc)}
+.apit>span:not(.apch){flex:1;min-width:0;display:flex;flex-direction:column}
+.apit b{font-weight:600;font-size:14px}
+.apit small{color:var(--muted);font-size:12px;line-height:1.3;margin-top:1px}
+.apch{color:var(--muted);font-size:20px;line-height:1;display:none}
+.apver{font-size:13px}
+.apcont>[data-ap]{display:none}
+.apcont>[data-ap].on{display:block;animation:aparecer .25s ease both}
+.apcont>[data-ap].on~[data-ap].on{margin-top:14px}
+.migas{display:none;align-items:center;gap:8px;font-size:14px;margin:0 0 10px;color:var(--muted);flex-wrap:wrap}
+.migas .link{font-size:14px}
+.migas b{color:var(--ink);font-weight:600}
+#s-ayuda .ayHead{margin-bottom:14px}
+@media (max-width:760px){
+  .apwrap{display:block}
+  .apizq{position:static}
+  .apit{padding:14px 10px}
+  .apit small{font-size:12.5px}
+  .apch{display:block}
+  .apit.on{background:none}.apit.on svg{color:var(--muted)}
+  .conap.apsub .apizq,.conap.apsub .aphead,.conap.apsub .ayHead{display:none}
+  .conap.apsub .migas{display:flex}
+  .conap.apmen .apcont{display:none}
+}
+@media (max-width:640px){
+  #rTable thead{display:none}
+  #rTable,#rTable tbody{display:block;width:100%}
+  #rTable tr[data-i]{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+  #rTable tr[data-i] td{padding:0;border:0}
+  #rTable tr[data-i] td:first-child{grid-column:1/-1}
+  #rTable tr[data-i] input,#rTable tr[data-i] select{width:100%!important;max-width:none!important}
+}

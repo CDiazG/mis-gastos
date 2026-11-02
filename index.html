@@ -11,7 +11,7 @@
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p}catch(e){}</script>
-<link rel="stylesheet" href="css/estilos.css?v=2.18.0">
+<link rel="stylesheet" href="css/estilos.css?v=2.19.0">
 </head>
 <body>
 <header>
@@ -159,13 +159,16 @@
   </section>
 
   <!-- AJUSTES -->
-  <section id="s-ajustes">
-    <h2>Ajustes</h2>
-    <p class="sub">Presupuesto, reglas de categorías y copias de seguridad.</p>
+  <section id="s-ajustes" class="conap">
+    <nav class="migas" aria-label="Estás en"></nav>
+    <div class="aphead"><h2>Ajustes</h2><p class="sub">Elige qué quieres cambiar.</p></div>
     <div id="pctAlert"></div>
-    <div class="card pad" id="sugCard" style="margin-bottom:14px"></div>
-    <div class="row2">
-      <div class="card pad">
+    <div class="apwrap">
+      <div class="apizq"><nav class="apmenu" data-menu="ajustes"></nav>
+        <div class="card pad apver" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="tag acc" id="verTagAj"></span><span class="small mut" style="flex:1;min-width:200px">Las novedades de cada versión y el buzón de sugerencias y quejas están en la pestaña Ayuda.</span><button class="btn sm" type="button" id="irAyuda">Ir a Ayuda</button></div></div>
+      <div class="apcont">
+<div data-ap="presupuesto" class="card pad" id="sugCard" ></div>
+<div data-ap="presupuesto" class="card pad">
         <h3>Categorías y presupuesto</h3>
         <p class="small mut" style="margin:4px 0 12px">Cambia el nombre, el grupo o el porcentaje de cada categoría, o añade nuevas. Las de «Ahorro y donativos» no cuentan como gasto.</p>
         <div style="margin-bottom:12px" class="pill small">
@@ -179,20 +182,18 @@
         <div id="catSug"></div>
         <p class="small mut" style="margin:6px 0 0">↻ = lo que no gastes en esa categoría pasa al mes siguiente (útil para Regalos, Viajes o Ropa, que no se gastan todos los meses).</p>
       </div>
-      <div class="grid" style="align-content:start">
-        <div class="card pad" id="clasCard">
-          <h3>Clasificación automática</h3>
-          <p class="small mut" style="margin:4px 0 10px">Cómo aprende el programa las categorías de tus movimientos.</p>
-          <div id="clasList" class="prefs"></div>
-        </div>
-        <div class="card pad">
-          <h3>Diezmo</h3>
-          <p class="small mut" style="margin:4px 0 10px">Si lo activas, cada mes se calcula el porcentaje de diezmo del presupuesto sobre los ingresos del mes y se muestra como pendiente hasta que lo pagas (poniendo la categoría «Diezmo» al movimiento del banco o con el botón «Marcar pagado» del Resumen).</p>
-          <label class="pref" style="border:0;padding:4px 0 8px"><span class="sw"><input type="checkbox" data-pref="diezmo" id="dzOn"><i></i></span><span><b>Doy diezmo</b><span class="small mut">Si lo quitas, desaparece del presupuesto y su porcentaje pasa al ahorro.</span></span></label>
-          <div id="dzAutoW"><label class="pill"><input type="checkbox" id="dzAuto"> Calcular el diezmo automáticamente</label>
-          <p class="small mut" id="dzTxt" style="margin:8px 0 0"></p></div>
-        </div>
-        <div class="card pad">
+<div data-ap="reglas" class="card pad" >
+      <div class="toolbar" style="margin-top:0"><h3>Reglas de categorías</h3><span class="sp"></span><input type="search" id="rBuscar" placeholder="Buscar regla…" style="width:200px"></div>
+      <p class="small mut" style="margin:0 0 10px">Si el concepto del banco contiene el texto, se le pone esa categoría. Las reglas aprendidas aparecen solas cuando corriges una categoría en un extracto; tienen prioridad sobre las de serie.</p>
+      <form class="toolbar" id="rAdd" style="margin:0 0 10px"><input type="text" id="rTexto" placeholder="Texto (p. ej. PARKIA)" required><select id="rCat"></select><button class="btn pri">Añadir regla</button></form>
+      <div class="tablewrap" style="max-height:420px"><table id="rTable"></table></div>
+    </div>
+<div data-ap="fijos" class="card pad"  id="fijosAj">
+      <div class="toolbar" style="margin-top:0"><h3>Gastos fijos previstos</h3><span class="sp"></span><button class="btn sm" id="fjDet2" type="button">Detectar automáticamente</button><button class="btn sm pri" id="fjAdd" type="button">＋ Añadir</button></div>
+      <p class="small mut" style="margin:0 0 10px">Se reconocen por el texto del concepto (o, si no, por categoría e importe parecido). Si uno no llega pasados 3 días de su fecha, o llega con otro importe, el Resumen avisa.</p>
+      <div class="tablewrap"><table id="fjTable"></table></div>
+    </div>
+<div data-ap="nomina" class="card pad">
           <h3>Nómina</h3>
           <p class="small mut" style="margin:4px 0 10px">El programa reconoce la nómina y la marca. Solo la nómina puede contar para otro mes; los demás ingresos (Bizum, devoluciones…) cuentan siempre en el mes en que entran.</p>
           <div class="small" style="display:flex;flex-direction:column;gap:8px">
@@ -202,7 +203,19 @@
             <div class="mut">Se puede cambiar en cada nómina: al importar el extracto (desplegable junto a «nómina») o en Movimientos con ✎.</div>
           </div>
         </div>
-        <div class="card pad">
+<div data-ap="diezmo" class="card pad">
+          <h3>Diezmo</h3>
+          <p class="small mut" style="margin:4px 0 10px">Si lo activas, cada mes se calcula el porcentaje de diezmo del presupuesto sobre los ingresos del mes y se muestra como pendiente hasta que lo pagas (poniendo la categoría «Diezmo» al movimiento del banco o con el botón «Marcar pagado» del Resumen).</p>
+          <label class="pref" style="border:0;padding:4px 0 8px"><span class="sw"><input type="checkbox" data-pref="diezmo" id="dzOn"><i></i></span><span><b>Doy diezmo</b><span class="small mut">Si lo quitas, desaparece del presupuesto y su porcentaje pasa al ahorro.</span></span></label>
+          <div id="dzAutoW"><label class="pill"><input type="checkbox" id="dzAuto"> Calcular el diezmo automáticamente</label>
+          <p class="small mut" id="dzTxt" style="margin:8px 0 0"></p></div>
+        </div>
+<div data-ap="clasif" class="card pad" id="clasCard">
+          <h3>Clasificación automática</h3>
+          <p class="small mut" style="margin:4px 0 10px">Cómo aprende el programa las categorías de tus movimientos.</p>
+          <div id="clasList" class="prefs"></div>
+        </div>
+<div data-ap="copia" class="card pad">
           <h3>Copia de seguridad</h3>
           <p class="small mut" style="margin:4px 0 10px" id="bkTxt">Descarga una copia de todos tus datos en un archivo, por si acaso.</p>
           <div class="toolbar" style="margin:0">
@@ -212,7 +225,7 @@
           </div>
           <p class="small mut" id="bkInfo" style="margin:10px 0 0"></p>
         </div>
-        <div class="card pad">
+<div data-ap="copia" class="card pad">
           <h3>Historial del Excel</h3>
           <p class="small mut" style="margin:4px 0 10px" id="histInfo"></p>
           <div class="toolbar" style="margin:0">
@@ -221,7 +234,7 @@
             <button class="btn dan" id="histDel">Quitar historial del Excel</button>
           </div>
         </div>
-        <div class="card pad">
+<div data-ap="instalar" class="card pad">
           <h3>Acceso directo en el escritorio</h3>
           <p class="small mut" style="margin:4px 0 10px" id="instTxt"></p>
           <div class="toolbar" style="margin:0"><button class="btn pri hide" id="instalarBtn">Instalar Cuentas Claras</button></div>
@@ -229,18 +242,6 @@
         </div>
       </div>
     </div>
-    <div class="card pad" style="margin-top:14px" id="fijosAj">
-      <div class="toolbar" style="margin-top:0"><h3>Gastos fijos previstos</h3><span class="sp"></span><button class="btn sm" id="fjDet2" type="button">Detectar automáticamente</button><button class="btn sm pri" id="fjAdd" type="button">＋ Añadir</button></div>
-      <p class="small mut" style="margin:0 0 10px">Se reconocen por el texto del concepto (o, si no, por categoría e importe parecido). Si uno no llega pasados 3 días de su fecha, o llega con otro importe, el Resumen avisa.</p>
-      <div class="tablewrap"><table id="fjTable"></table></div>
-    </div>
-    <div class="card pad" style="margin-top:14px">
-      <div class="toolbar" style="margin-top:0"><h3>Reglas de categorías</h3><span class="sp"></span><input type="search" id="rBuscar" placeholder="Buscar regla…" style="width:200px"></div>
-      <p class="small mut" style="margin:0 0 10px">Si el concepto del banco contiene el texto, se le pone esa categoría. Las reglas aprendidas aparecen solas cuando corriges una categoría en un extracto; tienen prioridad sobre las de serie.</p>
-      <form class="toolbar" id="rAdd" style="margin:0 0 10px"><input type="text" id="rTexto" placeholder="Texto (p. ej. PARKIA)" required><select id="rCat"></select><button class="btn pri">Añadir regla</button></form>
-      <div class="tablewrap" style="max-height:420px"><table id="rTable"></table></div>
-    </div>
-    <div class="card pad" style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span class="tag acc" id="verTagAj"></span><span class="small mut" style="flex:1;min-width:200px">Las novedades de cada versión y el buzón de sugerencias y quejas están en la pestaña Ayuda.</span><button class="btn sm" type="button" id="irAyuda">Ir a Ayuda</button></div>
   </section>
   <!-- USUARIOS (solo administrador) -->
   <section id="s-perfil">
@@ -281,16 +282,19 @@
     </div>
   </section>
 
-  <section id="s-ayuda">
+  <section id="s-ayuda" class="conap">
+    <nav class="migas" aria-label="Estás en"></nav>
     <div class="ayHead card pad"><span id="ayClara"></span><div style="flex:1;min-width:200px"><h2 style="margin:0">¿En qué te ayudo?</h2><p class="small mut" style="margin:4px 0 10px">Soy <span id="ayNombre"></span>. Aquí tienes las dudas más habituales y un foro para preguntar a los demás usuarios.</p><button class="btn sm pri" type="button" id="ayTuto">Ver el tutorial</button></div></div>
-    <div class="card pad" id="privCard" style="margin-top:14px"></div>
-    <div class="row2" style="margin-top:14px;align-items:start">
-      <div class="card">
+    <div class="apwrap">
+      <div class="apizq"><nav class="apmenu" data-menu="ayuda"></nav></div>
+      <div class="apcont">
+<div data-ap="faq" class="card">
         <div class="ghead"><span class="t">Preguntas frecuentes</span></div>
         <div class="pad" style="padding-bottom:4px"><input type="search" id="faqBuscar" placeholder="Busca tu duda… (p. ej. Bizum, nómina, efectivo)" style="width:100%"></div>
         <div id="faqList" class="pad" style="padding-top:6px"></div>
       </div>
-      <div class="card">
+<div data-ap="privacidad" class="card pad" id="privCard" ></div>
+<div data-ap="foro" class="card">
         <div class="ghead"><span class="t">Foro · preguntas entre usuarios</span></div>
         <form id="foroF" class="pad" autocomplete="off" style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)">
           <input type="text" id="foroTit" placeholder="Título (opcional)" maxlength="120">
@@ -299,9 +303,7 @@
         </form>
         <div id="foroList"></div>
       </div>
-    </div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));margin-top:14px;align-items:start">
-      <div class="card pad" id="buzonCard">
+<div data-ap="sugerencias" class="card pad" id="buzonCard">
         <h3>Sugerencias y quejas</h3>
         <p class="small mut" style="margin:4px 0 10px">¿Algo que mejorarías, que no te gusta o que no funciona? Escríbelo y le llegará al administrador. Aquí abajo verás si lo ha visto o ya está hecho.</p>
         <form id="buzonF" autocomplete="off" style="display:flex;flex-direction:column;gap:8px">
@@ -311,9 +313,10 @@
         </form>
         <div id="bzMias" style="margin-top:6px"></div>
       </div>
-      <div class="card pad">
+<div data-ap="novedades" class="card pad">
         <div class="toolbar" style="margin:0"><h3>Versión</h3><span class="sp"></span><span class="tag acc" id="verTag"></span></div>
         <div class="chlog" id="verList"></div>
+      </div>
       </div>
     </div>
   </section>
@@ -371,31 +374,31 @@
 <div id="undo" role="status"><span id="undoTxt"></span><button class="btn sm" type="button" id="undoBtn">Deshacer</button></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.18.0"></script>
-<script src="js/categorias.js?v=2.18.0"></script>
-<script src="js/version.js?v=2.18.0"></script>
-<script src="js/utilidades.js?v=2.18.0"></script>
-<script src="js/estado.js?v=2.18.0"></script>
-<script src="js/reglas.js?v=2.18.0"></script>
-<script src="js/navegacion.js?v=2.18.0"></script>
-<script src="js/resumen.js?v=2.18.0"></script>
-<script src="js/movimientos.js?v=2.18.0"></script>
-<script src="js/excel.js?v=2.18.0"></script>
-<script src="js/dialogos.js?v=2.18.0"></script>
-<script src="js/pdf.js?v=2.18.0"></script>
-<script src="js/formatos.js?v=2.18.0"></script>
-<script src="js/importar.js?v=2.18.0"></script>
-<script src="js/historico.js?v=2.18.0"></script>
-<script src="js/ajustes.js?v=2.18.0"></script>
-<script src="js/usuarios.js?v=2.18.0"></script>
-<script src="js/errores.js?v=2.18.0"></script>
-<script src="js/buzon.js?v=2.18.0"></script>
-<script src="js/perfil.js?v=2.18.0"></script>
-<script src="js/inicio.js?v=2.18.0"></script>
-<script src="js/privacidad.js?v=2.18.0"></script>
-<script src="js/ayuda.js?v=2.18.0"></script>
-<script src="js/chat.js?v=2.18.0"></script>
-<script src="js/acceso.js?v=2.18.0"></script>
-<script src="js/arranque.js?v=2.18.0"></script>
+<script src="js/config.js?v=2.19.0"></script>
+<script src="js/categorias.js?v=2.19.0"></script>
+<script src="js/version.js?v=2.19.0"></script>
+<script src="js/utilidades.js?v=2.19.0"></script>
+<script src="js/estado.js?v=2.19.0"></script>
+<script src="js/reglas.js?v=2.19.0"></script>
+<script src="js/navegacion.js?v=2.19.0"></script>
+<script src="js/resumen.js?v=2.19.0"></script>
+<script src="js/movimientos.js?v=2.19.0"></script>
+<script src="js/excel.js?v=2.19.0"></script>
+<script src="js/dialogos.js?v=2.19.0"></script>
+<script src="js/pdf.js?v=2.19.0"></script>
+<script src="js/formatos.js?v=2.19.0"></script>
+<script src="js/importar.js?v=2.19.0"></script>
+<script src="js/historico.js?v=2.19.0"></script>
+<script src="js/ajustes.js?v=2.19.0"></script>
+<script src="js/usuarios.js?v=2.19.0"></script>
+<script src="js/errores.js?v=2.19.0"></script>
+<script src="js/buzon.js?v=2.19.0"></script>
+<script src="js/perfil.js?v=2.19.0"></script>
+<script src="js/inicio.js?v=2.19.0"></script>
+<script src="js/privacidad.js?v=2.19.0"></script>
+<script src="js/ayuda.js?v=2.19.0"></script>
+<script src="js/chat.js?v=2.19.0"></script>
+<script src="js/acceso.js?v=2.19.0"></script>
+<script src="js/arranque.js?v=2.19.0"></script>
 </body>
 </html>
