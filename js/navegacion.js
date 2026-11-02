@@ -6,6 +6,35 @@ function setMes(m){MES=m;F.todos=false;render()}
 $('#mPrev').onclick=()=>setMes(addMes(MES,-1));
 $('#mNext').onclick=()=>setMes(addMes(MES,1));
 $('#mHoy').onclick=()=>setMes(mesDe(hoy()));
+/* Calendario de meses: al tocar el nombre del mes, todos los meses por año (con un punto los que tienen datos) */
+function abrirMesPicker(){
+  if($('#mesPicker')){cerrarMesPicker();return}
+  const conDatos=new Set(S.mov.map(x=>x.mes)),act=mesDe(hoy());
+  const anios=[...new Set([...conDatos].map(m=>m.slice(0,4)).concat(act.slice(0,4)))].sort().reverse();
+  let y=MES.slice(0,4);
+  const d=document.createElement('div');d.id='mesPicker';d.setAttribute('role','dialog');d.setAttribute('aria-label','Elegir mes');
+  const pintar=()=>{d.innerHTML=`<div class="mpfondo"></div><div class="mpcaja"><div class="mphead"><button type="button" class="btn sm icon" data-y="-1" ${y<=anios[anios.length-1]?'disabled':''} aria-label="Año anterior">‹</button><b>${y}</b><button type="button" class="btn sm icon" data-y="1" ${y>=anios[0]?'disabled':''} aria-label="Año siguiente">›</button></div>
+    <div class="mpgrid">${MESES.map((n,i)=>{const m=y+'-'+String(i+1).padStart(2,'0');return `<button type="button" class="mpm${m===MES?' on':''}${m===act?' hoy':''}" data-m="${m}">${n.slice(0,3)}${conDatos.has(m)?'<i></i>':''}</button>`}).join('')}</div>
+    <div class="mppie"><span class="small mut"><i class="mpdot"></i> con movimientos</span><button type="button" class="btn sm" data-m="${act}">Ir a hoy</button></div></div>`;
+    $('.mpfondo',d).onclick=cerrarMesPicker;
+    $$('[data-y]',d).forEach(b=>b.onclick=()=>{y=String(+y+ +b.dataset.y);pintar()});
+    $$('[data-m]',d).forEach(b=>b.onclick=()=>{cerrarMesPicker();setMes(b.dataset.m)});
+    const r=$('#monthnav').getBoundingClientRect(),c=$('.mpcaja',d);if(!esMovil()){c.style.left=Math.max(8,r.left+r.width/2-150)+'px';c.style.top=(r.bottom+6)+'px'}};
+  pintar();document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
+}
+function cerrarMesPicker(){const d=$('#mesPicker');if(d)d.remove()}
+$('#mLabel').onclick=abrirMesPicker;$('#mLabel').setAttribute('role','button');$('#mLabel').tabIndex=0;$('#mLabel').title='Elegir mes';
+$('#mLabel').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirMesPicker()}};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMesPicker()});
+/* En el móvil, deslizar a los lados en el Resumen o en Movimientos cambia de mes */
+(()=>{let x0=null,y0=0,t0=0;
+  const zona=e=>{const s=e.target.closest('#s-resumen,#s-movs');if(!s)return false;
+    return !e.target.closest('input,select,textarea,button,.tablewrap,.apchips,dialog,svg,.rtable,#movTable')};
+  document.addEventListener('touchstart',e=>{if(e.touches.length!==1||!zona(e)){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+  document.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+    if(Date.now()-t0>700||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*2)return;
+    setMes(addMes(MES,dx<0?1:-1));const s=$('#s-'+TAB);if(s){s.classList.remove('desliza-i','desliza-d');void s.offsetWidth;s.classList.add(dx<0?'desliza-i':'desliza-d')}},{passive:true});
+})();
 $$('.tab[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));
 /* Móvil: barra inferior con Inicio, Resumen, Añadir, Movimientos y «Más» */
 const EN_MAS=['importar','hist','patri','ajustes','ayuda','usuarios','perfil'];
@@ -109,6 +138,7 @@ function navGuardar(){
   NAV_CUR=st;
 }
 function cerrarAbierto(){
+  if($('#mesPicker')){cerrarMesPicker();return true}
   if($('#masSheet')){cerrarMas();return true}
   const d=$('#dlg');if(d&&d.open){d.close();return true}
   const rp=$('#rufoPanel');if(rp&&!rp.classList.contains('hide')&&typeof abrirChat==='function'){abrirChat(false);return true}

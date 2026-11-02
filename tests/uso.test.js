@@ -308,6 +308,46 @@ module.exports = {
     })();
   },
 
+  'elegir mes en el calendario y deslizar en el móvil'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      const h = await p.evaluate(() => { const h = mesDe(hoy()), a = addMes(h, -14); S.mov.push({ id: 'v', fecha: a + '-03', mes: a, concepto: 'CENA', importe: -20, cat: 'OCIO', cuenta: 'EVO' }); save(); go('resumen'); return h; });
+      const viejo = await p.evaluate(() => addMes(mesDe(hoy()), -14));
+      await p.tap('#mLabel'); await p.waitForSelector('#mesPicker .mpgrid');
+      await p.tap('#mesPicker [data-y="-1"]');
+      assert.ok(await p.$(`#mesPicker .mpm[data-m="${viejo}"] i`) || viejo.slice(0, 4) !== String(+h.slice(0, 4) - 1), 'marca los meses con datos');
+      while (!(await p.$(`#mesPicker .mpm[data-m="${viejo}"]`))) await p.tap('#mesPicker [data-y="-1"]');
+      await p.tap(`#mesPicker .mpm[data-m="${viejo}"]`);
+      assert.equal(await p.evaluate(() => MES), viejo, 'un toque y estás en ese mes');
+      assert.equal(await p.$('#mesPicker'), null);
+      // deslizar: hacia la izquierda, mes siguiente; hacia la derecha, el anterior
+      const desliza = (dx) => p.evaluate(dx => { const el = document.querySelector('#s-resumen .mesTit') || document.querySelector('#s-resumen');
+        const t = (x) => new Touch({ identifier: 1, target: el, clientX: x, clientY: 400 });
+        el.dispatchEvent(new TouchEvent('touchstart', { touches: [t(200)], changedTouches: [t(200)], bubbles: true }));
+        el.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: [t(200 + dx)], bubbles: true })); }, dx);
+      await desliza(-150); assert.equal(await p.evaluate(() => MES), await p.evaluate(v => addMes(v, 1), viejo));
+      await desliza(150); await desliza(150); assert.equal(await p.evaluate(() => MES), await p.evaluate(v => addMes(v, -1), viejo));
+      await desliza(-30); assert.equal(await p.evaluate(() => MES), await p.evaluate(v => addMes(v, -1), viejo), 'un roce no cambia de mes');
+    })();
+  },
+
+  'nómina de un segundo pagador: se marca a mano y lo recuerda'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const r0 = await p.evaluate(() => esNomina('TRANSFERENCIA DE TALLERES INVENTADOS SL 05/10', 600, '2026-10-05'));
+      assert.equal(r0, false, 'un ingreso pequeño a mitad de mes no parece nómina');
+      await p.evaluate(() => { S.mov.push({ id: 'p2', fecha: '2026-10-05', mes: '2026-10', concepto: 'TRANSFERENCIA DE TALLERES INVENTADOS SL 05/10', importe: 600, cat: 'INGRESO', cuenta: 'EVO' }); MES = '2026-10'; save(); go('movs'); });
+      await p.evaluate(() => editar(S.mov.find(x => x.id === 'p2')));
+      await p.waitForSelector('#eNom'); await p.check('#eNom'); await p.click('#dlgF >> text=Guardar'); await L.esperar(200);
+      assert.ok(await p.evaluate(() => S.mov.find(x => x.id === 'p2').nomina));
+      assert.equal(await p.evaluate(() => esNomina('TRANSFERENCIA DE TALLERES INVENTADOS SL 05/11', 610, '2026-11-05')), true, 'el mes siguiente lo reconoce solo');
+      await p.evaluate(() => go('ajustes', { sub: 'nomina' }));
+      assert.match(await p.textContent('#pagList'), /TALLERES INVENTADOS/);
+      await p.click('#pagList [data-pq="0"]');
+      assert.equal(await p.evaluate(() => esNomina('TRANSFERENCIA DE TALLERES INVENTADOS SL 05/12', 600, '2026-12-05')), false, 'se puede olvidar');
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

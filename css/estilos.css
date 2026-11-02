@@ -671,3 +671,27 @@ svg .hz:hover{fill:var(--acc-soft);opacity:.7}
 svg .hz[data-ir],.cbars .col[data-ir]{cursor:pointer}
 #tip .tr:has(.tipir){margin-top:4px;padding-top:5px;border-top:1px solid var(--line)}#tip .tr:has(.tipir)>span,#tip .tr:has(.tipir)>i{display:none}#tip .tr:has(.tipir)>b{font-weight:500}
 .rosco .rseg[data-cat]:not([data-cat='']){cursor:pointer}
+.paglist{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.paglist .tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 8px}.paglist .link{font-size:12px;text-decoration:none}
+
+/* Calendario de meses */
+.monthnav .m{cursor:pointer}
+.monthnav .m:hover{filter:brightness(.97)}
+#mesPicker{position:fixed;inset:0;z-index:72}
+#mesPicker .mpfondo{position:absolute;inset:0;background:rgba(0,0,0,.18)}
+#mesPicker .mpcaja{position:absolute;width:300px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.25);padding:12px;animation:dlgIn .18s ease both}
+.mphead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.mphead b{font-size:16px}
+.mpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mpm{position:relative;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 0 12px;font:inherit;font-size:14px;cursor:pointer;text-transform:capitalize}
+.mpm:hover{border-color:var(--acc)}
+.mpm.hoy{border-color:var(--acc);font-weight:650}
+.mpm.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.mpm i,.mpdot{position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--acc)}
+.mpm.on i{background:var(--acc-ink)}
+.mpdot{position:static;display:inline-block;margin:0 4px 1px 0;vertical-align:middle}
+.mppie{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+@media (max-width:760px){#mesPicker .mpcaja{left:12px;right:12px;width:auto;top:auto;bottom:calc(76px + env(safe-area-inset-bottom))}}
+/* Deslizar entre meses */
+@keyframes deslI{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes deslD{from{transform:translateX(-24px);opacity:.4}to{transform:none;opacity:1}}
+section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:deslD .22s ease-out}
+.sinanim section.desliza-i,.sinanim section.desliza-d{animation:none}

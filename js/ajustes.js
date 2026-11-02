@@ -48,6 +48,9 @@ function rAjustes(){
   $('#dzTxt').textContent=S.aj.diezmoAuto?`Activado desde ${nombreMes(S.aj.diezmoDesde||mesDe(hoy()))} · ${S.aj.pct.DIEZMO||0} % de los ingresos (se cambia en el presupuesto, categoría Diezmo).`:'';
   $('#dzAuto').onchange=e=>{S.aj.diezmoAuto=e.target.checked;if(e.target.checked&&!S.aj.diezmoDesde)S.aj.diezmoDesde=mesDe(hoy());save();rAjustes();toast(e.target.checked?'Diezmo automático activado':'Diezmo automático desactivado')};
   $('#umbralNomina').value=fmt(S.aj.umbralNomina||1000,0);$('#umbralNomina').onchange=e=>{const v=parseNum(e.target.value);S.aj.umbralNomina=isFinite(v)&&v>0?v:1000;save();toast('Guardado')};
+  const ps=S.aj.pagadores||[];
+  $('#pagList').innerHTML=ps.length?`<b>Pagadores de nómina que recuerdo</b><div class="paglist">${ps.map((p,i)=>`<span class="tag acc">${esc(p.n)} <button type="button" class="link" data-pq="${i}" title="Olvidar este pagador" aria-label="Olvidar ${esc(p.n)}">✕</button></span>`).join('')}</div>`:'';
+  $$('#pagList [data-pq]').forEach(b=>b.onclick=()=>{const p=ps.splice(+b.dataset.pq,1)[0];save();rAjustes();toast('Olvidado: '+p.n)});
   $$('#nomMes button').forEach(b=>{b.classList.toggle('on',b.dataset.v===(S.aj.nominaMes||'siguiente'));b.onclick=()=>{S.aj.nominaMes=b.dataset.v;save();rAjustes();toast('Guardado. Se aplica a las nóminas nuevas')}});
   instUI();
   $('#verTagAj').textContent='Versión '+VERSION;$('#irAyuda').onclick=()=>go('ayuda');

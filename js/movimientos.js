@@ -63,9 +63,16 @@ $('#fCat').onchange=e=>{F.cat=e.target.value;if(!F.cat)F.todos=false;rMovs()};
 $('#fSinCat').onchange=e=>{F.sinCat=e.target.checked;rMovs()};
 // Nómina: solo el ingreso de la nómina (no los Bizum ni otros ingresos) puede contar para el mes siguiente.
 const finDeMes=fecha=>+fecha.slice(8,10)>=(+S.aj.diaNomina||25);
+// Pagadores de nómina aprendidos: el concepto del banco sin números ni fechas (p. ej. «TRANSFERENCIA DE EMPRESA X»)
+function clavePagador(c){return norm(conceptoCorto(c)).replace(/[0-9]+([.,/-][0-9]+)*/g,' ').replace(/\b(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|SEPT|OCT|NOV|DIC|ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\b/g,' ').replace(/[^A-Z ]/g,' ').replace(/\s+/g,' ').trim().slice(0,48)}
+const esPagador=c=>{const k=clavePagador(c);return !!k&&k.length>=4&&(S.aj.pagadores||[]).some(p=>p.k===k)};
+function aprenderPagador(x,si){const k=clavePagador(x.concepto);if(!k||k.length<4)return;const ps=S.aj.pagadores||(S.aj.pagadores=[]);const i=ps.findIndex(p=>p.k===k);
+  if(si&&i<0){ps.push({k,n:conceptoCorto(x.concepto).slice(0,60)});toast('Recordaré «'+conceptoCorto(x.concepto).slice(0,40)+'» como nómina');}
+  else if(!si&&i>=0){ps.splice(i,1)}}
 function esNomina(concepto,importe,fecha){
   if(!(importe>0))return false;
   const n=norm(concepto);if(isBizum(concepto))return false;
+  if(esPagador(concepto))return true;
   if(/ (NOMI|NOMINA|NOMINAS) /.test(n))return true;
   return importe>=(+S.aj.umbralNomina||1000)&&finDeMes(fecha);
 }
@@ -95,6 +102,7 @@ function editar(x){
       const vals={nf:$('#eF').value,nom:$('#eNom').checked,m:$('#eM').value,c:$('#eC').value.trim(),k:$('#eK').value,per:$('#ePer').value.trim(),p:$('#eP').value,n:$('#eN').value.trim(),t:parseTags($('#eT').value)};
       conDeshacer('Guardado «'+vals.c+'»',()=>{
       const nf=vals.nf,eraMes=x.mes,nom=vals.nom&&vals.k==='INGRESO',cambioNom=nom!==!!x.nomina;
+      if(cambioNom&&pref('aprender'))aprenderPagador({concepto:vals.c},nom);
       x.nomina=nom;x.cat=vals.k;
       x.mes=((nf!==x.fecha||cambioNom)&&vals.m===eraMes)?mesPara({...x,fecha:nf}):vals.m;x.fecha=nf;
       x.concepto=vals.c;x.importe=r2(v);
