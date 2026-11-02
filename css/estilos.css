@@ -439,3 +439,12 @@ main>section.on{animation:aparecer .22s ease-out}
 #tip.on{opacity:1}
 .iniHead .sp{flex:1}
 .tab .tag{margin-left:2px}
+
+.sinanim *,.sinanim *::before,.sinanim *::after,.sinanim details::details-content{animation:none!important;transition:none!important}
+button.who{border:0;background:none;padding:3px 8px 3px 3px;border-radius:999px;cursor:pointer;font:inherit;font-weight:600;color:var(--ink)}
+button.who:hover{background:var(--soft)}
+.perfHead{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.perfHead .pfInfo{min-width:0}
+.pfact{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.pfact small{display:block;color:var(--muted);font-size:12px}.pfact b{display:block;font-size:18px}
+.ucell{display:flex;gap:10px;align-items:center}

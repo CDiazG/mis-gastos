@@ -107,13 +107,14 @@ module.exports = {
       await p.click('label.pref:has([data-pref="bizumReglas"])');
       assert.equal(await p.evaluate(() => autoCat('PAGO BIZUM DE AMPARO', '', 10)), 'OCIO');
       // quitar el gráfico y el botón flotante
+      await p.evaluate(() => go('perfil'));
       await p.click('label.pref:has([data-pref="verGrafico"])');
       await p.click('label.pref:has([data-pref="fab"])');
       await p.evaluate(() => go('resumen'));
       assert.ok(!(await p.isVisible('#grafCard')));
       assert.ok(!(await p.isVisible('#fabCash')));
       // tema
-      await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => go('perfil'));
       await p.click('#temaSeg [data-v="oscuro"]');
       assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'dark');
       const fondo = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -150,7 +151,7 @@ module.exports = {
       // recorrido por las pestañas
       const vistas = new Set();
       for (let i = 0; i < 20 && await p.isVisible('#tuto'); i++) { vistas.add(await p.evaluate(() => TAB)); if (await p.textContent('#tutoSig') === '¡Empezar!') break; await p.click('#tutoSig'); }
-      for (const t of ['inicio', 'resumen', 'efectivo', 'movs', 'importar', 'hist', 'patri', 'ajustes', 'ayuda']) assert.ok(vistas.has(t), 'la guía pasa por ' + t);
+      for (const t of ['inicio', 'resumen', 'efectivo', 'movs', 'importar', 'hist', 'patri', 'ajustes', 'perfil', 'ayuda']) assert.ok(vistas.has(t), 'la guía pasa por ' + t);
       await p.click('#tutoSig');
       assert.ok(!(await p.isVisible('#tuto')));
       assert.equal(await p.evaluate(() => S.aj.guiaV), await p.evaluate(() => GUIA_V));
@@ -204,7 +205,7 @@ module.exports = {
       const n = (await p.$$('#faqList details')).length;
       assert.ok(n >= 1 && n <= 4, 'la búsqueda filtra');
       // foto de perfil (se reduce a 160 px)
-      await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => go('perfil'));
       const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR42mNk+M/AwMDAxMDAwMDAAAAOFQEBcNqzKwAAAABJRU5ErkJggg==', 'base64');
       await p.setInputFiles('#fotoFile', { name: 'yo.png', mimeType: 'image/png', buffer: png }); await L.esperar(600);
       const f = await p.evaluate(() => ({ u: USER.foto.slice(0, 15), pub: JSON.parse(localStorage.__mockDb)['perfiles/' + USER.uid].foto.length }));

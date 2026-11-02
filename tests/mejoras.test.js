@@ -153,4 +153,31 @@ module.exports = {
       assert.ok(await p.$('#inicio details[data-ic="gasto"][open]'));
     })();
   },
+  'mi perfil: se abre desde el nombre, cambia el nombre y la apariencia; Usuarios con foto'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.click('#uWho');
+      assert.equal(await p.evaluate(() => TAB), 'perfil');
+      assert.match(await p.textContent('#pfNombre'), /Administrador/);
+      for (const id of ['#fotoAj', '#aparCard #palSel', '#aparCard #temaSeg', '#prefCard [data-pref="aviso80"]', '#pfAct', '#wipe']) assert.ok(await p.$(id), id);
+      assert.equal(await p.$('#prefCard [data-pref="bizumReglas"]'), null, 'lo de clasificar se queda en Ajustes');
+      // cambiar el nombre
+      await p.fill('#miNombre', 'Carlos'); await p.click('#miNombreF button'); await L.esperar(300);
+      assert.equal(await p.textContent('#uName'), 'Carlos');
+      assert.equal(await p.evaluate(() => JSON.parse(localStorage.__mockDb)['perfiles/' + USER.uid].nombre), 'Carlos');
+      // apariencia: quitar animaciones
+      await p.click('label.pref:has([data-pref="animaciones"])');
+      assert.ok(await p.evaluate(() => document.documentElement.classList.contains('sinanim')));
+      // Ajustes: clasificación y diezmo
+      await p.evaluate(() => go('ajustes'));
+      assert.ok(await p.$('#clasCard [data-pref="bizumReglas"]'));
+      assert.ok(await p.$('#dzOn'));
+      // foto y lista de usuarios con su foto
+      await p.evaluate(() => go('perfil'));
+      const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR42mNk+M/AwMDAxMDAwMDAAAAOFQEBcNqzKwAAAABJRU5ErkJggg==', 'base64');
+      await p.setInputFiles('#fotoFile', { name: 'yo.png', mimeType: 'image/png', buffer: png }); await L.esperar(500);
+      await p.evaluate(() => { USERS_VIVO = false; go('usuarios'); }); await L.esperar(500);
+      assert.ok(await p.$('#uTable .ucell img.avatar'), 'la foto sale en la lista de usuarios');
+    })();
+  },
 };

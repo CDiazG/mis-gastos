@@ -66,10 +66,11 @@ service cloud.firestore {
         && request.resource.data.estado == 'pendiente'
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80);
-      // Cada usuario solo puede actualizar su último acceso y su foto; el resto, el administrador.
+      // Cada usuario solo puede actualizar su último acceso, su foto y su nombre; el resto, el administrador.
       allow update: if esAdmin() || (request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso', 'foto'])
-        && (!('foto' in request.resource.data) || request.resource.data.foto.size() < 60000));
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso', 'foto', 'nombre'])
+        && (!('foto' in request.resource.data) || request.resource.data.foto.size() < 60000)
+        && request.resource.data.nombre is string && request.resource.data.nombre.size() > 0 && request.resource.data.nombre.size() <= 80);
       allow delete: if esAdmin();
 
       // Datos (movimientos, ajustes): solo el propio usuario, y solo si su cuenta está activa.

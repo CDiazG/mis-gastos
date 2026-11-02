@@ -5,7 +5,7 @@ function rAjustes(){
   $$('#baseSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.b===S.aj.base);b.onclick=()=>{S.aj.base=b.dataset.b;save();rAjustes()}});
   $('#baseFija').classList.toggle('hide',S.aj.base!=='fija');$('#baseFija').value=S.aj.baseFija?fmt(S.aj.baseFija):'';
   $('#baseFija').onchange=e=>{const v=parseNum(e.target.value);S.aj.baseFija=isFinite(v)?v:0;save()};
-  refreshCats();rPrefs();rFotoAj();rCatSug();const dzc=$('#dzAuto').closest('.card');if(dzc)dzc.classList.toggle('hide',!diezmoOn());
+  refreshCats();rPrefs();rCatSug();$('#dzAutoW').classList.toggle('hide',!diezmoOn());
   const gOpts=sel=>GROUPS.map(g=>`<option value="${g.id}"${g.id===sel?' selected':''}>${g.n}</option>`).join('');
   $('#caGrupo').innerHTML=gOpts('VARIABLES');
   $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id&&(c.id!=='DIEZMO'||diezmoOn()));
@@ -207,34 +207,41 @@ function cargarHist(H){
 }
 
 /* ---- Preferencias (interruptores) ---- */
+// Interruptores. g: dónde salen (apar = Mi perfil → Apariencia, avisos = Mi perfil → Avisos, clas = Ajustes → Clasificación)
 const PREFS=[
-  {k:'diezmo',t:'Diezmo',d:'Desactívalo si no das diezmo: desaparece del presupuesto y su porcentaje pasa al ahorro.'},
-  {k:'bizumReglas',t:'Aprender la categoría de los Bizum',d:'Desactivado: cada Bizum se clasifica a mano, porque la misma persona te puede pagar por motivos distintos.'},
-  {k:'aprender',t:'Aprender reglas al cambiar una categoría',d:'Al poner categoría a un movimiento del banco, los siguientes con el mismo comercio se clasifican solos.'},
-  {k:'aviso80',t:'Avisar al llegar al 80 % de una categoría',d:'Aviso en el Resumen cuando te acercas al presupuesto.'},
-  {k:'comparar',t:'Comparar con el mes anterior',d:'Muestra ▲ / ▼ junto a cada categoría.'},
-  {k:'avisoCopia',t:'Recordar la copia de seguridad',d:'Aviso en el Resumen si hace más de un mes de la última copia.'},
-  {k:'verGrafico',t:'Gráfico «En qué se ha ido el dinero»',d:'En el Resumen.'},
-  {k:'verFijos',t:'Gastos fijos previstos',d:'Tarjeta del Resumen que avisa si un fijo no llega o cambia de importe.'},
-  {k:'verObjetivos',t:'Objetivos de ahorro en el Resumen',d:'Siguen disponibles en Patrimonio aunque lo desactives.'},
-  {k:'fab',t:'Botón flotante «＋ Añadir»',d:'El botón redondo de abajo a la derecha.'},
+  {k:'bizumReglas',g:'clas',t:'Aprender la categoría de los Bizum',d:'Desactivado: cada Bizum se clasifica a mano, porque la misma persona te puede pagar por motivos distintos.'},
+  {k:'aprender',g:'clas',t:'Aprender reglas al cambiar una categoría',d:'Al poner categoría a un movimiento del banco, los siguientes con el mismo comercio se clasifican solos.'},
+  {k:'aviso80',g:'avisos',t:'Avisar al llegar al 80 % de una categoría',d:'Aviso en el Resumen cuando te acercas al presupuesto.'},
+  {k:'comparar',g:'avisos',t:'Comparar con el mes anterior',d:'Muestra ▲ / ▼ junto a cada categoría.'},
+  {k:'avisoCopia',g:'avisos',t:'Recordar la copia de seguridad',d:'Aviso si hace más de un mes de la última copia.'},
+  {k:'verGrafico',g:'avisos',t:'Gráfico «En qué se ha ido el dinero»',d:'En el Resumen.'},
+  {k:'verFijos',g:'avisos',t:'Gastos fijos previstos',d:'Tarjeta del Resumen que avisa si un fijo no llega o cambia de importe.'},
+  {k:'verObjetivos',g:'avisos',t:'Objetivos de ahorro en el Resumen',d:'Siguen disponibles en Patrimonio aunque lo desactives.'},
+  {k:'fab',g:'apar',t:'Botón flotante «＋ Añadir»',d:'El botón redondo de abajo a la derecha.'},
+  {k:'animaciones',g:'apar',t:'Animaciones',d:'Movimientos suaves al abrir pestañas y desplegables.'},
 ];
 const pref=k=>S&&S.aj&&S.aj[k]!==false&&(k!=='bizumReglas'||S.aj[k]===true);
+const prefHtml=p=>`<label class="pref"><span class="sw"><input type="checkbox" data-pref="${p.k}" ${pref(p.k)?'checked':''}><i></i></span><span><b>${p.t}</b><span class="small mut">${p.d}</span></span></label>`;
 function rPrefs(){
   const tema=S.aj.tema||'auto';
   const pal=S.aj.paleta||'verde',osc=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
-  const palHtml=`<div class="pref" style="cursor:default;flex-direction:column;align-items:stretch;gap:0"><span><b>Colores</b><span class="small mut">Cada persona elige los suyos; se ven bien en claro y en oscuro.</span></span><div class="palopts" id="palSel">${Object.entries(PALETAS).map(([k,p])=>`<button type="button" class="palopt${k===pal?' on':''}" data-pal="${k}"><span class="sw3">${p[osc?'d':'l'].map(c=>`<i style="background:${c}"></i>`).join('')}</span><b>${p.n}</b></button>`).join('')}</div></div>`;
-  $('#prefList').innerHTML=palHtml+`<div class="pref" style="cursor:default;align-items:center"><span style="flex:1"><b>Tema</b><span class="small mut">Automático: como tenga el dispositivo.</span></span><span class="seg" id="temaSeg">${[['claro','☀️ Claro'],['oscuro','🌙 Oscuro'],['auto','Auto']].map(([k,t])=>`<button type="button" data-v="${k}" class="${k===tema?'on':''}">${t}</button>`).join('')}</span></div>`+PREFS.map(p=>`<label class="pref"><span class="sw"><input type="checkbox" data-pref="${p.k}" ${pref(p.k)?'checked':''}><i></i></span><span><b>${p.t}</b><span class="small mut">${p.d}</span></span></label>`).join('')+
-    `<div class="toolbar" style="margin:10px 0 0"><button class="btn sm" type="button" id="verTuto">Ver el tutorial otra vez</button></div>`;
+  const palHtml=`<div class="pref" style="cursor:default;flex-direction:column;align-items:stretch;gap:0"><span><b>Colores</b><span class="small mut">Se ven bien en claro y en oscuro.</span></span><div class="palopts" id="palSel">${Object.entries(PALETAS).map(([k,p])=>`<button type="button" class="palopt${k===pal?' on':''}" data-pal="${k}"><span class="sw3">${p[osc?'d':'l'].map(c=>`<i style="background:${c}"></i>`).join('')}</span><b>${p.n}</b></button>`).join('')}</div></div>`;
+  const temaHtml=`<div class="pref" style="cursor:default;align-items:center"><span style="flex:1"><b>Tema</b><span class="small mut">Automático: como tenga el dispositivo.</span></span><span class="seg" id="temaSeg">${[['claro','☀️ Claro'],['oscuro','🌙 Oscuro'],['auto','Auto']].map(([k,t])=>`<button type="button" data-v="${k}" class="${k===tema?'on':''}">${t}</button>`).join('')}</span></div>`;
+  const grupo=g=>PREFS.filter(p=>p.g===g).map(prefHtml).join('');
+  if($('#aparList'))$('#aparList').innerHTML=palHtml+temaHtml+grupo('apar');
+  if($('#prefList'))$('#prefList').innerHTML=grupo('avisos');
+  if($('#clasList'))$('#clasList').innerHTML=grupo('clas');
+  const dz=$('#dzOn');if(dz)dz.checked=diezmoOn();
   $$('#palSel .palopt').forEach(b=>b.onclick=()=>{S.aj.paleta=b.dataset.pal;aplicarTema();save();rPrefs();toast('Colores: '+PALETAS[b.dataset.pal].n)});
   $$('#temaSeg button').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.v;aplicarTema();save();rPrefs()});
-  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab')render()});
-  const vt=$('#verTuto');if(vt)vt.onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
+  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab')render();if(k==='animaciones')aplicarTema()});
 }
+$('#verTuto').onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
 const PALETAS={"verde": {"n": "Verde", "l": ["#0f6b5c", "#e1f0eb", "#f5f4ef"], "d": ["#4db6a0", "#16332d", "#131615"]}, "lavanda": {"n": "Lavanda", "l": ["#6b4fbb", "#ece6fb", "#f6f4fa"], "d": ["#a58cf0", "#2b2445", "#15131c"]}, "oceano": {"n": "Océano", "l": ["#1f5fa8", "#e2edf8", "#f2f6f9"], "d": ["#6aa7ec", "#172b42", "#10151b"]}, "terracota": {"n": "Terracota", "l": ["#b9532f", "#f8e5dc", "#faf5ef"], "d": ["#e58a6b", "#3a241b", "#171311"]}, "frambuesa": {"n": "Frambuesa", "l": ["#ad2f5b", "#f9e1ea", "#fbf4f6"], "d": ["#ec7ca3", "#3d1f2b", "#181215"]}, "ciruela": {"n": "Ciruela", "l": ["#5b3a6e", "#efe7f3", "#f7f5f1"], "d": ["#b88fd0", "#33263b", "#151217"]}};
 function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.paleta)||'verde',de=document.documentElement;
   if(t==='auto')delete de.dataset.theme;else de.dataset.theme=t==='claro'?'light':'dark';
   if(p==='verde'||!PALETAS[p])delete de.dataset.pal;else de.dataset.pal=p;
+  de.classList.toggle('sinanim',!!(S&&S.aj&&S.aj.animaciones===false));
   try{localStorage.setItem('mg-tema',t);localStorage.setItem('mg-paleta',p)}catch(_){}
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=(PALETAS[p]||PALETAS.verde).l[0];}
 // Activar o desactivar el diezmo sin descuadrar el 100 %: su porcentaje va y viene del ahorro.

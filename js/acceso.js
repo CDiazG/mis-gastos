@@ -97,8 +97,8 @@ async function entrar(u){
   try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+(e.code||e.message),true);return}
   $('#login').classList.add('hide');$('#userbox').classList.remove('hide');pintarCuenta();setSync('ok');
   $('#tabUsuarios').classList.toggle('hide',!admin);
-  $('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(USER.nombre)+'</b> ('+esc(USER.email)+').'+(admin?'':' Si tu nombre no es correcto, pide al administrador que lo cambie.');
-  $('#miNombreF').classList.toggle('hide',!admin);$('#miNombre').value=USER.nombre;
+  $('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(USER.nombre)+'</b> ('+esc(USER.email)+').'+'';
+  $('#miNombre').value=USER.nombre;
   iniciarUI();
 }
 
