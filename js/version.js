@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.9.0';
+const VERSION='2.10.0';
 const CAMBIOS=[
+ {v:'2.10.0',f:'2026-11-02',c:['Buzón de «Sugerencias y quejas» al final de Ajustes: envía una sugerencia, una queja o un fallo, y mira si el administrador la ha visto o ya está hecha.','La información de la versión pasa al final de Ajustes, junto al buzón.','El administrador recibe las sugerencias en la pestaña Usuarios, con aviso en el Resumen.']},
  {v:'2.9.0',f:'2026-11-02',c:['«Ahorro / inversión» se separa en «Ahorro» (cuenta de ahorro, colchón) e «Inversión» (Trade Republic, ETFs, acciones, fondos, oro…), las dos en la tercera columna y sin contar como gasto.','Los movimientos de inversión que ya había (Trade Republic, oro…) pasan solos a «Inversión», y el porcentaje de ahorro se reparte entre las dos.']},
  {v:'2.8.0',f:'2026-11-02',c:['Las tres columnas del presupuesto se llaman ahora «Necesidades», «Ocio y caprichos» y «Ahorro y donativos».','«Salud y bienestar» se separa en «Salud» (psicólogo, nutricionista, farmacia…) y la nueva «Deporte y actividades» (gimnasio, baile…), que pasa a Ocio y caprichos. Los movimientos y reglas que ya había se cambian solos.']},
  {v:'2.7.0',f:'2026-11-02',c:['Los movimientos sin categoría cuentan en el resumen, dentro de «Sin categorizar».','Gráfico «En qué se ha ido el dinero» en el Resumen y evolución mes a mes de cada categoría en el Histórico.','Cada categoría muestra cuánto ha subido o bajado respecto al mes anterior.','Aviso cuando falta subir el extracto del mes anterior de alguna cuenta.','Diezmo automático (se activa en Ajustes): calcula el porcentaje de los ingresos del mes y lo muestra pendiente hasta que se paga.','Préstamos por persona en Patrimonio: quién te debe cuánto y desde cuándo, con botón «Me lo ha devuelto».','Informe para imprimir o guardar en PDF, de un mes o de un año.','Importar extractos en Norma 43 (el formato estándar de los bancos españoles), CSV y Excel, además de PDF.','El administrador ve cuándo entró cada persona por última vez.']},
