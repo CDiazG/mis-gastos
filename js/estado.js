@@ -104,7 +104,7 @@ async function cargarNube(){
 
 /* ---- Sincronización en tiempo real entre dispositivos ---- */
 let UNSUB=[],REMOTO={meta:null,meses:{}},tRemoto=null,renderPend=false;
-function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];USERS_VIVO=false;USERS=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
+function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];if(typeof BZ_TODAS!=='undefined'){BZ_TODAS=[];BZ_MIAS=[];BZ_VIVO=false}USERS_VIVO=false;USERS=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
 function escuchar(){
   pararEscucha();if(!fb.fsM.onSnapshot)return;
   const {doc,collection,onSnapshot}=fb.fsM;const uid=USER.uid;
@@ -119,6 +119,7 @@ function escuchar(){
       else{const j=ch.doc.data().m;if(j!==LAST.meses[id]){REMOTO.meses[id]=j;n++}}});
     if(n)programarRemoto();
   },e=>console.warn('sync meses',e)));
+  if(typeof escucharBuzon==='function')escucharBuzon();
   if(USER.admin){
     UNSUB.push(onSnapshot(collection(fb.db,'users'),qs=>{
       const us=[];qs.forEach?qs.forEach(d=>us.push({id:d.id,...d.data()})):(qs.docs||[]).forEach(d=>us.push({id:d.id,...d.data()}));

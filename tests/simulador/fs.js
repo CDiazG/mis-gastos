@@ -7,6 +7,10 @@ const ADMIN='admin@prueba.test';
 function isAdmin(){const u=auth();return !!(u&&u.email===ADMIN&&u.verified)}
 function can(path,op,data){
   const u=auth();const p=path.split('/');
+  if(p[0]==='sugerencias'){const d=db()[path];
+    if(op==='read')return isAdmin()||(!!u&&!!d&&d.uid===u.uid);
+    if(op==='create')return !!u&&!!data&&data.uid===u.uid&&data.estado==='nueva'&&!d;
+    return isAdmin();}
   if(p[0]!=='users')return false;
   if(p.length===1)return op==='list'&&isAdmin();
   if(p.length===2)return op==='read'?(isAdmin()||(u&&u.uid===p[1])):(isAdmin()||(!!u&&u.uid===p[1]&&!!data&&data.activo===false&&data.estado==='pendiente'&&data.rol==='usuario'&&!db()[path]));
@@ -18,9 +22,16 @@ export function initializeFirestore(app,o){return {app}} export function getFire
 export function persistentLocalCache(){return {}} export function persistentMultipleTabManager(){return {}}
 export function doc(d,...s){return {path:s.join('/'),id:s[s.length-1]}}
 export function collection(d,...s){return {path:s.join('/'),col:true}}
+export function where(f,op,v){return {f,op,v}}
+export function query(c,...w){return {...c,filtros:w}}
+const pasaFiltros=(c,data)=>(c.filtros||[]).every(w=>data&&data[w.f]===w.v);
+export async function addDoc(c,data){const id='s'+Math.random().toString(36).slice(2,9);const path=c.path+'/'+id;if(!can(path,'create',data))throw err('permission-denied');const d=db();d[path]=JSON.parse(JSON.stringify(data));sv(d);return {path,id}}
+export async function deleteDoc(r){if(!can(r.path,'write'))throw err('permission-denied');const d=db();delete d[r.path];sv(d)}
 const snap=(path,data)=>({id:path.split('/').pop(),exists:()=>data!==undefined,data:()=>data});
 export async function getDoc(r){if(!can(r.path,'read'))throw err('permission-denied');return snap(r.path,db()[r.path])}
-export async function getDocs(c){const depth=c.path.split('/').length+1;if(!can(c.path+(c.path.split('/').length===1?'':'/x'),c.path.split('/').length===1?'list':'read'))throw err('permission-denied');
+export async function getDocs(c){
+  if(c.path==='sugerencias'){const u=auth();if(!isAdmin()&&!(u&&(c.filtros||[]).some(w=>w.f==='uid'&&w.v===u.uid)))throw err('permission-denied');
+    const d=db();const docs=Object.keys(d).filter(k=>k.startsWith('sugerencias/')&&pasaFiltros(c,d[k])).map(k=>snap(k,d[k]));return {empty:!docs.length,forEach:cb=>docs.forEach(cb),docs}}const depth=c.path.split('/').length+1;if(!can(c.path+(c.path.split('/').length===1?'':'/x'),c.path.split('/').length===1?'list':'read'))throw err('permission-denied');
   const d=db();const docs=Object.keys(d).filter(k=>k.startsWith(c.path+'/')&&k.split('/').length===depth).map(k=>snap(k,d[k]));return {empty:!docs.length,forEach:cb=>docs.forEach(cb),docs}}
 export async function setDoc(r,data){if(!can(r.path,'write',data))throw err('permission-denied');const d=db();d[r.path]=JSON.parse(JSON.stringify(data));sv(d)}
 export async function updateDoc(r,data){const u=auth();const propio=u&&r.path==='users/'+u.uid&&Object.keys(data).every(k=>k==='ultimoAcceso');if(!propio&&!can(r.path,'write'))throw err('permission-denied');const d=db();d[r.path]={...d[r.path],...data};sv(d)}

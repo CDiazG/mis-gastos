@@ -16,6 +16,16 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(uid)).data.activo == true;
     }
 
+    // Buzón de sugerencias: cada persona envía y ve solo las suyas; el administrador las ve todas y las gestiona.
+    match /sugerencias/{id} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'email', 'tipo', 'texto', 'version', 'dispositivo', 'fecha', 'estado'])
+        && request.resource.data.estado == 'nueva'
+        && request.resource.data.texto is string && request.resource.data.texto.size() <= 2000;
+      allow read: if esAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow update, delete: if esAdmin();
+    }
+
     // Perfil de cada usuario: lo lee el propio usuario; solo el administrador lo crea o cambia.
     match /users/{uid} {
       allow read: if esAdmin() || (request.auth != null && request.auth.uid == uid);

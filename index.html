@@ -199,10 +199,6 @@
           <div class="small" id="instPasos"></div>
         </div>
         <div class="card pad">
-          <div class="toolbar" style="margin:0"><h3>Versión</h3><span class="sp"></span><span class="tag acc" id="verTag"></span></div>
-          <div class="chlog" id="verList"></div>
-        </div>
-        <div class="card pad">
           <h3>Mi cuenta</h3>
           <p class="small mut" style="margin:4px 0 10px" id="cuentaTxt"></p>
           <form class="toolbar hide" id="miNombreF" style="margin:0 0 10px"><input type="text" id="miNombre" placeholder="Tu nombre" style="flex:1;min-width:140px"><button class="btn">Guardar nombre</button></form>
@@ -224,6 +220,22 @@
       <form class="toolbar" id="rAdd" style="margin:0 0 10px"><input type="text" id="rTexto" placeholder="Texto (p. ej. PARKIA)" required><select id="rCat"></select><button class="btn pri">Añadir regla</button></form>
       <div class="tablewrap" style="max-height:420px"><table id="rTable"></table></div>
     </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));margin-top:14px;align-items:start">
+      <div class="card pad" id="buzonCard">
+        <h3>Sugerencias y quejas</h3>
+        <p class="small mut" style="margin:4px 0 10px">¿Algo que mejorarías, que no te gusta o que no funciona? Escríbelo y le llegará al administrador. Aquí abajo verás si lo ha visto o ya está hecho.</p>
+        <form id="buzonF" autocomplete="off" style="display:flex;flex-direction:column;gap:8px">
+          <div class="chips" id="bzTipo"></div>
+          <textarea id="bzTxt" rows="4" maxlength="2000" placeholder="Cuéntalo con tus palabras…" required style="width:100%;resize:vertical"></textarea>
+          <div style="display:flex;justify-content:flex-end"><button class="btn pri" id="bzGo">Enviar</button></div>
+        </form>
+        <div id="bzMias" style="margin-top:6px"></div>
+      </div>
+      <div class="card pad">
+        <div class="toolbar" style="margin:0"><h3>Versión</h3><span class="sp"></span><span class="tag acc" id="verTag"></span></div>
+        <div class="chlog" id="verList"></div>
+      </div>
+    </div>
   </section>
   <!-- USUARIOS (solo administrador) -->
   <section id="s-usuarios">
@@ -242,6 +254,7 @@
         <p class="small mut" style="margin:14px 0 0">«Desactivar» bloquea el acceso y conserva sus datos; se puede volver a activar cuando quieras.</p>
       </div>
     </div>
+    <div class="card" style="margin-top:14px" id="bzAdmin"></div>
   </section>
 </main>
 
@@ -286,6 +299,7 @@
 <script src="js/historico.js?v=2.9.0"></script>
 <script src="js/ajustes.js?v=2.9.0"></script>
 <script src="js/usuarios.js?v=2.9.0"></script>
+<script src="js/buzon.js?v=2.9.0"></script>
 <script src="js/acceso.js?v=2.9.0"></script>
 <script src="js/arranque.js?v=2.9.0"></script>
 </body>

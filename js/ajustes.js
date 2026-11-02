@@ -47,7 +47,7 @@ function rAjustes(){
   const nh=S.mov.filter(x=>x.origen==='excel').length;const hm=S.histMeta;
   $('#histInfo').textContent=nh?`Hay ${nh} apuntes que vienen del Excel${hm?` (${nombreMes(hm.desde)} – ${nombreMes(hm.hasta)})`:''}.`:'Si tienes el archivo del historial del Excel (historial-mis-gastos.json), puedes cargarlo aquí.';
   $('#histLoad').disabled=!!nh;$('#histDel').disabled=!nh;
-  rReglas();rFijosAj();
+  rReglas();rFijosAj();rBuzon();cargarMias();
   $('#rCat').innerHTML=catOptions('',{blank:false});
 }
 function borrarCat(c){

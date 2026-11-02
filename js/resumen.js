@@ -20,6 +20,7 @@ function rResumen(){
   if(Math.abs(pp)>0.009)al.push(`<div class="alert info"><span class="grow">${pp>0?'Te deben':'Debes'} <b>${eur(Math.abs(pp))}</b> en préstamos pendientes.</span><button class="btn sm" data-act="prest">Ver</button></div>`);
   if(S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'} Descárgala y guárdala en tu ordenador o en Drive: si algo se borra por error, se puede recuperar con ella.</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
   if(NUBE&&USER&&USER.admin&&pendientesN())al.push(`<div class="alert"><span class="grow"><b>${pendientesN()} solicitud${pendientesN()>1?'es':''} de acceso</b> esperando tu aprobación.</span><button class="btn sm" data-act="usu">Revisar</button></div>`);
+  if(NUBE&&USER&&USER.admin&&bzNuevas())al.push(`<div class="alert info"><span class="grow"><b>${bzNuevas()} sugerencia${bzNuevas()>1?'s':''} nueva${bzNuevas()>1?'s':''}</b> en el buzón.</span><button class="btn sm" data-act="bz">Leer</button></div>`);
   if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
   else{const sg=sugerencia();if(sg&&sg.cambia)al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
   if(MES===mesDe(hoy())&&st.base>0){
@@ -42,6 +43,7 @@ function rResumen(){
     if(a==='imp')go('importar');
     if(a==='aj'||a==='sug')go('ajustes');
     if(a==='usu')go('usuarios');
+    if(a==='bz'){go('usuarios');setTimeout(()=>$('#bzAdmin').scrollIntoView({behavior:'smooth'}),80)}
     if(a==='dz'){MES=b.dataset.m;render()}
   });
   // grupos
