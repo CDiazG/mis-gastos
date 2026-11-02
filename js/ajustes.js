@@ -243,7 +243,11 @@ function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.pal
   if(p==='verde'||!PALETAS[p])delete de.dataset.pal;else de.dataset.pal=p;
   de.classList.toggle('sinanim',!!(S&&S.aj&&S.aj.animaciones===false));
   try{localStorage.setItem('mg-tema',t);localStorage.setItem('mg-paleta',p)}catch(_){}
-  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=(PALETAS[p]||PALETAS.verde).l[0];}
+  const col=(PALETAS[p]||PALETAS.verde).l[0];
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=col;
+  // el icono de la pestaña del navegador, del color elegido (el de la app instalada se queda verde)
+  const ic=document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+  if(ic)ic.href=p==='verde'?'icons/logo.svg':'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="${col}"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="#fff" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg>`);}
 // Activar o desactivar el diezmo sin descuadrar el 100 %: su porcentaje va y viene del ahorro.
 function ponerDiezmo(on){
   const p=S.aj.pct;

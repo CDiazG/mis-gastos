@@ -165,6 +165,11 @@ module.exports = {
       await p.fill('#miNombre', 'Carlos'); await p.click('#miNombreF button'); await L.esperar(300);
       assert.equal(await p.textContent('#uName'), 'Carlos');
       assert.equal(await p.evaluate(() => JSON.parse(localStorage.__mockDb)['perfiles/' + USER.uid].nombre), 'Carlos');
+      // el icono de la pestaña sigue a la paleta
+      await p.click('#palSel [data-pal="frambuesa"]');
+      assert.match(await p.evaluate(() => decodeURIComponent(document.querySelector('link[rel="icon"][type="image/svg+xml"]').href)), /#ad2f5b/);
+      await p.click('#palSel [data-pal="verde"]');
+      assert.match(await p.evaluate(() => document.querySelector('link[rel="icon"][type="image/svg+xml"]').href), /logo\.svg$/);
       // apariencia: quitar animaciones
       await p.click('label.pref:has([data-pref="animaciones"])');
       assert.ok(await p.evaluate(() => document.documentElement.classList.contains('sinanim')));
