@@ -3,6 +3,7 @@
 /* ============ Histórico ============ */
 let YEAR=null;
 let EVO='OCIO';
+const pasoRedondo=x=>{const e=Math.pow(10,Math.floor(Math.log10(x||1))),f=x/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
 function rEvol(data){
   const opts=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'},{id:'__TOTAL',n:'Todo lo gastado'},{id:'__ING',n:'Ingresos'}];
   if(!opts.some(o=>o.id===EVO))EVO='__TOTAL';
@@ -11,17 +12,20 @@ function rEvol(data){
   const d=data.slice(-24);const val=x=>EVO==='__TOTAL'?x.consumo:EVO==='__ING'?x.ingresos:(x.by[EVO]||0);
   const vs=d.map(val),con=d.filter(x=>!x.vacio).map(val);
   const media=con.length?con.reduce((a,b)=>a+b,0)/con.length:0;
-  const W=1100,H=210,pl=46,pb=26,pt=10;const max=Math.max(1,...vs);
+  const W=1100,H=210,pl=46,pb=26,pt=10;const pasoE=pasoRedondo(Math.max(1,...vs)/4),max=Math.ceil(Math.max(1,...vs)/pasoE)*pasoE;
   const step=(W-pl-10)/d.length,bw=Math.max(4,step*0.6);const y=v=>pt+(H-pt-pb)*(1-Math.max(0,v)/max);
   let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución mensual">`;
-  for(let i=0;i<=4;i++){const v=max*i/4;svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${v>=1000?fmt(v/1000,1)+'k':fmt(v,0)}</text>`}
+  // color según la media: en gastos, por debajo verde, algo por encima ámbar y bastante por encima rojo (en ingresos al revés)
+  const esIng=EVO==='__ING',color=v=>{if(!media)return 'var(--acc)';const r=v/media;return esIng?(r>=0.97?'var(--good)':r>=0.85?'var(--warn)':'var(--bad)'):(r<=1.03?'var(--good)':r<=1.2?'var(--warn)':'var(--bad)')};
+  for(let v=0;v<=max+0.01;v+=pasoE){svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${v>=1000?fmt(v/1000,1)+'k':fmt(v,0)}</text>`}
   d.forEach((x,i)=>{const cx=pl+step*i+step/2,v=vs[i];
-    if(!x.vacio)svg+=`<rect x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${Math.max(0,y(0)-y(v))}" rx="2" fill="var(--acc)"><title>${nombreMes(x.m)} · ${eur(v)}</title></rect>`;
+    if(!x.vacio)svg+=`<rect class="crece" x="${cx-bw/2}" y="${y(v)}" width="${bw}" height="${Math.max(0,y(0)-y(v))}" rx="3" fill="${color(v)}" opacity=".85"><title>${nombreMes(x.m)} · ${eur(v)}${media?` · ${v>=media?'▲':'▼'} ${eur(Math.abs(v-media),0)} ${v>=media?'más':'menos'} que la media`:''}</title></rect>`;
     if(i%2===0||d.length<14)svg+=`<text x="${cx}" y="${H-8}" font-size="11" text-anchor="middle" fill="var(--muted)">${nombreMesC(x.m)}</text>`});
-  if(media>0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(media)}" y2="${y(media)}" stroke="var(--warn)" stroke-dasharray="5 4" stroke-width="1.5"/><text x="${W-8}" y="${y(media)<20?y(media)+14:y(media)-5}" font-size="11" text-anchor="end" fill="var(--warn)" paint-order="stroke" stroke="var(--card)" stroke-width="3">media ${eur(media,0)}</text>`;
+  if(media>0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(media)}" y2="${y(media)}" stroke="var(--ink)" opacity=".55" stroke-dasharray="6 5" stroke-width="1.5"/><text x="${W-8}" y="${y(media)<20?y(media)+14:y(media)-5}" font-size="11" text-anchor="end" fill="var(--ink)" paint-order="stroke" stroke="var(--card)" stroke-width="3">media ${eur(media,0)}</text>`;
   svg+='</svg>';
   const ult=d.filter(x=>!x.vacio).slice(-1)[0];
-  $('#evoChart').innerHTML=svg+`<p class="small mut" style="margin:6px 0 0">${ult?`${nombreMes(ult.m)}: ${eur(val(ult),0)} · media de estos meses: ${eur(media,0)}`:''}</p>`;
+  $('#evoChart').innerHTML=svg+`<div class="legend">${esIng?'<span><i style="background:var(--good)"></i>En la media o más</span><span><i style="background:var(--warn)"></i>Algo menos</span><span><i style="background:var(--bad)"></i>Bastante menos</span>':'<span><i style="background:var(--good)"></i>En la media o menos</span><span><i style="background:var(--warn)"></i>Algo más (hasta +20%)</span><span><i style="background:var(--bad)"></i>Bastante más</span>'}<span><i class="lin" style="background:var(--ink);opacity:.55"></i>Media</span></div>
+    <p class="small mut" style="margin:6px 0 0">${ult?`${nombreMes(ult.m)}: ${eur(val(ult),0)} · media de estos meses: ${eur(media,0)}`:''}</p>`;
 }
 function rHist(){
   const ms=mesesConDatos();
@@ -31,25 +35,36 @@ function rHist(){
   const data=all.map(m=>{const s=stats(m);return {m,...s,ahorroMes:r2(s.ingresos-s.consumo-s.diezmo),vacio:!s.ms.length}});
   // gráfico últimos 24 meses
   const d=data.slice(-24);const W=1100,Hh=260,pl=46,pb=26,pt=14;
-  const max=Math.max(1,...d.map(x=>Math.max(x.ingresos,x.consumo,x.ahorroMes))),min=Math.min(0,...d.filter(x=>!x.vacio).map(x=>x.ahorroMes));
+  // eje con valores redondos (500, 1.000…) que pasan por el cero
+  const max0=Math.max(1,...d.map(x=>Math.max(x.ingresos,x.consumo,x.ahorroMes))),min0=Math.min(0,...d.filter(x=>!x.vacio).map(x=>x.ahorroMes));
+  const paso=pasoRedondo((max0-min0)/4),max=Math.ceil(max0/paso)*paso,min=Math.floor(min0/paso)*paso;
   const step=(W-pl-10)/d.length,bw=Math.max(4,step*0.34);
   const y=v=>pt+(Hh-pt-pb)*(max-v)/(max-min);
-  let svg=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Ingresos, gastos y ahorro por mes">`;
-  const ticks=4,paso=(max-min)/ticks;for(let i=0;i<=ticks;i++){const v=min+paso*i;svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${fmt(v/1000,1)}k</text>`}
+  const y0=y(0);
+  let svg=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Ingresos, gastos y ahorro por mes" class="hchart">
+    <defs><linearGradient id="gIng" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--good)" stop-opacity=".55"/><stop offset="1" stop-color="var(--good)" stop-opacity=".25"/></linearGradient>
+    <linearGradient id="gGas" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc)" stop-opacity=".7"/></linearGradient>
+    <clipPath id="cpPos"><rect x="0" y="0" width="${W}" height="${y0}"/></clipPath><clipPath id="cpNeg"><rect x="0" y="${y0}" width="${W}" height="${Hh}"/></clipPath></defs>`;
+  for(let v=min;v<=max+0.01;v+=paso){svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${Math.abs(v)>=1000?fmt(v/1000,Math.abs(v)%1000?1:0)+'k':fmt(v,0)}</text>`}
   if(min<0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1.2"/>`;
   d.forEach((x,i)=>{const cx=pl+step*i+step/2;
-    svg+=`<rect x="${cx-bw-1}" y="${y(x.ingresos)}" width="${bw}" height="${Math.max(0,y(0)-y(x.ingresos))}" rx="2" fill="var(--good)" opacity=".5"><title>${nombreMes(x.m)} · ingresos ${eur(x.ingresos)}</title></rect>`;
-    svg+=`<rect x="${cx+1}" y="${y(x.consumo)}" width="${bw}" height="${Math.max(0,y(0)-y(x.consumo))}" rx="2" fill="var(--acc)" opacity=".85"><title>${nombreMes(x.m)} · gastado ${eur(x.consumo)}</title></rect>`;
+    svg+=`<rect class="crece" x="${cx-bw-1}" y="${y(x.ingresos)}" width="${bw}" height="${Math.max(0,y(0)-y(x.ingresos))}" rx="3" fill="url(#gIng)"><title>${nombreMes(x.m)} · ingresos ${eur(x.ingresos)}</title></rect>`;
+    svg+=`<rect class="crece" x="${cx+1}" y="${y(x.consumo)}" width="${bw}" height="${Math.max(0,y(0)-y(x.consumo))}" rx="3" fill="url(#gGas)"><title>${nombreMes(x.m)} · gastado ${eur(x.consumo)}</title></rect>`;
     if(i%2===0||d.length<14)svg+=`<text x="${cx}" y="${Hh-8}" font-size="11" text-anchor="middle" fill="var(--muted)">${nombreMesC(x.m)}</text>`});
   // línea del ahorro del mes, sobre el mismo eje en euros (los meses sin datos cortan la línea)
-  let tramo=[],lineas='',puntos='';const cerrarTramo=()=>{if(tramo.length>1)lineas+=`<polyline points="${tramo.join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;tramo=[]};
+  // verde por encima de cero (ahorras) y rojo por debajo (sale más de lo que entra), con el área sombreada
+  let tramo=[],lineas='',areas='',puntos='';const cerrarTramo=()=>{if(tramo.length>1){const pts=tramo.join(' '),x0=tramo[0].split(',')[0],x1=tramo[tramo.length-1].split(',')[0];
+      const area=`<polygon points="${x0},${y0.toFixed(1)} ${pts} ${x1},${y0.toFixed(1)}"`;
+      areas+=`${area} fill="var(--good)" opacity=".13" clip-path="url(#cpPos)"/>${area} fill="var(--bad)" opacity=".16" clip-path="url(#cpNeg)"/>`;
+      const lin=`<polyline class="traza" pathLength="1" points="${pts}" fill="none" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"`;
+      lineas+=`${lin} stroke="var(--good)" clip-path="url(#cpPos)"/>${lin} stroke="var(--bad)" clip-path="url(#cpNeg)"/>`}tramo=[]};
   d.forEach((x,i)=>{if(x.vacio){cerrarTramo();return}const cx=pl+step*i+step/2,cy=y(x.ahorroMes);tramo.push(`${cx.toFixed(1)},${cy.toFixed(1)}`);
-    puntos+=`<circle cx="${cx}" cy="${cy}" r="4" fill="${x.ahorroMes<0?'var(--bad)':'var(--ink)'}" stroke="var(--card)" stroke-width="2"><title>${nombreMes(x.m)} · ahorro ${eur(x.ahorroMes)}${x.ingresos?' ('+Math.round(x.ahorroMes/x.ingresos*100)+'% de lo ingresado)':''}</title></circle>`});
-  cerrarTramo();svg+=lineas+puntos;
+    puntos+=`<circle class="punto" cx="${cx}" cy="${cy}" r="4.5" fill="${x.ahorroMes<0?'var(--bad)':'var(--good)'}" stroke="var(--card)" stroke-width="2"><title>${nombreMes(x.m)} · ahorro ${eur(x.ahorroMes)}${x.ingresos?' ('+Math.round(x.ahorroMes/x.ingresos*100)+'% de lo ingresado)':''}</title></circle>`});
+  cerrarTramo();svg+=areas+lineas+puntos;
   const ult=[...d].reverse().find(x=>!x.vacio);
-  if(ult){const i=d.indexOf(ult),cx=pl+step*i+step/2;svg+=`<text x="${Math.min(cx,W-60)}" y="${Math.max(12,y(ult.ahorroMes)-10)}" font-size="12" font-weight="650" text-anchor="middle" fill="var(--ink)">${eur(ult.ahorroMes,0)}</text>`}
+  if(ult){const i=d.indexOf(ult),cx=pl+step*i+step/2;svg+=`<text x="${Math.min(cx,W-60)}" y="${Math.max(12,y(ult.ahorroMes)-10)}" font-size="12" font-weight="650" text-anchor="middle" fill="${ult.ahorroMes<0?'var(--bad)':'var(--good)'}" paint-order="stroke" stroke="var(--card)" stroke-width="4">${eur(ult.ahorroMes,0)}</text>`}
   svg+='</svg>';
-  $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.5"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span><span><i class="lin"></i>Ahorro del mes</span><span class="mut">Pasa el dedo o el ratón por encima para ver las cifras</span></div>`;
+  $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.45"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span><span><i class="lin" style="background:var(--good)"></i>Ahorro del mes</span><span><i class="lin" style="background:var(--bad)"></i>Mes en negativo</span><span class="mut">Pasa el dedo o el ratón por encima para ver las cifras</span></div>`;
   // años
   const years=[...new Set(all.map(m=>m.slice(0,4)))].reverse();
   $('#years').innerHTML=years.map(yr=>{const xs=data.filter(x=>x.m.startsWith(yr)&&!x.vacio);if(!xs.length)return '';

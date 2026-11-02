@@ -148,7 +148,7 @@ module.exports = {
       assert.equal(await p.$('#inicio details[data-ic="gasto"][open]'), null, 'recuerda las plegadas');
       await p.$eval('#inicio details[data-ic="ahorro"]', e => e.scrollIntoView({ block: 'center' }));
       await p.hover('#inicio details[data-ic="ahorro"] .col:last-child');
-      assert.ok(await p.isVisible('#tip.on'));
+      await p.waitForSelector('#tip.on', { timeout: 3000 });
       assert.match(await p.textContent('#tip'), /ahorraste/);
       await p.click('#iniTodo');
       assert.ok(await p.$('#inicio details[data-ic="gasto"][open]'));

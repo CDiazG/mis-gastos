@@ -553,3 +553,32 @@ body.arrastrando-cat,body.arrastrando-cat *{cursor:grabbing!important;user-selec
 #pctTable tr[data-cid]{transition:transform .15s ease}
 #pctTable tr.arrastrando{transition:none;position:relative;z-index:2;background:var(--card);box-shadow:0 6px 20px rgba(0,0,0,.18)}
 .sinanim #pctTable tr[data-cid]{transition:none}
+
+/* ===== Gráficas más claras ===== */
+:root{--c1:#4e79a7;--c2:#f28e2b;--c3:#76b7b2;--c4:#b07aa1;--c5:#edc948;--c6:#9c755f;--c7:#ff9da7}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c1:#7aa6d6;--c2:#f5a75a;--c3:#8fd0cb;--c4:#c99bbd;--c5:#f0d677;--c6:#c19a82;--c7:#ffb3bb}}
+:root[data-theme="dark"]{--c1:#7aa6d6;--c2:#f5a75a;--c3:#8fd0cb;--c4:#c99bbd;--c5:#f0d677;--c6:#c19a82;--c7:#ffb3bb}
+.bar.ok i{background:var(--good)}
+.bar i{transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.cbars .col i.p{background:var(--good)}
+.cbars .col i.alto{background:var(--warn)}
+.cbars .col i{box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+svg .crece{transform-box:fill-box;transform-origin:bottom}
+.anim svg .crece{animation:crecer .7s cubic-bezier(.2,.8,.3,1) both}
+.anim svg .traza{stroke-dasharray:1;stroke-dashoffset:1;animation:trazar .75s .1s ease-out forwards}
+.anim svg .punto{animation:fundido .25s .6s both}
+@keyframes trazar{to{stroke-dashoffset:0}}
+.hchart rect:hover,#evoChart rect:hover{filter:brightness(1.12)}
+.hchart .punto:hover{r:6.5}
+.rosco{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center}
+.rosco svg{width:150px;height:150px;overflow:visible}
+.rosco .rseg{transition:stroke-width .15s}
+.rosco .rseg:hover{stroke-width:19}
+.anim .rosco svg{animation:girar .8s cubic-bezier(.2,.8,.3,1) both}
+@keyframes girar{from{opacity:0;transform:rotate(-40deg) scale(.85)}to{opacity:1;transform:none}}
+.rleyenda .rfila{grid-template-columns:minmax(0,1fr) auto}
+.rleyenda .gn i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+@media (max-width:640px){.rosco{grid-template-columns:1fr;justify-items:center}.rosco .rleyenda{width:100%}}
+.sinanim svg *,.sinanim .rosco svg{animation:none!important}
+@media (prefers-reduced-motion: reduce){svg .crece,svg .traza,svg .punto,.rosco svg{animation:none!important;stroke-dashoffset:0!important}}
+.sinanim svg .traza{stroke-dashoffset:0!important;stroke-dasharray:none!important}

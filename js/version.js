@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.17.1';
+const VERSION='2.18.0';
 const CAMBIOS=[
+ {v:'2.18.0',f:'2026-11-02',c:['Gráficas más claras y bonitas.','Histórico: la línea del ahorro va en verde cuando ahorras y en rojo cuando sale más de lo que entra, con el área sombreada; ejes con cifras redondas.','Evolución de una categoría: cada mes en verde, ámbar o rojo según la media.','Resumen e Inicio: las barras del presupuesto van en verde, ámbar desde el 80 % y rojo al pasarte.','Inicio: «En qué se va el dinero» en un rosco con el total en el centro.','Barras redondeadas que crecen al abrir la pestaña.']},
  {v:'2.17.1',f:'2026-11-02',c:['Las categorías se ordenan arrastrando el asa ⠿ (con el ratón o el dedo), en vez de con flechas. Las cuentas nuevas traen la categoría Donativos (en Ahorro y donativos, con 0 %); se puede quitar.']},
  {v:'2.17.0',f:'2026-11-02',c:['En Android, con la app instalada, el extracto se puede mandar desde la app del banco con «Compartir → Cuentas Claras» y se abre directamente en Importar. Si ya la tenías instalada y no aparece en la lista, desinstálala y vuelve a instalarla (tus datos no se pierden).']},
  {v:'2.16.1',f:'2026-11-02',c:['En el móvil ya no se puede hacer zoom con dos dedos: la pantalla y la barra de abajo se quedan quietas. En Histórico, la tabla «Frente al año pasado» ya no se sale de la pantalla.','Nuevas en «Más categorías»: Cuota de autónomos y Gestoría. Impuestos y tasas reconoce también los modelos 303 y 130.','Lee el extracto del patrimonio neto de Trade Republic: actualiza en Patrimonio el efectivo y lo que valen tus inversiones, con el detalle de cada valor de la cartera.']},
