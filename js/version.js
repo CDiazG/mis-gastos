@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.16.1';
+const VERSION='2.17.0';
 const CAMBIOS=[
+ {v:'2.17.0',f:'2026-11-02',c:['En Android, con la app instalada, el extracto se puede mandar desde la app del banco con «Compartir → Cuentas Claras» y se abre directamente en Importar. Si ya la tenías instalada y no aparece en la lista, desinstálala y vuelve a instalarla (tus datos no se pierden).']},
  {v:'2.16.1',f:'2026-11-02',c:['En el móvil ya no se puede hacer zoom con dos dedos: la pantalla y la barra de abajo se quedan quietas. En Histórico, la tabla «Frente al año pasado» ya no se sale de la pantalla.','Nuevas en «Más categorías»: Cuota de autónomos y Gestoría. Impuestos y tasas reconoce también los modelos 303 y 130.','Lee el extracto del patrimonio neto de Trade Republic: actualiza en Patrimonio el efectivo y lo que valen tus inversiones, con el detalle de cada valor de la cartera.']},
  {v:'2.16.0',f:'2026-11-02',c:['En el móvil, barra de abajo con Inicio, Resumen, Añadir, Movimientos y «Más».','Los conceptos del banco se leen mejor y los números de tarjeta salen ocultos (…5218).','Las cuentas nuevas empiezan sin cuentas de ejemplo: se crean solas al importar.','Rufo y «Añadir» se apartan al bajar la pantalla.','Histórico más ordenado y Resumen con avisos agrupados y botón «Ahora no».','Patrimonio explica qué hacer cuando aún no tienes cuentas.','Resumen: el ingreso de la nómina sale como «Nómina» y en el móvil la cabecera es más compacta.','Inicio: «Tu dinero» en dos columnas.']},
  {v:'2.15.1',f:'2026-11-02',c:['Usuarios: la lista ocupa todo el ancho, con el estado junto al nombre y el correo sin partirse.']},

@@ -8,6 +8,21 @@ drop.ondragover=e=>{e.preventDefault();drop.classList.add('hover')};
 drop.ondragleave=()=>drop.classList.remove('hover');
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove('hover');leerArchivos([...e.dataTransfer.files])};
 $('#pdfInput').onchange=e=>{leerArchivos([...e.target.files]);e.target.value=''};
+// Extractos que llegan desde «Compartir» del móvil (ver sw.js): se recogen al entrar en la app.
+if(/Android/i.test(navigator.userAgent))$('#shareTip').classList.remove('hide');
+async function recogerCompartidos(){
+  if(/[?&]compartido=1/.test(location.search))history.replaceState(null,'',location.pathname+location.hash);
+  if(!('caches' in window))return;
+  try{
+    const c=await caches.open('compartido'),ks=await c.keys();if(!ks.length)return;
+    const files=[];
+    for(const k of ks){const r=await c.match(k);await c.delete(k);if(!r)continue;
+      if(Date.now()-(+r.headers.get('x-fecha')||0)>864e5)continue; // de hace más de un día: se descarta
+      const b=await r.blob();files.push(new File([b],decodeURIComponent(r.headers.get('x-nombre')||'extracto'),{type:r.headers.get('content-type')||b.type}))}
+    if(!files.length)return;
+    go('importar');toast(files.length>1?files.length+' extractos recibidos':'Extracto recibido');leerArchivos(files);
+  }catch(e){console.warn(e)}
+}
 async function leerArchivos(files){
   files=files.filter(f=>/\.(pdf|csv|txt|xlsx|xls|n43|q43|aeb|c43)$/i.test(f.name)||/pdf|csv|sheet|excel|text/.test(f.type));
   if(!files.length){toast('Elige un extracto en PDF, Norma 43, CSV o Excel',true);return}

@@ -167,6 +167,29 @@ module.exports = {
     })();
   },
 
+  'un extracto compartido desde la app del banco se abre en Importar'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const c = csv();
+      // lo que deja sw.js al recibirlo desde «Compartir»
+      await p.evaluate(async t => { const k = await caches.open('compartido');
+        await k.put('./compartido/1', new Response(new Blob([t], { type: 'text/csv' }), { headers: { 'content-type': 'text/csv', 'x-nombre': encodeURIComponent('movimientos banco.csv'), 'x-fecha': String(Date.now()) } }));
+        await k.put('./compartido/2', new Response('viejo', { headers: { 'x-nombre': 'viejo.csv', 'x-fecha': String(Date.now() - 2 * 864e5) } }));
+        history.replaceState(null, '', '?compartido=1'); }, c.texto);
+      await p.evaluate(() => recogerCompartidos());
+      await p.waitForSelector('#impGo', { timeout: 30000 });
+      const r = await p.evaluate(async () => ({ tab: TAB, n: IMP.rows.length, arch: IMP.res.map(x => x.archivo), quedan: (await (await caches.open('compartido')).keys()).length, url: location.search }));
+      assert.equal(r.tab, 'importar');
+      assert.equal(r.n, c.n);
+      assert.deepEqual(r.arch, ['movimientos banco.csv'], 'el de hace dos días se descarta');
+      assert.equal(r.quedan, 0, 'no se queda guardado en el móvil');
+      assert.equal(r.url, '');
+      const m = JSON.parse(require('fs').readFileSync(require('path').join(L.RAIZ, 'manifest.webmanifest'), 'utf8'));
+      assert.equal(m.share_target.method, 'POST');
+      assert.ok(require('fs').readFileSync(require('path').join(L.RAIZ, 'sw.js'), 'utf8').includes(m.share_target.params.files[0].name));
+    })();
+  },
+
   'si no reconoce el banco pregunta la cuenta, y la recuerda'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
