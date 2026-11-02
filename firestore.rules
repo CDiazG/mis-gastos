@@ -26,6 +26,26 @@ service cloud.firestore {
       allow update, delete: if esAdmin();
     }
 
+    // Foro: lo leen y escriben los usuarios activos; cada uno borra lo suyo y el administrador, todo.
+    match /foro/{id} {
+      allow read: if request.auth != null && activo(request.auth.uid);
+      allow create: if request.auth != null && activo(request.auth.uid)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'titulo', 'texto', 'hilo', 'fecha'])
+        && request.resource.data.texto is string && request.resource.data.texto.size() <= 3000
+        && request.resource.data.titulo is string && request.resource.data.titulo.size() <= 120;
+      allow delete: if esAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+    }
+
+    // Nombre y foto que ven los demás usuarios (en el foro). Nada de datos de cuentas.
+    match /perfiles/{uid} {
+      allow read: if request.auth != null && activo(request.auth.uid);
+      allow create, update: if request.auth != null && request.auth.uid == uid && activo(uid)
+        && request.resource.data.keys().hasOnly(['nombre', 'foto'])
+        && request.resource.data.foto is string && request.resource.data.foto.size() < 60000;
+      allow delete: if esAdmin();
+    }
+
     // Perfil de cada usuario: lo lee el propio usuario; solo el administrador lo crea o cambia.
     match /users/{uid} {
       allow read: if esAdmin() || (request.auth != null && request.auth.uid == uid);
@@ -37,9 +57,10 @@ service cloud.firestore {
         && request.resource.data.estado == 'pendiente'
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80);
-      // Cada usuario solo puede actualizar su fecha de último acceso; el resto, el administrador.
+      // Cada usuario solo puede actualizar su último acceso y su foto; el resto, el administrador.
       allow update: if esAdmin() || (request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso']));
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso', 'foto'])
+        && (!('foto' in request.resource.data) || request.resource.data.foto.size() < 60000));
       allow delete: if esAdmin();
 
       // Datos (movimientos, ajustes): solo el propio usuario, y solo si su cuenta está activa.

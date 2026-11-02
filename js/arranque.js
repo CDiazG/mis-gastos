@@ -4,8 +4,8 @@
 let uiLista=false;
 function iniciarUI(){
   if(HAY_MIGRACION){HAY_MIGRACION=false;save()}
-  refreshCats();MES=mesDe(hoy());go('resumen');
-  if(uiLista&&!NUBE)return;uiLista=true;
+  refreshCats();aplicarTema();MES=mesDe(hoy());go('resumen');
+  if(uiLista&&!NUBE)return;uiLista=true;tutorialInicial();
   if(S.histOfrecido&&cmpV(VERSION,S.verVista||'1.0')>0){
     const desde=S.verVista||'1.0';S.verVista=VERSION;save();
     dialog('Novedades de la versión '+VERSION,'<p class="small mut" style="margin-top:0">Tus datos se mantienen. Esto es lo nuevo desde la versión '+esc(desde)+':</p>'+cambiosHtml(desde),[{t:'Entendido',cls:'pri'}]);

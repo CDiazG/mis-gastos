@@ -56,6 +56,7 @@ async function borrarDatosUsuario(u){
     const fin=new Date().getFullYear()+2;
     for(let y=2000;y<=fin;y++)for(let m=1;m<=12;m++)refs.push(doc(fb.db,'users',u.id,'meses',y+'-'+String(m).padStart(2,'0')));
     for(let i=0;i<refs.length;i+=450){const b=writeBatch(fb.db);refs.slice(i,i+450).forEach(r=>b.delete(r));await b.commit()}
+    try{await fb.fsM.deleteDoc(doc(fb.db,'perfiles',u.id))}catch(_){}
     await updateDoc(doc(fb.db,'users',u.id),{activo:false,eliminado:true,eliminadoEn:Date.now()});
     dialog('Usuario eliminado',`<p>Se han borrado los datos de <b>${esc(u.nombre)}</b> y ya no puede entrar.</p><p class="small mut">Su correo sigue registrado en Firebase por si algún día quieres darle de alta de nuevo (empezaría sin datos). Si quieres borrarlo también de ahí: consola de Firebase → Authentication → Usuarios → ⋮ junto a ${esc(u.email)} → Eliminar cuenta.</p>`,[{t:'Entendido',cls:'pri'}]);
   }catch(e){console.error(e);toast('No se ha podido eliminar: '+(e.code||e.message)+(e.code==='permission-denied'?' (¿están publicadas las reglas nuevas?)':''),true)}

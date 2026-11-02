@@ -90,7 +90,7 @@ function editar(x){
 
 /* ============ Añadir (gasto o ingreso a mano) ============ */
 let aTipo='gasto',cCat='',cCatManual=false,aPago='__efectivo';
-const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO').map(c=>c.id)];
+const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO'&&c.id!=='AHORRO').map(c=>c.id),'TRASPASO'];
 function rEfectivo(){
   const f=$('#cFecha');if(!f.value||mesDe(f.value)!==MES)f.value=mesDe(hoy())===MES?hoy():MES+'-01';
   const g=aTipo==='gasto';

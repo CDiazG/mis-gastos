@@ -10,7 +10,8 @@
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="css/estilos.css?v=2.10.0">
+<script>try{var t=localStorage.getItem('mg-tema');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark'}catch(e){}</script>
+<link rel="stylesheet" href="css/estilos.css?v=2.11.0">
 </head>
 <body>
 <header>
@@ -33,6 +34,7 @@
     <button class="tab" data-t="hist">Histórico</button>
     <button class="tab" data-t="patri">Patrimonio</button>
     <button class="tab" data-t="ajustes">Ajustes</button>
+    <button class="tab" data-t="ayuda">Ayuda</button>
     <button class="tab hide" data-t="usuarios" id="tabUsuarios">Usuarios</button>
   </nav>
 </header>
@@ -40,6 +42,7 @@
 <main>
   <!-- RESUMEN -->
   <section id="s-resumen" class="on">
+    <div class="mesTit"></div>
     <div class="hola"><span id="hola" class="hola-t"></span><span style="flex:1"></span><button class="btn sm" data-informe type="button">Informe para imprimir</button></div>
     <div class="grid kpis" id="kpis"></div>
     <div class="alerts" id="alerts"></div>
@@ -78,6 +81,7 @@
 
   <!-- MOVIMIENTOS -->
   <section id="s-movs">
+    <div class="mesTit"></div>
     <div class="toolbar">
       <input type="search" id="fBuscar" placeholder="Buscar…" style="width:220px">
       <select id="fCat"></select>
@@ -157,6 +161,11 @@
         <p class="small" id="pctSum"></p>
       </div>
       <div class="grid" style="align-content:start">
+        <div class="card pad" id="prefCard">
+          <h3>Preferencias</h3>
+          <p class="small mut" style="margin:4px 0 10px">Activa o desactiva lo que prefieras. Se guarda en tu cuenta.</p>
+          <div id="prefList" class="prefs"></div>
+        </div>
         <div class="card pad">
           <h3>Diezmo</h3>
           <p class="small mut" style="margin:4px 0 10px">Si lo activas, cada mes se calcula el porcentaje de diezmo del presupuesto sobre los ingresos del mes y se muestra como pendiente hasta que lo pagas (poniendo la categoría «Diezmo» al movimiento del banco o con el botón «Marcar pagado» del Resumen).</p>
@@ -201,6 +210,7 @@
         <div class="card pad">
           <h3>Mi cuenta</h3>
           <p class="small mut" style="margin:4px 0 10px" id="cuentaTxt"></p>
+          <div id="fotoAj" style="display:flex;gap:12px;align-items:center;margin:0 0 12px"></div>
           <form class="toolbar hide" id="miNombreF" style="margin:0 0 10px"><input type="text" id="miNombre" placeholder="Tu nombre" style="flex:1;min-width:140px"><button class="btn">Guardar nombre</button></form>
           <div class="toolbar" style="margin:0 0 16px"><button class="btn" id="cambiarPass">Cambiar mi contraseña</button></div>
           <h3>Borrar todo</h3>
@@ -238,6 +248,26 @@
     </div>
   </section>
   <!-- USUARIOS (solo administrador) -->
+  <section id="s-ayuda">
+    <div class="ayHead card pad"><span id="ayClara"></span><div style="flex:1;min-width:200px"><h2 style="margin:0">¿En qué te ayudo?</h2><p class="small mut" style="margin:4px 0 10px">Soy Clara. Aquí tienes las dudas más habituales y un foro para preguntar a los demás usuarios.</p><button class="btn sm pri" type="button" id="ayTuto">Ver el tutorial</button></div></div>
+    <div class="row2" style="margin-top:14px;align-items:start">
+      <div class="card">
+        <div class="ghead"><span class="t">Preguntas frecuentes</span></div>
+        <div class="pad" style="padding-bottom:4px"><input type="search" id="faqBuscar" placeholder="Busca tu duda… (p. ej. Bizum, nómina, efectivo)" style="width:100%"></div>
+        <div id="faqList" class="pad" style="padding-top:6px"></div>
+      </div>
+      <div class="card">
+        <div class="ghead"><span class="t">Foro · preguntas entre usuarios</span></div>
+        <form id="foroF" class="pad" autocomplete="off" style="display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)">
+          <input type="text" id="foroTit" placeholder="Título (opcional)" maxlength="120">
+          <textarea id="foroTxt" rows="3" maxlength="3000" placeholder="Pregunta o comparte un truco…" required></textarea>
+          <div class="toolbar" style="margin:0"><span class="small mut" style="flex:1">Lo ven todos los usuarios. No pongas datos de tus cuentas.</span><button class="btn pri" id="foroGo">Publicar</button></div>
+        </form>
+        <div id="foroList"></div>
+      </div>
+    </div>
+  </section>
+
   <section id="s-usuarios">
     <h2>Usuarios</h2>
     <p class="sub">Cada persona tiene su cuenta y sus datos. Nadie puede ver los datos de otra persona desde el programa, tampoco el administrador.</p>
@@ -276,31 +306,35 @@
   <div id="lMsg"></div>
 </div></div>
 <button id="fabCash" class="fab hide" type="button">＋ Añadir</button>
+<div id="tutoSpot" class="hide"></div>
+<div id="tuto" class="hide" role="dialog" aria-label="Tutorial"></div>
+<input type="file" id="fotoFile" accept="image/*" class="hide">
 <div id="updBar" class="hide"><span id="updTxt"></span><button class="btn sm" id="updGo">Actualizar</button></div>
 
 <dialog id="dlg"><form method="dialog"><div class="dh" id="dlgT"></div><div class="db" id="dlgB"></div><div class="df" id="dlgF"></div></form></dialog>
 <div id="toast"></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.10.0"></script>
-<script src="js/categorias.js?v=2.10.0"></script>
-<script src="js/version.js?v=2.10.0"></script>
-<script src="js/utilidades.js?v=2.10.0"></script>
-<script src="js/estado.js?v=2.10.0"></script>
-<script src="js/reglas.js?v=2.10.0"></script>
-<script src="js/navegacion.js?v=2.10.0"></script>
-<script src="js/resumen.js?v=2.10.0"></script>
-<script src="js/movimientos.js?v=2.10.0"></script>
-<script src="js/excel.js?v=2.10.0"></script>
-<script src="js/dialogos.js?v=2.10.0"></script>
-<script src="js/pdf.js?v=2.10.0"></script>
-<script src="js/formatos.js?v=2.10.0"></script>
-<script src="js/importar.js?v=2.10.0"></script>
-<script src="js/historico.js?v=2.10.0"></script>
-<script src="js/ajustes.js?v=2.10.0"></script>
-<script src="js/usuarios.js?v=2.10.0"></script>
-<script src="js/buzon.js?v=2.10.0"></script>
-<script src="js/acceso.js?v=2.10.0"></script>
-<script src="js/arranque.js?v=2.10.0"></script>
+<script src="js/config.js?v=2.11.0"></script>
+<script src="js/categorias.js?v=2.11.0"></script>
+<script src="js/version.js?v=2.11.0"></script>
+<script src="js/utilidades.js?v=2.11.0"></script>
+<script src="js/estado.js?v=2.11.0"></script>
+<script src="js/reglas.js?v=2.11.0"></script>
+<script src="js/navegacion.js?v=2.11.0"></script>
+<script src="js/resumen.js?v=2.11.0"></script>
+<script src="js/movimientos.js?v=2.11.0"></script>
+<script src="js/excel.js?v=2.11.0"></script>
+<script src="js/dialogos.js?v=2.11.0"></script>
+<script src="js/pdf.js?v=2.11.0"></script>
+<script src="js/formatos.js?v=2.11.0"></script>
+<script src="js/importar.js?v=2.11.0"></script>
+<script src="js/historico.js?v=2.11.0"></script>
+<script src="js/ajustes.js?v=2.11.0"></script>
+<script src="js/usuarios.js?v=2.11.0"></script>
+<script src="js/buzon.js?v=2.11.0"></script>
+<script src="js/ayuda.js?v=2.11.0"></script>
+<script src="js/acceso.js?v=2.11.0"></script>
+<script src="js/arranque.js?v=2.11.0"></script>
 </body>
 </html>

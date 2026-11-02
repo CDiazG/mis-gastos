@@ -11,6 +11,12 @@ function can(path,op,data){
     if(op==='read')return isAdmin()||(!!u&&!!d&&d.uid===u.uid);
     if(op==='create')return !!u&&!!data&&data.uid===u.uid&&data.estado==='nueva'&&!d;
     return isAdmin();}
+  const activoU=()=>{const pr=u&&db()['users/'+u.uid];return !!(pr&&pr.activo===true)};
+  if(p[0]==='foro'){const d=db()[path];
+    if(op==='read'||op==='list')return activoU();
+    if(op==='create')return activoU()&&!!data&&data.uid===u.uid&&!d&&typeof data.texto==='string'&&data.texto.length<=3000;
+    return isAdmin()||(!!u&&!!d&&d.uid===u.uid);}
+  if(p[0]==='perfiles'){if(op==='read'||op==='list')return activoU();return activoU()&&p[1]===u.uid&&(!data||String(data.foto||'').length<60000);}
   if(p[0]!=='users')return false;
   if(p.length===1)return op==='list'&&isAdmin();
   if(p.length===2)return op==='read'?(isAdmin()||(u&&u.uid===p[1])):(isAdmin()||(!!u&&u.uid===p[1]&&!!data&&data.activo===false&&data.estado==='pendiente'&&data.rol==='usuario'&&!db()[path]));
@@ -34,7 +40,7 @@ export async function getDocs(c){
     const d=db();const docs=Object.keys(d).filter(k=>k.startsWith('sugerencias/')&&pasaFiltros(c,d[k])).map(k=>snap(k,d[k]));return {empty:!docs.length,forEach:cb=>docs.forEach(cb),docs}}const depth=c.path.split('/').length+1;if(!can(c.path+(c.path.split('/').length===1?'':'/x'),c.path.split('/').length===1?'list':'read'))throw err('permission-denied');
   const d=db();const docs=Object.keys(d).filter(k=>k.startsWith(c.path+'/')&&k.split('/').length===depth).map(k=>snap(k,d[k]));return {empty:!docs.length,forEach:cb=>docs.forEach(cb),docs}}
 export async function setDoc(r,data){if(!can(r.path,'write',data))throw err('permission-denied');const d=db();d[r.path]=JSON.parse(JSON.stringify(data));sv(d)}
-export async function updateDoc(r,data){const u=auth();const propio=u&&r.path==='users/'+u.uid&&Object.keys(data).every(k=>k==='ultimoAcceso');if(!propio&&!can(r.path,'write'))throw err('permission-denied');const d=db();d[r.path]={...d[r.path],...data};sv(d)}
+export async function updateDoc(r,data){const u=auth();const propio=u&&r.path==='users/'+u.uid&&Object.keys(data).every(k=>k==='ultimoAcceso'||k==='foto');if(!propio&&!can(r.path,'write'))throw err('permission-denied');const d=db();d[r.path]={...d[r.path],...data};sv(d)}
 export function writeBatch(){const ops=[];return {set:(r,v)=>ops.push(['s',r,v]),delete:r=>ops.push(['d',r]),commit:async()=>{for(const o of ops){window.__delOp=o[0]==='d';const ok=can(o[1].path,'write');window.__delOp=false;if(!ok)throw err('permission-denied')}const d=db();for(const o of ops){if(o[0]==='s')d[o[1].path]=JSON.parse(JSON.stringify(o[2]));else delete d[o[1].path]}sv(d)}}}
 export async function waitForPendingWrites(d){if(window.__offline)return new Promise(()=>{});}
 export async function terminate(d){window.__terminated=(window.__terminated||0)+1}

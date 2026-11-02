@@ -17,10 +17,15 @@ function go(t){
   TAB=t;$$('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));render()}
 function render(){
   refreshCats();
-  $('#mLabel').textContent=nombreMes(MES);
+  const act=mesDe(hoy()),esAct=MES===act,estado=esAct?'mes actual':MES<act?'mes pasado':'mes futuro';
+  $('#mLabel').innerHTML=`${nombreMes(MES)}<small>${estado}</small>`;
+  $('#monthnav').classList.toggle('pasado',!esAct);$('#mHoy').classList.toggle('hide',esAct);
+  $$('.mesTit').forEach(el=>{el.innerHTML=`<span class="mt">${nombreMes(MES)}</span>${esAct?'<span class="tag good">mes actual</span>':`<span class="tag cash">${estado}</span><button class="link mtHoy" type="button">Volver a ${nombreMes(act)}</button>`}`;
+    const b=$('.mtHoy',el);if(b)b.onclick=()=>setMes(act)});
   $('#monthnav').classList.toggle('nomes',!(TAB==='resumen'||TAB==='movs'||TAB==='efectivo'));
-  $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER));
-  ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes})[TAB]();
+  $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER)||!pref('fab'));
+  ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes,ayuda:rAyuda})[TAB]();
 }
 
-function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;$('#uAv').textContent=(USER.nombre||USER.email||'?').trim().charAt(0).toUpperCase();$('#uWho').title=USER.nombre+' · '+USER.email}
+function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;const av=$('#uAv');
+  if(USER.foto){av.textContent='';av.style.background=`center/cover url("${USER.foto}")`}else{av.style.background='';av.textContent=(USER.nombre||USER.email||'?').trim().charAt(0).toUpperCase()}$('#uWho').title=USER.nombre+' · '+USER.email}

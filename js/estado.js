@@ -6,9 +6,10 @@ let S;
 function defState(){
   return {v:1,mov:[],reglas:SEED_RULES.map(([t,c])=>({t,c,u:0})),
     cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
-    aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente'},
+    aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente',
+      bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true},
     cuentas:[{n:'EVO',v:null,f:null,banco:1},{n:'Revolut',v:null,f:null,banco:1},{n:'Trade Republic',v:null,f:null},{n:'Santander',v:null,f:null},{n:'Oro',v:null,f:null}],
-    fijos:[],objetivos:[],mig:{actividades:true,inversion:true},
+    fijos:[],objetivos:[],mig:{actividades:true,inversion:true,ahorroAuto:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};
 }
 // Cambios de categorías de la versión 2.8.0: «Salud y bienestar» se separa en «Salud» y «Deporte y actividades»
@@ -44,8 +45,18 @@ function migrarInversion(){
   for(const r of S.reglas||[])if(r.c==='AHORRO'&&esInv(r.t))r.c='INVERSION';
   return true;
 }
+// Versión 2.11.0: el ahorro es lo que no se gasta. «Ahorro» deja de ser una categoría que se elige:
+// pasar dinero a otra cuenta propia es un traspaso y ya cuenta como ahorro.
+function migrarAhorroAuto(){
+  if(!S||(S.mig&&S.mig.ahorroAuto))return false;
+  S.mig={...(S.mig||{}),ahorroAuto:true};
+  for(const x of S.mov||[])if(x.cat==='AHORRO'){x.cat='TRASPASO';x.exAhorro=true}
+  for(const r of S.reglas||[])if(r.c==='AHORRO')r.c='TRASPASO';
+  for(const f of S.fijos||[])if(f.cat==='AHORRO')f.cat='TRASPASO';
+  return true;
+}
 let HAY_MIGRACION=false;
-function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(S&&S.aj&&migrarInversion())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
+function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(S&&S.aj&&migrarInversion())HAY_MIGRACION=true;if(S&&S.aj&&migrarAhorroAuto())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
   const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined)S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
 function load(){
   try{const t=localStorage.getItem(KEY);if(t){S=JSON.parse(t);completar();return}}catch(e){console.error(e)}
@@ -104,7 +115,7 @@ async function cargarNube(){
 
 /* ---- Sincronización en tiempo real entre dispositivos ---- */
 let UNSUB=[],REMOTO={meta:null,meses:{}},tRemoto=null,renderPend=false;
-function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];if(typeof BZ_TODAS!=='undefined'){BZ_TODAS=[];BZ_MIAS=[];BZ_VIVO=false}USERS_VIVO=false;USERS=[];REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
+function pararEscucha(){UNSUB.forEach(f=>{try{f()}catch(_){}});UNSUB=[];if(typeof BZ_TODAS!=='undefined'){BZ_TODAS=[];BZ_MIAS=[];BZ_VIVO=false}USERS_VIVO=false;USERS=[];if(typeof FORO!=='undefined'){FORO=[];FORO_VIVO=false;PERFILES={}}REMOTO={meta:null,meses:{}};clearTimeout(tRemoto)}
 function escuchar(){
   pararEscucha();if(!fb.fsM.onSnapshot)return;
   const {doc,collection,onSnapshot}=fb.fsM;const uid=USER.uid;

@@ -17,7 +17,7 @@ function autoCatR(desc,detalle,imp){
   const full=desc+' '+(detalle||'');
   const r=matchRule(full);
   if(!r)return {c:'',r:null};
-  if(isBizum(desc)&&!r.u)return {c:'',r:null}; // Bizum: solo reglas puestas a mano
+  if(isBizum(desc)&&(!r.u||!pref('bizumReglas')))return {c:'',r:null}; // Bizum: a mano (salvo que se active en Preferencias)
   if(r.c==='INGRESO'&&imp<0)return {c:'',r:null};
   return {c:r.c,r};
 }
@@ -29,7 +29,7 @@ function learnKey(desc){
   return toks.slice(0,4).join(' ');
 }
 function learn(desc,cat){
-  if(!cat||isBizum(desc))return;
+  if(!cat||!pref('aprender')||(isBizum(desc)&&!pref('bizumReglas')))return;
   const k=learnKey(desc);if(!k||k.length<3)return;
   const ex=S.reglas.find(r=>r.u&&norm(r.t)===norm(k));
   if(ex)ex.c=cat;else S.reglas.unshift({t:k,c:cat,u:1});
@@ -46,7 +46,10 @@ function stats(m){
     else by[x.cat]=(by[x.cat]||0)-x.importe;
   }
   const consumo=CONSUMO.reduce((a,c)=>a+(by[c]||0),0)+(by.SINCAT||0);
-  const ahorro=CATS.filter(c=>c.g==='AHORRO'&&c.id!=='DIEZMO').reduce((a,c)=>a+(by[c.id]||0),0),diezmo=by.DIEZMO||0;
+  // El ahorro es todo lo que no se gasta: ingresos − gastos − diezmo. Lo invertido es parte del ahorro;
+  // la fila «Ahorro» del presupuesto es lo que queda en cuenta (se calcula, no se elige como categoría).
+  const diezmo=by.DIEZMO||0,ahorro=ingresos-consumo-diezmo;
+  by.AHORRO=r2(ahorro-(by.INVERSION||0));
   const base=S.aj.base==='fija'?(+S.aj.baseFija||0):ingresos;
   return {ms,by,ingresos:r2(ingresos),consumo:r2(consumo),ahorro:r2(ahorro),diezmo:r2(diezmo),sinCat,sinCatImp:r2(sinCatImp),base};
 }

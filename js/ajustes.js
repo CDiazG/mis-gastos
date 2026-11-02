@@ -5,12 +5,12 @@ function rAjustes(){
   $$('#baseSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.b===S.aj.base);b.onclick=()=>{S.aj.base=b.dataset.b;save();rAjustes()}});
   $('#baseFija').classList.toggle('hide',S.aj.base!=='fija');$('#baseFija').value=S.aj.baseFija?fmt(S.aj.baseFija):'';
   $('#baseFija').onchange=e=>{const v=parseNum(e.target.value);S.aj.baseFija=isFinite(v)?v:0;save()};
-  refreshCats();
+  refreshCats();rPrefs();rFotoAj();
   const gOpts=sel=>GROUPS.map(g=>`<option value="${g.id}"${g.id===sel?' selected':''}>${g.n}</option>`).join('');
   $('#caGrupo').innerHTML=gOpts('VARIABLES');
   $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id);
     return `<tr><td colspan="4" class="small mut" style="padding-top:12px"><b>${g.n}</b></td></tr>`+cs.map((c,k)=>`<tr data-cid="${c.id}">
-      <td><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:170px" ${c.id==='DIEZMO'||c.id==='AHORRO'?'':''}></td>
+      <td><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:170px">${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que no gastas ni inviertes</div>':''}</td>
       <td><select class="cg" style="max-width:118px;font-size:13px" ${FIJAS.has(c.id)?'disabled title="Esta categoría no se puede mover de grupo"':''}>${gOpts(c.g)}</select></td>
       <td class="r" style="white-space:nowrap"><input type="number" min="0" max="100" step="0.5" data-p="${c.id}" value="${S.aj.pct[c.id]??0}" style="width:72px" class="right"> %</td>
       <td style="white-space:nowrap"><button type="button" class="btn sm icon cu" title="Subir" ${k===0?'disabled':''}>↑</button><button type="button" class="btn sm icon cd" title="Bajar" ${k===cs.length-1?'disabled':''}>↓</button>${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
@@ -174,9 +174,34 @@ function cargarHist(H){
     else if(n.includes(' DESAJUST'))cat='AJUSTE';
     else if(legacy.has(cat)||!ALLC.some(c=>c.id===cat)){const r=matchRule(h.c);cat=r&&!['INGRESO','EFECTIVO','TRASPASO'].includes(r.c)?r.c:'OTROS'}
     if(cat==='SALUD'&&RE_ACTIVIDAD.test(norm(h.c)))cat='ACTIVIDADES';
-    if(cat==='AHORRO'&&RE_INVERSION.test(norm(h.c)))cat='INVERSION';
+    if(cat==='AHORRO')cat=RE_INVERSION.test(norm(h.c))?'INVERSION':'TRASPASO';
     S.mov.push({id:uid(),fecha:h.f,mes:h.f.slice(0,7),concepto:h.c,importe:h.i,cat,metodo:h.e?'efectivo':'banco',cuenta:h.e?'':'',origen:'excel'});
   }
   S.notas={...(S.notas||{}),...(H.notas||{})};S.histMeta={desde:H.desde,hasta:H.hasta,n:H.mov.length};
   S.histCargado=true;S.histOfrecido=true;save();
 }
+
+/* ---- Preferencias (interruptores) ---- */
+const PREFS=[
+  {k:'bizumReglas',t:'Aprender la categoría de los Bizum',d:'Desactivado: cada Bizum se clasifica a mano, porque la misma persona te puede pagar por motivos distintos.'},
+  {k:'aprender',t:'Aprender reglas al cambiar una categoría',d:'Al poner categoría a un movimiento del banco, los siguientes con el mismo comercio se clasifican solos.'},
+  {k:'aviso80',t:'Avisar al llegar al 80 % de una categoría',d:'Aviso en el Resumen cuando te acercas al presupuesto.'},
+  {k:'comparar',t:'Comparar con el mes anterior',d:'Muestra ▲ / ▼ junto a cada categoría.'},
+  {k:'avisoCopia',t:'Recordar la copia de seguridad',d:'Aviso en el Resumen si hace más de un mes de la última copia.'},
+  {k:'verGrafico',t:'Gráfico «En qué se ha ido el dinero»',d:'En el Resumen.'},
+  {k:'verFijos',t:'Gastos fijos previstos',d:'Tarjeta del Resumen que avisa si un fijo no llega o cambia de importe.'},
+  {k:'verObjetivos',t:'Objetivos de ahorro en el Resumen',d:'Siguen disponibles en Patrimonio aunque lo desactives.'},
+  {k:'fab',t:'Botón flotante «＋ Añadir»',d:'El botón redondo de abajo a la derecha.'},
+];
+const pref=k=>S&&S.aj&&S.aj[k]!==false&&(k!=='bizumReglas'||S.aj[k]===true);
+function rPrefs(){
+  const tema=S.aj.tema||'auto';
+  $('#prefList').innerHTML=`<div class="pref" style="cursor:default;align-items:center"><span style="flex:1"><b>Tema</b><span class="small mut">Automático: como tenga el dispositivo.</span></span><span class="seg" id="temaSeg">${[['claro','☀️ Claro'],['oscuro','🌙 Oscuro'],['auto','Auto']].map(([k,t])=>`<button type="button" data-v="${k}" class="${k===tema?'on':''}">${t}</button>`).join('')}</span></div>`+PREFS.map(p=>`<label class="pref"><span class="sw"><input type="checkbox" data-pref="${p.k}" ${pref(p.k)?'checked':''}><i></i></span><span><b>${p.t}</b><span class="small mut">${p.d}</span></span></label>`).join('')+
+    `<div class="toolbar" style="margin:10px 0 0"><button class="btn sm" type="button" id="verTuto">Ver el tutorial otra vez</button></div>`;
+  $$('#temaSeg button').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.v;aplicarTema();save();rPrefs()});
+  $$('[data-pref]').forEach(c=>c.onchange=()=>{S.aj[c.dataset.pref]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(c.dataset.pref==='fab')render()});
+  const vt=$('#verTuto');if(vt)vt.onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
+}
+function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto';
+  if(t==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t==='claro'?'light':'dark';
+  try{localStorage.setItem('mg-tema',t)}catch(_){}}

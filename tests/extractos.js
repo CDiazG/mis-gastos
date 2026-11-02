@@ -121,3 +121,40 @@ function xlsx() {
 module.exports.norma43 = norma43;
 module.exports.csv = csv;
 module.exports.xlsx = xlsx;
+
+// ---- Formato tipo Trade Republic inventado: cada movimiento en tres líneas
+// (día y mes arriba, tipo + importes en medio, año abajo); septiembre partido («02» / «sept»).
+function htmlTradeRepublic() {
+  const inicial = 400;
+  const movs = [
+    { d: '02', m: 'sept', partido: true, tipo: 'Operar', l1: 'Savings plan execution IE00B4ND3602 iShares Physical Gold ETC, quantity:', l3: '1.5', i: -150 },
+    { d: '05', m: 'oct', tipo: 'Transferencia', medio: 'Incoming transfer from PERSONA INVENTADA EJEMPLO (ES0012345678901234567890)', i: 500 },
+    { d: '10', m: 'oct', tipo: 'Operar', l1: 'Buy trade IE00B4L5Y983 iShares Core MSCI World, quantity: 2', i: -200 },
+    { d: '12', m: 'oct', tipo: 'Operar', l1: 'Sell trade IE000KHX9DX6 Fondo Inventado de Metales', l3: 'UCITS ETF - USD Acc, quantity: 1.41526', i: 70.12 },
+    { d: '20', m: 'oct', tipo: 'Transferencia', medio: 'Incoming transfer from OTRA GENTE DISTINTA (ES9912345678901234567890)', i: 30 },
+  ];
+  let saldo = inicial, ent = 0, sal = 0, top = 0;
+  const s = (x, y, t) => `<span style="position:absolute;left:${x}px;top:${y}px">${t}</span>`;
+  let h = s(0, 0, 'TRADE REPUBLIC BANK GMBH BRUNNENSTRASSE 19-21 10119 BERLIN')
+    + s(0, 30, 'PERSONA INVENTADA EJEMPLO') + s(350, 30, 'FECHA') + s(400, 30, '01 sept 2026 - 01 nov 2026')
+    + s(0, 70, 'RESUMEN DE ESTADO DE CUENTA');
+  const filas = [];
+  top = 200;
+  for (const m of movs) {
+    saldo = Math.round((saldo + m.i) * 100) / 100; if (m.i > 0) ent += m.i; else sal -= m.i;
+    const imp = `${eurTR(Math.abs(m.i))} €`;
+    filas.push(s(0, top, m.partido ? m.d : `${m.d} ${m.m}`) + (m.l1 ? s(110, top, m.l1) : '')
+      + (m.partido ? s(0, top + 9, m.m) : '') + s(40, top + 9, m.tipo) + (m.medio ? s(110, top + 9, m.medio) : '')
+      + s(m.i > 0 ? 470 : 540, top + 9, imp) + s(610, top + 9, `${eurTR(saldo)} €`)
+      + s(0, top + 18, '2026') + (m.l3 ? s(110, top + 18, m.l3) : ''));
+    top += 50;
+  }
+  h += s(0, 100, 'PRODUCTO') + s(120, 100, 'BALANCE INICIAL') + s(250, 100, 'ENTRADA DE DINERO') + s(380, 100, 'SALIDA DE DINERO') + s(520, 100, 'BALANCE FINAL')
+    + s(0, 115, 'Cuenta corriente') + s(120, 115, `${eurTR(inicial)} €`) + s(250, 115, `${eurTR(ent)} €`) + s(380, 115, `${eurTR(sal)} €`) + s(520, 115, `${eurTR(saldo)} €`)
+    + s(470, 160, 'ENTRADA DE') + s(540, 160, 'SALIDA DE') + s(0, 170, 'FECHA') + s(40, 170, 'TIPO') + s(110, 170, 'DESCRIPCIÓN') + s(610, 170, 'BALANCE')
+    + s(470, 180, 'DINERO') + s(540, 180, 'DINERO') + filas.join('')
+    + s(0, top + 30, 'RESUMEN DEL BALANCE') + s(0, top + 60, 'Trade Republic Bank GmbH www.traderepublic.com');
+  return { n: movs.length, saldoFinal: saldo, html: `<html><head><style>body{font:8px Arial,sans-serif;position:relative;margin:0}span{white-space:nowrap}</style></head><body><div style="position:relative;height:${top + 100}px">${h}</div></body></html>` };
+}
+const eurTR = n => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' });
+module.exports.htmlTradeRepublic = htmlTradeRepublic;

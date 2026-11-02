@@ -98,7 +98,7 @@ module.exports = {
       assert.equal(r.g, 'ACTIVIDADES'); assert.equal(r.ps, 'SALUD'); assert.equal(r.suma, 100); assert.equal(r.salud, 'Salud'); assert.equal(r.regla, 'ACTIVIDADES');
       assert.equal(await p.evaluate(() => S.reglas.find(r => r.t === 'TRADE REPUBLIC').c), 'INVERSION');
       const r2 = await p.evaluate(() => ({ t: S.mov.find(x => x.id === 'c').cat, a: S.mov.find(x => x.id === 'd').cat, pa: S.aj.pct.AHORRO, pi: S.aj.pct.INVERSION, n: S.cats.find(c => c.id === 'AHORRO').n }));
-      assert.equal(r2.t, 'INVERSION'); assert.equal(r2.a, 'AHORRO'); assert.equal(r2.pa + r2.pi, 20); assert.equal(r2.n, 'Ahorro');
+      assert.equal(r2.t, 'INVERSION'); assert.equal(r2.a, 'TRASPASO', 'el ahorro ya no es categoría: pasar a otra cuenta es traspaso'); assert.equal(r2.pa + r2.pi, 20); assert.equal(r2.n, 'Ahorro');
       assert.match(await p.textContent('#groups'), /Necesidades/);
       await p.reload(); await L.esperar(300);
       assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 'a').cat), 'ACTIVIDADES', 'el cambio queda guardado');

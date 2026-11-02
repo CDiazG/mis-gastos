@@ -75,7 +75,7 @@ async function salir(forzar){
 }
 $('#logout').onclick=()=>salir(false);
 $('#miNombreF').onsubmit=async e=>{e.preventDefault();const n=$('#miNombre').value.trim();if(!n||!USER)return;
-  try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',USER.uid),{nombre:n});USER.nombre=n;pintarCuenta();$('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(n)+'</b> ('+esc(USER.email)+').';toast('Nombre guardado')}catch(err){toast('Error: '+(err.code||err.message),true)}};
+  try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',USER.uid),{nombre:n});USER.nombre=n;fb.fsM.setDoc(fb.fsM.doc(fb.db,'perfiles',USER.uid),{nombre:n,foto:USER.foto||''}).catch(()=>{});pintarCuenta();$('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(n)+'</b> ('+esc(USER.email)+').';toast('Nombre guardado')}catch(err){toast('Error: '+(err.code||err.message),true)}};
 $('#cambiarPass').onclick=async()=>{if(!NUBE||!USER)return;try{await fb.authM.sendPasswordResetEmail(fb.auth,USER.email);toast('Te he enviado un correo para cambiar la contraseña')}catch(e){toast(errAuth(e),true)}};
 async function entrar(u){
   const {doc,getDoc,setDoc}=fb.fsM;
@@ -89,7 +89,8 @@ async function entrar(u){
   if(admin&&!perfil){perfil={nombre:'Administrador',email:u.email,activo:true,rol:'admin',creado:Date.now()};await setDoc(doc(fb.db,'users',u.uid),perfil)}
   if(!perfil||!perfil.activo){await fb.authM.signOut(fb.auth);
     mostrarLogin(perfil&&perfil.estado==='pendiente'&&!perfil.eliminado?'Tu solicitud de acceso está pendiente. Podrás entrar cuando el administrador la apruebe.':perfil&&perfil.estado==='rechazada'?'Tu solicitud de acceso no ha sido aceptada.':'Tu cuenta no está activa. Habla con el administrador.',!(perfil&&perfil.estado==='pendiente'));return}
-  USER={uid:u.uid,email:u.email,nombre:perfil.nombre||u.email,admin};
+  USER={uid:u.uid,email:u.email,nombre:perfil.nombre||u.email,admin,foto:perfil.foto||''};
+  try{fb.fsM.setDoc(doc(fb.db,'perfiles',u.uid),{nombre:USER.nombre,foto:USER.foto}).catch(e=>console.warn('perfil público',e.code||e))}catch(_){}
   try{fb.fsM.updateDoc(doc(fb.db,'users',u.uid),{ultimoAcceso:Date.now()}).catch(e=>console.warn('último acceso',e.code||e))}catch(_){}
   try{sessionStorage.setItem('mg-sesion',u.uid)}catch(_){}
   if(admin){try{localStorage.setItem('mg-admin-ok','1')}catch(_){}$('#lAlta').classList.add('hide')}

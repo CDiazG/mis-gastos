@@ -12,12 +12,14 @@ const leer = f => fs.readFileSync(path.join(__dirname, f), 'utf8');
 
 // Contexto de navegador con Firebase simulado y configuración de prueba.
 async function nuevoContexto(browser, opciones = {}) {
-  const ctx = await browser.newContext({ viewport: { width: 1300, height: 900 }, acceptDownloads: true, ...opciones });
+  const { conTutorial, ...resto } = opciones;
+  const ctx = await browser.newContext({ viewport: { width: 1300, height: 900 }, acceptDownloads: true, ...resto });
   await ctx.route('https://www.gstatic.com/**', r => {
     const u = r.request().url();
     const f = u.includes('auth') ? 'auth.js' : u.includes('firestore') ? 'fs.js' : 'app.js';
     r.fulfill({ contentType: 'text/javascript', body: leer('simulador/' + f) });
   });
+  if (!conTutorial) await ctx.addInitScript(() => { try { localStorage.setItem('mg-sin-tuto', '1'); } catch (e) {} });
   const hash = crypto.createHash('sha256').update(ADMIN).digest('hex');
   await ctx.route('**/js/config.js*', r => r.fulfill({
     contentType: 'text/javascript',

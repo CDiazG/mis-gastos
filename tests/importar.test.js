@@ -1,7 +1,7 @@
 // Lectura de extractos en PDF (EVO y Revolut inventados), categorías, nómina y duplicados.
 const assert = require('assert');
 const L = require('./lib');
-const { htmlEvo, htmlRevolut } = require('./extractos');
+const { htmlEvo, htmlRevolut, htmlTradeRepublic } = require('./extractos');
 
 async function dentro(browser, estado) {
   const ctx = await L.nuevoContexto(browser); (estado.contextos ||= []).push(ctx);
@@ -73,6 +73,44 @@ module.exports = {
       assert.equal(f('INDIGO').cat, 'TRANSPORTE', 'se clasifica por el detalle (Parkia)');
       assert.ok(!/Tarjeta/.test(f('Pizzeria').d || ''), 'la línea de la tarjeta no se guarda');
       assert.equal(f('Pizzeria').cat, 'OCIO');
+    })();
+  },
+  'lee un extracto de Trade Republic sin contar dos veces la inversión'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      // ya tenía la transferencia de EVO a Trade Republic como Inversión y un mes del Excel
+      await p.evaluate(() => {
+        S.mov.push({ id: uid(), fecha: '2026-10-04', mes: '2026-10', concepto: 'TRANSF /TRADE REPUBLIC', importe: -500, cat: 'INVERSION', metodo: 'banco', cuenta: 'EVO', origen: 'extracto', key: 'x' });
+        S.mov.push({ id: uid(), fecha: '2026-09-01', mes: '2026-09', concepto: 'Supermercado', importe: -150, cat: 'SUPERMERCADO', metodo: 'banco', cuenta: '', origen: 'excel' });
+        save();
+      });
+      const tr = htmlTradeRepublic();
+      await subir(p, [{ name: 'Certificado.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, tr.html) }]);
+      const r = await p.evaluate(() => ({ res: IMP.res[0], sust: Object.values(IMP.sust).filter(Boolean).length, dobles: IMP.dobles && IMP.dobles.lista.length,
+        filas: IMP.rows.map(x => ({ c: x.concepto, f: x.fecha, i: x.importe, cat: x.cat, nom: !!x.nomina, est: x.estado })) }));
+      assert.equal(r.res.banco, 'Trade Republic');
+      assert.equal(r.res.movs.length, tr.n);
+      assert.equal(r.res.cuadra, true);
+      assert.equal(r.res.saldoFin, tr.saldoFinal);
+      const f = c => r.filas.find(x => x.c.startsWith(c));
+      assert.equal(f('Plan de inversión').f, '2026-09-02', 'septiembre partido en dos líneas');
+      assert.equal(f('Plan de inversión').cat, 'INVERSION');
+      assert.equal(f('Plan de inversión').i, -150);
+      assert.equal(f('Plan de inversión').est, 'nuevo', 'no se confunde con un apunte del Excel');
+      assert.equal(f('Compra').cat, 'INVERSION');
+      assert.equal(f('Venta').i, 70.12);
+      assert.equal(f('Transferencia de PERSONA').cat, 'TRASPASO');
+      assert.equal(f('Transferencia de PERSONA').nom, false);
+      assert.equal(f('Transferencia de OTRA').cat, '');
+      assert.equal(r.sust, 0, 'no ofrece sustituir el Excel');
+      assert.equal(r.dobles, 1);
+      await p.click('#impGo'); await L.esperar(500);
+      const d = await p.evaluate(() => ({ evo: S.mov.find(x => x.concepto === 'TRANSF /TRADE REPUBLIC').cat, inv: stats('2026-10').by.INVERSION,
+        c: S.cuentas.find(c => c.n === 'Trade Republic') }));
+      assert.equal(d.evo, 'TRASPASO');
+      assert.equal(Math.round(d.inv * 100) / 100, 129.88);
+      assert.equal(d.c.v, tr.saldoFinal);
+      assert.equal(d.c.inversion, 1);
     })();
   },
 };

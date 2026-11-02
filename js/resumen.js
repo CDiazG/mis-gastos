@@ -2,28 +2,29 @@
 "use strict";
 /* ============ Resumen ============ */
 function rResumen(){
-  const h=$('#hola');h.innerHTML=NUBE&&USER?`<span class="avatar">${esc((USER.nombre||'?').charAt(0).toUpperCase())}</span><span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b> · ${esc(USER.email)}</span>`:'';
+  const h=$('#hola');h.innerHTML=NUBE&&USER?`${avatarHtml(USER.uid,USER.nombre,USER.foto||'',26)}<span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b> · ${esc(USER.email)}</span>`:'';
   const st=stats(MES);
-  const libre=st.ingresos-st.consumo-st.diezmo;
+  const libre=st.ahorro;
   const tasa=st.ingresos>0?libre/st.ingresos:null;
-  const queda=st.ingresos-st.consumo-st.ahorro-st.diezmo;
+  const pObj=(+S.aj.pct.AHORRO||0)+(+S.aj.pct.INVERSION||0),obj=r2(st.base*pObj/100);
+  const logrado=obj>0&&libre>=obj-0.5,esteMes=MES===mesDe(hoy());
   $('#kpis').innerHTML=`
    <div class="card pad kpi"><div class="l">Ingresos</div><div class="v num pos">${eur(st.ingresos)}</div><div class="s">${st.ms.filter(x=>x.cat==='INGRESO').map(x=>esc(x.concepto)).slice(0,2).join(' · ')||'Sin ingresos apuntados'}</div></div>
    <div class="card pad kpi"><div class="l">Gastado</div><div class="v num">${eur(st.consumo)}</div><div class="s">${st.base>0?Math.round(st.consumo/st.base*100)+'% de la base del presupuesto':'&nbsp;'}</div></div>
-   <div class="card pad kpi"><div class="l">Ahorro del mes</div><div class="v num ${libre<0?'neg':''}">${eur(libre)}</div><div class="s">${tasa!==null?Math.round(tasa*100)+'% de lo ingresado':'&nbsp;'}${[st.by.INVERSION?eur(st.by.INVERSION,0)+' invertidos':'',st.by.AHORRO?eur(st.by.AHORRO,0)+' apartados':''].filter(Boolean).map(t=>' · '+t).join('')}</div></div>
-   <div class="card pad kpi"><div class="l">Sin asignar</div><div class="v num ${queda<0?'neg':''}">${eur(queda)}</div><div class="s">Ingresos − gastos − ahorro − diezmo</div></div>`;
+   <div class="card pad kpi"><div class="l">Ahorro del mes</div><div class="v num ${libre<0?'neg':''}">${eur(libre)}</div><div class="s">${tasa!==null?Math.round(tasa*100)+'% de lo ingresado · ':''}lo que no has gastado${st.by.INVERSION?` <br>${eur(st.by.INVERSION,0)} invertidos · ${eur(st.by.AHORRO,0)} en cuenta`:''}</div></div>
+   <div class="card pad kpi ${logrado?'kok':''}" id="kObj"><div class="l">Objetivo de ahorro ${pObj?`<span class="mut">· ${pObj}%</span>`:''}</div>${!pObj?'<div class="v mut" style="font-size:16px">Sin objetivo</div><div class="s">Ponlo en Ajustes (Ahorro + Inversión)</div>':!st.base?'<div class="v mut" style="font-size:16px">Sin ingresos</div><div class="s">Aún no hay ingresos este mes</div>':logrado?`<div class="v num pos">✓ Conseguido</div><div class="s">${eur(obj,0)} de objetivo · te sobran ${eur(libre-obj,0)}${esteMes?' (de momento)':''}</div>`:`<div class="v num">${eur(obj)}</div><div class="s">Te faltan ${eur(obj-libre,0)} · llevas ${Math.max(0,Math.round(libre/obj*100))}%</div><div class="bar" style="margin-top:8px"><i style="width:${Math.max(0,Math.min(100,libre/obj*100))}%"></i></div>`}</div>`;
   // alertas
   const al=[];
   if(st.sinCat)al.push(`<div class="alert"><span class="grow"><b>${st.sinCat} movimiento${st.sinCat>1?'s':''} sin categoría</b> (${eur(-st.sinCatImp)}). Cuentan como «Sin categorizar»; ponles categoría para que el presupuesto sea exacto.</span><button class="btn sm" data-act="sincat">Revisar</button></div>`);
   if(!st.ingresos&&S.aj.base==='ingresos'&&st.ms.length)al.push(`<div class="alert info"><span class="grow">Este mes no tiene ingresos apuntados, así que el presupuesto sale a 0. Puedes usar una base fija en Ajustes.</span></div>`);
   const pp=prestamosPendientes();
   if(Math.abs(pp)>0.009)al.push(`<div class="alert info"><span class="grow">${pp>0?'Te deben':'Debes'} <b>${eur(Math.abs(pp))}</b> en préstamos pendientes.</span><button class="btn sm" data-act="prest">Ver</button></div>`);
-  if(S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'} Descárgala y guárdala en tu ordenador o en Drive: si algo se borra por error, se puede recuperar con ella.</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
+  if(pref('avisoCopia')&&S.mov.length&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))al.push(`<div class="alert"><span class="grow">${S.ultimaCopia?'Hace más de un mes de la última copia de seguridad.':'Aún no has guardado ninguna copia de seguridad.'} Descárgala y guárdala en tu ordenador o en Drive: si algo se borra por error, se puede recuperar con ella.</span><button class="btn sm" data-act="copia">Guardar copia</button></div>`);
   if(NUBE&&USER&&USER.admin&&pendientesN())al.push(`<div class="alert"><span class="grow"><b>${pendientesN()} solicitud${pendientesN()>1?'es':''} de acceso</b> esperando tu aprobación.</span><button class="btn sm" data-act="usu">Revisar</button></div>`);
   if(NUBE&&USER&&USER.admin&&bzNuevas())al.push(`<div class="alert info"><span class="grow"><b>${bzNuevas()} sugerencia${bzNuevas()>1?'s':''} nueva${bzNuevas()>1?'s':''}</b> en el buzón.</span><button class="btn sm" data-act="bz">Leer</button></div>`);
   if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
   else{const sg=sugerencia();if(sg&&sg.cambia)al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
-  if(MES===mesDe(hoy())&&st.base>0){
+  if(pref('aviso80')&&MES===mesDe(hoy())&&st.base>0){
     const cerca=CATS.filter(c=>c.g!=='AHORRO').map(c=>({c,p:st.base*(S.aj.pct[c.id]||0)/100,v:st.by[c.id]||0})).filter(x=>x.p>0&&x.v>=x.p*0.8&&x.v<=x.p+0.5);
     if(cerca.length)al.push(`<div class="alert"><span class="grow"><b>Cerca del límite:</b> ${cerca.map(x=>`${esc(x.c.n)} (${Math.round(x.v/x.p*100)}%, quedan ${eur(x.p-x.v,0)})`).join(' · ')}</span></div>`);
   }
@@ -49,7 +50,7 @@ function rResumen(){
   // grupos
   const mAnt=addMes(MES,-1),stAnt=stats(mAnt),hayAnt=stAnt.ms.length>0;
   const dz=diezmoMes(MES,st);
-  const cmp=(id,v)=>{if(!hayAnt)return '';const d=r2(v-(stAnt.by[id]||0));if(Math.abs(d)<1)return '';
+  const cmp=(id,v)=>{if(!hayAnt||!pref('comparar'))return '';const d=r2(v-(stAnt.by[id]||0));if(Math.abs(d)<1)return '';
     return ` · <span class="${d>0?'neg':'pos'}" title="Comparado con ${nombreMes(mAnt)}">${d>0?'▲':'▼'} ${eur(Math.abs(d),0)} vs ${MESES[+mAnt.slice(5)-1].slice(0,3)}</span>`};
   $('#groups').innerHTML=GROUPS.map(g=>{
     const cs=CATS.filter(c=>c.g===g.id);
@@ -63,7 +64,11 @@ function rResumen(){
         const w=p>0?Math.min(100,v/p*100):(v>0?100:0);
         const over=v>p+0.5;
         const isSave=g.id==='AHORRO';
-        const cerca=!isSave&&!over&&p>0&&v>=p*0.8;
+        const cerca=pref('aviso80')&&!isSave&&!over&&p>0&&v>=p*0.8;
+        if(c.id==='AHORRO'){const wa=p>0?Math.max(0,Math.min(100,v/p*100)):0;
+          return `<div class="crow" data-cat="AHORRO"><div class="a"><span>${c.n} <span class="tag" title="Se calcula solo: ingresos − gastos − inversión − diezmo">automático</span></span><span class="num ${v<0?'neg':''}"><b>${eur(v)}</b></span></div>
+            <div class="bar"><i style="width:${wa}%"></i></div>
+            <div class="b"><span>Lo que no gastas ni inviertes · ${S.aj.pct[c.id]||0}% · objetivo ${eur(p,0)}</span><span class="num ${rest>0.5?'mut':'pos'}">${rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'}</span></div></div>`}
         if(c.id==='DIEZMO'&&dz){
           const w2=dz.debido>0?Math.min(100,dz.pagado/dz.debido*100):0;
           return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n} ${dz.pendiente>0.5?'<span class="tag cash">pendiente</span>':dz.debido>0?'<span class="tag good">al día</span>':''}</span><span class="num"><b>${eur(dz.pagado)}</b> <span class="mut small">de ${eur(dz.debido,0)}</span></span></div>
@@ -71,14 +76,15 @@ function rResumen(){
             <div class="b"><span>${dz.pct}% de los ingresos del mes</span>${dz.pendiente>0.5?`<button class="btn sm dzpag" type="button">Marcar ${eur(dz.pendiente,0)} pagado</button>`:'<span class="pos">pagado</span>'}</div></div>`}
         return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
           <div class="bar ${over&&!isSave?'over':cerca?'warn':''}"><i style="width:${w}%"></i></div>
-          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(rest>0.5?'faltan '+eur(rest,0):'cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
+          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
       }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
           <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
   }).join('');
-  $$('#groups .crow').forEach(r=>r.onclick=e=>{if(e.target.closest('.dzpag'))return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
+  $$('#groups .crow').forEach(r=>r.onclick=e=>{if(e.target.closest('.dzpag')||r.dataset.cat==='AHORRO')return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
   $$('#groups .dzpag').forEach(b=>b.onclick=()=>{aTipo='gasto';cCat='DIEZMO';cCatManual=true;aPago='__efectivo';go('efectivo');$('#cImp').value=fmt(dz.pendiente);$('#cCon').value='Diezmo '+nombreMes(MES);
     const ult=addMes(MES,1)+'-01';const d=new Date(ult);d.setDate(0);const fin=d.toISOString().slice(0,10);$('#cFecha').value=hoy()<fin?hoy():fin;$('#cImp').focus();toast('Revisa el importe y la forma de pago, y pulsa «Añadir gasto»')});
   rGrafico(st);rFijosCard();rObjCard();
+  $('#grafCard').classList.toggle('hide',!pref('verGrafico'));$('#fijosCard').classList.toggle('hide',!pref('verFijos'));$('#objCard').classList.toggle('hide',!pref('verObjetivos'));
   // especiales
   const esp=SPECIAL.filter(c=>c.id!=='INGRESO').map(c=>({c,v:st.by[c.id]||0})).filter(x=>Math.abs(x.v)>0.009);
   const cuentas=S.cuentas.filter(c=>c.banco&&c.v!=null);
@@ -169,7 +175,7 @@ function infoObj(o){const ah=ahorradoObj(o),falta=Math.max(0,r2(o.meta-ah));let 
   if(o.mesMeta){meses=difMeses(mesDe(hoy()),o.mesMeta)+1;if(meses>0&&falta>0)alMes=falta/meses}
   return {ah,falta,alMes,meses,pct:o.meta>0?Math.min(100,ah/o.meta*100):0}}
 function objHtml(o,compacto){const i=infoObj(o);
-  return `<div class="crow" style="cursor:default" data-o="${o.id}"><div class="a"><span>${esc(o.nombre)}${i.falta<=0?' <span class="tag good">conseguido</span>':''}</span><span class="num"><b>${eur(i.ah,0)}</b> <span class="mut small">de ${eur(o.meta,0)}</span></span></div>
+  return `<div class="crow ${i.falta<=0?'objok':''}" style="cursor:default" data-o="${o.id}"><div class="a"><span>${i.falta<=0?'✓ ':''}${esc(o.nombre)}${i.falta<=0?' <span class="tag good">conseguido</span>':''}</span><span class="num"><b>${eur(i.ah,0)}</b> <span class="mut small">de ${eur(o.meta,0)}</span></span></div>
     <div class="bar"><i style="width:${i.pct}%"></i></div>
     <div class="b"><span>${i.falta>0?'Faltan '+eur(i.falta,0):'¡Objetivo cumplido!'}${o.mesMeta?' · para '+nombreMes(o.mesMeta):''}</span><span>${i.alMes?'≈ '+eur(i.alMes,0)+' al mes':(o.mesMeta&&i.falta>0&&i.meses<=0?'<span class="neg">fecha pasada</span>':'')}</span></div>
     ${compacto?'':`<div class="toolbar" style="margin:8px 0 0"><button class="btn sm pri oa">＋ Aportar</button><button class="btn sm or">− Retirar</button><span class="sp"></span><button class="btn sm icon oe" title="Editar">✎</button><button class="btn sm icon dan od" title="Borrar">✕</button></div>`}</div>`}
@@ -191,7 +197,8 @@ function rObjetivos(){
   $$('#objetivos [data-o]').forEach(row=>{const o=os.find(x=>x.id===row.dataset.o);
     const mov=signo=>dialog((signo>0?'Aportar a «':'Retirar de «')+o.nombre+'»',`<div class="formgrid"><label>Importe</label><input type="text" id="oImp" inputmode="decimal"><label>Fecha</label><input type="date" id="oF" value="${hoy()}"></div>`,
       [{t:'Cancelar'},{t:signo>0?'Aportar':'Retirar',cls:'pri',fn:()=>{const v=parseNum($('#oImp').value);if(!isFinite(v)||v<=0){toast('Importe no válido',true);return false}
-        (o.aport||(o.aport=[])).push({f:$('#oF').value,i:r2(v*signo)});save();rObjetivos();toast(signo>0?'Aportado':'Retirado')}}]);
+        const antes=infoObj(o).falta;(o.aport||(o.aport=[])).push({f:$('#oF').value,i:r2(v*signo)});save();rObjetivos();
+        toast(antes>0&&infoObj(o).falta<=0?'🎉 ¡Objetivo «'+o.nombre+'» conseguido!':signo>0?'Aportado':'Retirado')}}]);
     $('.oa',row).onclick=()=>mov(1);$('.or',row).onclick=()=>mov(-1);
     $('.oe',row).onclick=()=>dialog('Editar objetivo',`<div class="formgrid"><label>Nombre</label><input type="text" id="eoN" value="${esc(o.nombre)}"><label>Meta</label><input type="text" id="eoM" value="${fmt(o.meta)}" inputmode="decimal"><label>Para cuándo</label><input type="month" id="eoF" value="${o.mesMeta||''}"></div>
       ${(o.aport||[]).length?'<p class="small mut">Aportaciones: '+o.aport.slice(-6).map(a=>fFecha(a.f)+' '+(a.i>0?'+':'')+eur(a.i,0)).join(' · ')+'</p>':''}`,

@@ -43,8 +43,100 @@ function dateAt(t,i){
   }
   return null;
 }
+// Trade Republic: cada movimiento ocupa varias líneas (día y mes arriba, importe y saldo
+// en medio, año abajo), así que se agrupan las líneas desde la fecha hasta el año.
+const TR_DIAS=f=>Math.round(new Date(f+'T12:00:00Z').getTime()/864e5);
+function esMismaPersona(a,b){
+  const ta=norm(a).trim().split(' ').filter(x=>x.length>2),tb=new Set(norm(b).trim().split(' '));
+  if(!ta.length)return false;const n=ta.filter(x=>tb.has(x)).length;return n>=Math.min(2,ta.length);
+}
+function movTradeRepublic(tipo,desc,importe,titular){
+  const d=desc.replace(/\s+/g,' ').trim(),TT=norm(tipo),D=norm(d);
+  const qty=d.match(/,?\s*(?:quantity|cantidad)\s*:?\s*([\d.,]+)\s*$/i);
+  const sinQty=qty?d.slice(0,qty.index).trim():d;
+  const isin=sinQty.match(/\b([A-Z]{2}[A-Z0-9]{9}\d)\b/);
+  const valor=isin?sinQty.slice(isin.index+isin[0].length).trim():sinQty;
+  const det=[isin?isin[1]:'',qty?qty[1]+' participaciones':''].filter(Boolean).join(' · ');
+  let m;
+  if(/ SAVINGS PLAN | PLAN DE (INVERSION|AHORRO) /.test(D))return {concepto:'Plan de inversión · '+valor,detalle:det,cat:'INVERSION',regla:'plan de inversión'};
+  if(/ (BUY|KAUF) | COMPRA /.test(D)&&/ TRADE | ORDER | OPERACION | ORDEN /.test(D))return {concepto:'Compra · '+valor,detalle:det,cat:'INVERSION',regla:'compra de inversión'};
+  if(/ (SELL|VERKAUF) | VENTA /.test(D)&&/ TRADE | ORDER | OPERACION | ORDEN /.test(D))return {concepto:'Venta · '+valor,detalle:det,cat:'INVERSION',regla:'venta de inversión'};
+  if(/ (DIVIDEND|DIVIDENDO|DISTRIBUTION|DISTRIBUCION)/.test(D+TT))return {concepto:'Dividendo · '+valor,detalle:det,cat:'INGRESO',regla:'dividendo'};
+  if(/ (INTEREST|INTERES|INTERESES|ZINS)/.test(D+TT))return {concepto:'Intereses Trade Republic',detalle:'',cat:importe>0?'INGRESO':'',regla:'intereses'};
+  if((m=d.match(/^(?:Incoming transfer from|Transferencia (?:entrante )?de)\s+(.+?)(?:\s*\(([A-Z]{2}\d{2}[A-Z0-9]+)\))?$/i))){
+    const yo=esMismaPersona(titular,m[1]);
+    return {concepto:'Transferencia de '+m[1],detalle:m[2]||'',cat:yo?'TRASPASO':'',regla:yo?'desde otra cuenta tuya':''};
+  }
+  if((m=d.match(/^(?:Outgoing transfer (?:to|for)|Transferencia (?:saliente )?(?:a|para))\s+(.+?)(?:\s*\(([A-Z]{2}\d{2}[A-Z0-9]+)\))?$/i))){
+    const yo=esMismaPersona(titular,m[1]);
+    return {concepto:'Transferencia a '+m[1],detalle:m[2]||'',cat:yo?'TRASPASO':'',regla:yo?'a otra cuenta tuya':''};
+  }
+  if(/ OPERAR | TRADE /.test(TT))return {concepto:valor||d,detalle:det,cat:'INVERSION',regla:'operación de bolsa'};
+  return {concepto:d||tipo||'(sin concepto)',detalle:'',cat:'',regla:''};
+}
+function parseTradeRepublic({lines}){
+  let titular='',cols={},saldoIni=null,saldoFin=null,esperaResumen=false,prev=null,fila=null,anioDef=null;
+  const movs=[];
+  const cerrar=anio=>{
+    if(!fila)return;const f=fila;fila=null;
+    const y=anio||f.anio||anioDef;if(!y||!f.mo)return;
+    const toks=f.toks;const amts=toks.filter(x=>isAmt(x.s));if(!amts.length)return;
+    const dx=cols.desc!=null?cols.desc-4:140,ax=cols.entrada!=null?Math.min(cols.entrada,cols.salida||1e9)-6:400;
+    const palabras=toks.filter(x=>!isAmt(x.s)&&x.s!=='€');
+    const tipo=palabras.filter(x=>x.x<dx).map(x=>x.s).join(' ');
+    const desc=palabras.filter(x=>x.x>=dx&&x.x<ax).map(x=>x.s).join(' ');
+    let saldo=null,impTok=amts[0];if(amts.length>=2){saldo=amt(amts[amts.length-1].s);impTok=amts[amts.length-2]}
+    const imp=Math.abs(amt(impTok.s));let signed=null,chk=null;
+    if(saldo!=null&&prev!=null){const diff=r2(saldo-prev);if(Math.abs(Math.abs(diff)-imp)<0.011){signed=diff<0?-imp:imp;chk=true}else chk=false}
+    if(signed==null&&cols.entrada!=null&&cols.salida!=null)signed=Math.abs(impTok.x-cols.entrada)<Math.abs(impTok.x-cols.salida)?imp:-imp;
+    if(signed==null)signed=-imp;
+    const info=movTradeRepublic(tipo,desc,signed,titular);
+    const fecha=`${y}-${String(f.mo).padStart(2,'0')}-${String(f.d).padStart(2,'0')}`;
+    movs.push({fecha,concepto:info.concepto,detalle:info.detalle,importe:r2(signed),saldo,ref:'',chk,cat:info.cat,regla:info.regla});
+    if(saldo!=null)prev=saldo;
+    if(saldoIni==null&&saldo!=null)saldoIni=r2(saldo-signed);
+  };
+  let pag=0;
+  for(const l of lines){
+    const t=l.t,txt=t.map(x=>x.s).join(' '),C=norm(txt).replace(/ /g,'');
+    if(l.p!==pag){cerrar(null);pag=l.p}
+    // titular (a la izquierda de «FECHA» en la cabecera) y periodo del extracto
+    const fx=t.findIndex(x=>x.s==='FECHA'&&x.x>200);
+    if(fx>0&&!titular){titular=t.slice(0,fx).map(x=>x.s).join(' ');const ys=t.slice(fx).filter(x=>/^\d{4}$/.test(x.s));if(ys.length)anioDef=+ys[0].s;continue}
+    if(C.includes('BALANCEINICIAL')&&C.includes('BALANCEFINAL')){esperaResumen=true;continue}
+    const amts=t.filter(x=>isAmt(x.s));
+    if(esperaResumen&&amts.length>=2){saldoIni=amt(amts[0].s);saldoFin=amt(amts[amts.length-1].s);prev=saldoIni;esperaResumen=false;continue}
+    if(t.some(x=>x.s==='ENTRADA')&&t.some(x=>x.s==='SALIDA')){cols.entrada=t.find(x=>x.s==='ENTRADA').x;cols.salida=t.find(x=>x.s==='SALIDA').x;continue}
+    if(t[0]&&t[0].s==='FECHA'&&t.some(x=>/^DESCRIPCI/.test(x.s))){cols.desc=t.find(x=>/^DESCRIPCI/.test(x.s)).x;cols.tipo=(t.find(x=>x.s==='TIPO')||{}).x;continue}
+    if(cols.desc==null)continue;
+    const lim=cols.tipo!=null?cols.tipo-4:cols.desc-4;
+    const mo=t[1]&&MABR[t[1].s.toLowerCase().replace('.','')];
+    if(t[0]&&/^\d{1,2}$/.test(t[0].s)&&t[0].x<lim&&mo){
+      cerrar(null);
+      fila={d:+t[0].s,mo,toks:[]};let resto=t.slice(2);
+      if(resto[0]&&/^\d{4}$/.test(resto[0].s)&&resto[0].x<lim){const y=+resto[0].s;fila.toks.push(...resto.slice(1));
+        if(resto.slice(1).some(x=>isAmt(x.s))){cerrar(y);continue}fila.anio=y;continue}
+      fila.toks.push(...resto);continue;
+    }
+    // día solo en su línea; el mes («sept») llega en la siguiente
+    if(t[0]&&/^\d{1,2}$/.test(t[0].s)&&t[0].x<lim&&!(t[1]&&t[1].x<lim)){cerrar(null);fila={d:+t[0].s,mo:null,toks:t.slice(1)};continue}
+    if(!fila)continue;
+    if(fila.mo==null&&t[0]&&t[0].x<lim&&MABR[t[0].s.toLowerCase().replace('.','')]){fila.mo=MABR[t[0].s.toLowerCase().replace('.','')];fila.toks.push(...t.slice(1));continue}
+    if(t[0]&&/^\d{4}$/.test(t[0].s)&&t[0].x<lim){fila.toks.push(...t.slice(1));cerrar(+t[0].s);continue}
+    if(/^(RESUMENDELBALANCE|NOTASSOBRE|TRADEREPUBLICBANKGMBH)/.test(C)){cerrar(fila.anio);continue}
+    fila.toks.push(...t);
+    if(fila.anio&&amts.length)cerrar(fila.anio);
+  }
+  cerrar(null);
+  const sum=r2(movs.reduce((a,m)=>a+m.importe,0));
+  const finCalc=saldoIni!=null?r2(saldoIni+sum):null;
+  const finReal=saldoFin!=null?saldoFin:(movs.length?movs[movs.length-1].saldo:null);
+  const cuadra=finCalc!=null&&finReal!=null?Math.abs(finCalc-finReal)<0.011:null;
+  return {banco:'Trade Republic',inversion:true,movs,saldoIni,saldoFin:finReal,finCalc,cuadra,malos:movs.filter(m=>m.chk===false).length};
+}
 function parseStatement({lines,text}){
   const T=norm(text);
+  if(T.includes(' TRADE REPUBLIC BANK')||T.includes(' TRBKDEBB'))return parseTradeRepublic({lines,text});
   let banco='';if(T.includes(' REVOLUT BANK')||T.includes(' REVOESM'))banco='Revolut';else if(T.includes(' EVO ')||T.includes(' BKBKESMM'))banco='EVO';else if(T.includes(' BANKINTER'))banco='Bankinter';
   let cols=null,expectSum=false,saldoIni=null,saldoFin=null,prev=null,last=null,lastY=0,cont=0;
   const movs=[];

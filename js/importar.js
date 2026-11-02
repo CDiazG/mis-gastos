@@ -25,25 +25,51 @@ function prepararRevision(res){
   for(const r of res){
     if(r.error)continue;
     if(r.banco&&!S.cuentas.some(c=>c.n===r.banco))S.cuentas.push({n:r.banco,v:null,f:null,banco:1});
+    if(r.inversion){const c=S.cuentas.find(c=>c.n===r.banco);if(c)c.inversion=1}
     r.cuenta=r.banco||(S.cuentas.find(c=>c.banco)||{n:'EVO'}).n;
     r.movs.forEach((m,i)=>{
-      const ac=autoCatR(m.concepto,m.detalle,m.importe);let cat=ac.c;
-      const nomina=esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
+      const ac=m.cat?{c:m.cat,r:{t:m.regla||r.banco,u:false}}:autoCatR(m.concepto,m.detalle,m.importe);let cat=ac.c;
+      const nomina=!m.cat&&!r.inversion&&esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
       const mes=mesPara({cat,nomina,fecha:m.fecha});
       const key=[r.cuenta,m.fecha,m.importe.toFixed(2),m.saldo!=null?m.saldo.toFixed(2):'',norm(m.concepto).trim().slice(0,24)].join('|');
       rows.push({...m,i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
     });
   }
-  // meses con datos del Excel que el extracto puede sustituir
+  const dobles=buscarDobles(rows);
+  // meses con datos del Excel que el extracto puede sustituir (no con una cuenta de inversión)
   const sust={};
   for(const x of rows){
-    if(x.cat==='INGRESO')continue;
+    if(x.cat==='INGRESO'||x.src.inversion)continue;
     const m=mesDe(x.fecha);
     if(sust[m]===undefined){const n=S.mov.filter(y=>y.origen==='excel'&&y.mes===m&&y.metodo!=='efectivo'&&y.cat!=='INGRESO').length;sust[m]=n?{n,on:true}:null}
   }
-  IMP={res,rows,sust,soloPend:false};
+  IMP={res,rows,sust,dobles,soloPend:false};
   marcarDuplicados();
   rImport();
+}
+// Cuentas de inversión (Trade Republic): el dinero que llega desde otra cuenta tuya es un traspaso
+// y la inversión se cuenta al comprar los fondos. La transferencia que salió de la otra cuenta
+// estaba como Inversión, así que se pasa a traspaso para no contarla dos veces.
+function buscarDobles(rows){
+  const inv=new Set(S.cuentas.filter(c=>c.inversion).map(c=>c.n));
+  rows.filter(x=>x.src.inversion).forEach(x=>inv.add(x.cuenta));
+  const cerca=(a,b)=>Math.abs(TR_DIAS(a)-TR_DIAS(b))<=5;
+  const usados=new Set(),lista=[];
+  // 1) movimientos de este mismo extracto: transferencia a la cuenta de inversión ya registrada
+  for(const x of rows){
+    if(x.src.inversion||x.cat!=='INVERSION'||x.importe>=0)continue;
+    const y=S.mov.find(y=>inv.has(y.cuenta)&&y.cat==='TRASPASO'&&Math.abs(y.importe+x.importe)<0.005&&cerca(y.fecha,x.fecha)&&!usados.has(y));
+    const z=!y&&rows.find(z=>z.src.inversion&&z.cat==='TRASPASO'&&Math.abs(z.importe+x.importe)<0.005&&cerca(z.fecha,x.fecha)&&!usados.has(z));
+    if(y||z){usados.add(y||z);x.cat='TRASPASO';x.auto=true;x.regla='ya está en '+(y?y.cuenta:z.cuenta);x.reglaU=false}
+  }
+  // 2) movimientos ya guardados de otras cuentas que corresponden a los traspasos de este extracto
+  for(const x of rows){
+    if(!x.src.inversion||x.cat!=='TRASPASO'||x.importe<=0)continue;
+    if(rows.some(z=>!z.src.inversion&&z.cat==='TRASPASO'&&Math.abs(z.importe+x.importe)<0.005&&cerca(z.fecha,x.fecha)))continue;
+    const y=S.mov.find(y=>!inv.has(y.cuenta)&&y.cat==='INVERSION'&&!usados.has(y.id)&&Math.abs(y.importe+x.importe)<0.005&&(cerca(y.fecha,x.fecha)||(y.origen==='excel'&&(y.mes||mesDe(y.fecha))===mesDe(x.fecha))));
+    if(y){usados.add(y.id);lista.push(y)}
+  }
+  return lista.length?{lista,on:true}:null;
 }
 function marcarDuplicados(){
   const quitar=new Set();
@@ -52,7 +78,7 @@ function marcarDuplicados(){
   const usados=new Set();
   for(const x of IMP.rows){
     if(keys.has(x.key)){x.estado='ya';x.sel=false;x.dupDe=null;continue}
-    const d=S.mov.find(y=>!y.key&&y.metodo!=='efectivo'&&!quitar.has(y.id)&&!usados.has(y.id)&&y.mes===x.mes&&Math.abs(y.importe-x.importe)<0.005);
+    const d=S.mov.find(y=>!y.key&&y.metodo!=='efectivo'&&!quitar.has(y.id)&&!usados.has(y.id)&&y.mes===x.mes&&Math.abs(y.importe-x.importe)<0.005&&(!x.src.inversion||y.cuenta===x.cuenta));
     if(d){usados.add(d.id);x.estado='dup';x.dupDe=d;if(x._userSel===undefined)x.sel=false}
     else{x.estado='nuevo';x.dupDe=null;if(x._userSel===undefined)x.sel=true}
   }
@@ -71,10 +97,13 @@ function rImport(){
       <div class="it"><div class="l">Movimientos</div><div class="v">${r.movs.length} · ${fFecha(f[0])} – ${fFecha(f[f.length-1])}</div></div>
       <div class="it"><div class="l">Saldo inicial → final</div><div class="v num">${r.saldoIni!=null?eur(r.saldoIni):'?'} → ${r.saldoFin!=null?eur(r.saldoFin):'?'}</div></div>
       <div class="it"><div class="l">Comprobación</div><div class="v">${r.cuadra===true?'<span class="ok">✓ Cuadra con el saldo del banco</span>':r.cuadra===false?`<span class="ko">✗ No cuadra (calculado ${eur(r.finCalc)})</span>`:'<span class="mut">Sin saldo para comprobar</span>'}</div></div>
-    </div>${r.malos?`<p class="small ko" style="margin:8px 0 0">${r.malos} líneas no encajan con el saldo; revisa sus importes.</p>`:''}</div>`;
+    </div>${r.inversion?`<p class="small mut" style="margin:8px 0 0">Cuenta de inversión: las compras de fondos cuentan como <b>Inversión</b> el día que se hacen, las ventas la reducen y el dinero que llega desde tus otras cuentas es un <b>traspaso</b>. El saldo es el dinero sin invertir, no el valor de los fondos.</p>`:''}${r.malos?`<p class="small ko" style="margin:8px 0 0">${r.malos} líneas no encajan con el saldo; revisa sus importes.</p>`:''}</div>`;
   }
   const sm=Object.entries(IMP.sust).filter(([m,v])=>v);
   if(sm.length)h+=`<div class="alert info" style="margin-top:14px;flex-direction:column;align-items:stretch">${sm.map(([m,v])=>`<label class="pill"><input type="checkbox" data-sust="${m}" ${v.on?'checked':''}> Sustituir los ${v.n} apuntes del Excel de <b>${nombreMes(m)}</b> por los del extracto (el efectivo y los ingresos del Excel se mantienen)</label>`).join('')}</div>`;
+  const db=IMP.dobles;
+  if(db){const tot=r2(-db.lista.reduce((a,y)=>a+y.importe,0)),cs=[...new Set(db.lista.map(y=>y.cuenta||'el Excel'))].join(', ');
+    h+=`<div class="alert info" style="margin-top:14px"><label class="pill grow"><input type="checkbox" id="impDobles" ${db.on?'checked':''}> Pasar a «Traspaso entre mis cuentas» ${db.lista.length} transferencia${db.lista.length>1?'s':''} a ${esc(IMP.res.find(r=>r.inversion).banco)} (${eur(tot)}) que ya tenías como Inversión en ${esc(cs)}. Con este extracto la inversión se cuenta al comprar los fondos; así no se cuenta dos veces (recomendado).</label></div>`}
   const R=IMP.rows;
   if(R.length){
     const pend=R.filter(x=>x.sel&&!x.cat).length,nsel=R.filter(x=>x.sel).length;
@@ -97,6 +126,7 @@ function rImport(){
   $$('[data-cuenta]',o).forEach(s=>s.onchange=()=>{const r=IMP.res[+s.dataset.cuenta];r.cuenta=s.value;IMP.rows.filter(x=>x.src===r).forEach(x=>{x.cuenta=s.value;x.key=[x.cuenta,...x.key.split('|').slice(1)].join('|')});marcarDuplicados();rImport()});
   $$('[data-sust]',o).forEach(c=>c.onchange=()=>{IMP.sust[c.dataset.sust].on=c.checked;marcarDuplicados();rImport()});
   const ib=$('#impBiz');if(ib)ib.onchange=()=>{const c=ib.value;if(!c)return;let n=0;IMP.rows.forEach(x=>{if(!x.cat&&isBizum(x.concepto)&&x.importe>0){x.cat=c;x.auto=false;n++}});toast(n+' Bizum actualizados');marcarDuplicados();rImport()};
+  const idb=$('#impDobles');if(idb)idb.onchange=()=>{IMP.dobles.on=idb.checked};
   const ip=$('#impPend');if(ip)ip.onchange=()=>{IMP.soloPend=ip.checked;rImport()};
   const ia=$('#impAll');if(ia)ia.onchange=()=>{IMP.rows.forEach(x=>{if(x.estado!=='ya'){x.sel=ia.checked;x._userSel=true}});rImport()};
   $$('tr[data-k]',o).forEach(tr=>{const x=IMP.rows[+tr.dataset.k];
@@ -107,7 +137,7 @@ function rImport(){
       marcarNomina(x);
       if(x.cat){learn(x.concepto,x.cat);save();
         const k=learnKey(x.concepto);let n=0;
-        if(!isBizum(x.concepto))IMP.rows.forEach(y=>{if(y!==x&&!y.cat&&learnKey(y.concepto)===k){y.cat=x.cat;y.auto=true;y.regla=k;y.reglaU=true;marcarNomina(y);n++}});
+        if(pref('aprender')&&(!isBizum(x.concepto)||pref('bizumReglas')))IMP.rows.forEach(y=>{if(y!==x&&!y.cat&&learnKey(y.concepto)===k){y.cat=x.cat;y.auto=true;y.regla=k;y.reglaU=true;marcarNomina(y);n++}});
         if(n)toast(`También aplicado a ${n} movimiento${n>1?'s':''} parecido${n>1?'s':''}`);
       }
       marcarDuplicados();rImport();
@@ -121,6 +151,7 @@ function guardarImport(){
   const quitar=new Set();
   for(const m in IMP.sust)if(IMP.sust[m]&&IMP.sust[m].on)S.mov.forEach(y=>{if(y.origen==='excel'&&y.mes===m&&y.metodo!=='efectivo'&&y.cat!=='INGRESO')quitar.add(y.id)});
   S.mov=S.mov.filter(y=>!quitar.has(y.id));
+  if(IMP.dobles&&IMP.dobles.on)IMP.dobles.lista.forEach(y=>{y.cat='TRASPASO'});
   let orden=0;
   for(const x of sel)S.mov.push({id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++});
   for(const r of IMP.res){
