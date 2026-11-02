@@ -622,3 +622,28 @@ svg .crece{transform-box:fill-box;transform-origin:bottom}
   #rTable tr[data-i] td:first-child{grid-column:1/-1}
   #rTable tr[data-i] input,#rTable tr[data-i] select{width:100%!important;max-width:none!important}
 }
+
+/* Pestañas internas (Histórico) */
+.apchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 14px;padding:4px 0;position:sticky;top:102px;z-index:5;background:var(--bg)}
+.apchips::-webkit-scrollbar{display:none}
+.apchip{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.apchip:hover{border-color:var(--acc)}
+.apchip.on{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);font-weight:600}
+.conap.conchips .apcont>[data-ap].on~[data-ap].on{margin-top:14px}
+#s-perfil .perfHead{margin-bottom:14px}
+@media (max-width:760px){.apchips{top:0;margin:0 -12px 12px;padding:6px 12px}.conap.apsub .perfHead{display:none}}
+/* Grupos del Resumen que se pliegan */
+.ghead.gtog{width:100%;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:inherit;cursor:pointer;text-align:left;border-radius:14px 14px 0 0}
+.ghead.gtog:hover{background:var(--soft)}
+.ghead.gtog .r{display:inline-flex;align-items:center;gap:10px}
+.ghead.gtog .chev{display:inline-block;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);transition:transform .25s}
+.grupo.plegado .ghead.gtog{border-bottom-color:transparent;border-radius:14px}
+.grupo.plegado .chev{transform:rotate(-45deg)}
+.grupo.plegado>:not(.ghead){display:none}
+/* Temas de las preguntas frecuentes */
+.faqtemas{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.faqtemas .apchip{padding:6px 12px;font-size:13px}
+h4.faqtema{margin:16px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+h4.faqtema:first-child{margin-top:4px}
+#groups{align-items:start}
+@media (max-width:640px){#s-hist>.toolbar{flex-wrap:nowrap;gap:6px}#s-hist>.toolbar .btn{padding:6px 10px;font-size:13px;white-space:nowrap}#s-hist>.toolbar h2{flex:none}}

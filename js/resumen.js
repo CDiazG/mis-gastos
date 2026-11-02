@@ -1,5 +1,10 @@
 // Cuentas Claras · Pestaña Resumen, gastos fijos previstos y objetivos de ahorro
 "use strict";
+// Grupos del presupuesto que la persona ha plegado (se recuerda en este dispositivo)
+const GR_PLEG=(()=>{try{return new Set(JSON.parse(localStorage.getItem('mg-grupos-plegados')||'[]'))}catch(e){return new Set()}})();
+document.addEventListener('click',e=>{const b=e.target.closest('#groups .gtog');if(!b)return;const c=b.closest('.grupo'),g=c.dataset.g;
+  if(GR_PLEG.has(g))GR_PLEG.delete(g);else GR_PLEG.add(g);c.classList.toggle('plegado',GR_PLEG.has(g));b.setAttribute('aria-expanded',!GR_PLEG.has(g));
+  try{localStorage.setItem('mg-grupos-plegados',JSON.stringify([...GR_PLEG]))}catch(_){}});
 /* ============ Resumen ============ */
 function rResumen(){
   const h=$('#hola');h.innerHTML=NUBE&&USER?`${avatarHtml(USER.uid,USER.nombre,USER.foto||'',26)}<span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b><span class="hmail"> · ${esc(USER.email)}</span></span>`:'';
@@ -58,7 +63,7 @@ function rResumen(){
     const gp=cs.reduce((a,c)=>a+(c.id==='AHORRO'?st.base*(S.aj.pct[c.id]||0)/100:presupuestoCat(MES,c.id,st).p),0);
     const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
     const pctG=cs.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0);
-    return `<div class="card"><div class="ghead"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}</span></div>`+
+    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span></button>`+
       cs.map(c=>{
         const pc=presupuestoCat(MES,c.id,st),p=pc.p, v=st.by[c.id]||0, rest=p-v;
         if(c.id==='OTROS'&&!v)return '';

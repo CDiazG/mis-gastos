@@ -126,24 +126,25 @@
   </section>
 
   <!-- HISTORICO -->
-  <section id="s-hist">
+  <section id="s-hist" class="conap conchips">
     <div class="toolbar" style="margin:0"><h2>Histórico</h2><span class="sp"></span><button class="btn" data-informe type="button">Informe para imprimir</button><button class="btn" data-export>Exportar a Excel</button></div>
     <p class="sub">Ingresos y gastos de todos los meses guardados. El ahorro del mes es lo que entra menos lo que se gasta (sin contar traspasos, préstamos ni ajustes).</p>
-    <div class="card pad chart" id="chart"></div>
-    <div class="grid years" id="years"></div>
-    <div class="row2" style="margin-bottom:14px;align-items:start">
-      <div class="card pad" id="vsAnio"></div>
-      <div class="card pad" id="tagsCard"></div>
-    </div>
-    <div class="card pad" style="margin-bottom:14px">
-      <div class="toolbar" style="margin-top:0"><h3>Gasto medio por categoría</h3><span class="sp"></span><select id="yearSel"></select></div>
-      <div class="tablewrap" id="catAvg"></div>
-    </div>
-    <div class="card pad" style="margin-bottom:14px">
+    <nav class="apchips" data-menu="hist" aria-label="Vistas del histórico"></nav>
+    <div class="apcont">
+      <div data-ap="evolucion" class="card pad chart" id="chart"></div>
+      <div data-ap="evolucion" class="grid years" id="years"></div>
+      <div data-ap="evolucion" class="card pad">
       <div class="toolbar" style="margin-top:0"><h3>Evolución de una categoría</h3><span class="sp"></span><select id="evoCat"></select></div>
       <div class="chart" id="evoChart"></div>
     </div>
-    <div class="card tablewrap"><table id="histTable"></table></div>
+      <div data-ap="meses" class="card tablewrap"><table id="histTable"></table></div>
+      <div data-ap="categorias" class="card pad">
+      <div class="toolbar" style="margin-top:0"><h3>Gasto medio por categoría</h3><span class="sp"></span><select id="yearSel"></select></div>
+      <div class="tablewrap" id="catAvg"></div>
+    </div>
+      <div data-ap="comparar" class="card pad" id="vsAnio"></div>
+      <div data-ap="etiquetas" class="card pad" id="tagsCard"></div>
+    </div>
   </section>
 
   <!-- PATRIMONIO -->
@@ -244,39 +245,39 @@
     </div>
   </section>
   <!-- USUARIOS (solo administrador) -->
-  <section id="s-perfil">
+  <section id="s-perfil" class="conap">
+    <nav class="migas" aria-label="Estás en"></nav>
     <div class="card pad perfHead"><span id="pfFoto"></span><div class="pfInfo"><h2 id="pfNombre" style="margin:0"></h2><div class="small mut" id="pfMail"></div><div class="small mut" id="pfDesde"></div></div><span class="sp"></span><button class="btn" type="button" id="pfSalir">Salir</button></div>
-    <div class="row2" style="margin-top:14px;align-items:start">
-      <div class="grid" style="align-content:start">
-        <div class="card pad">
+    <div class="apwrap">
+      <div class="apizq"><nav class="apmenu" data-menu="perfil"></nav></div>
+      <div class="apcont">
+<div data-ap="datos" class="card pad">
           <h3>Tus datos</h3>
           <p class="small mut" style="margin:4px 0 10px" id="cuentaTxt"></p>
           <div id="fotoAj" style="display:flex;gap:12px;align-items:center;margin:0 0 12px"></div>
           <form class="toolbar" id="miNombreF" style="margin:0 0 10px"><input type="text" id="miNombre" maxlength="80" placeholder="Tu nombre" style="flex:1;min-width:140px"><button class="btn">Guardar nombre</button></form>
           <div class="toolbar" style="margin:0"><button class="btn" id="cambiarPass">Cambiar mi contraseña</button></div>
         </div>
-        <div class="card pad" id="aparCard">
+<div data-ap="datos" class="card pad">
+          <h3>Borrar todo</h3>
+          <p class="small mut" style="margin:4px 0 10px">Elimina todos tus movimientos, reglas y ajustes. No se puede deshacer, salvo con una copia de seguridad.</p>
+          <button class="btn dan" id="wipe">Borrar todos mis datos</button>
+        </div>
+<div data-ap="apariencia" class="card pad" id="aparCard">
           <h3>Apariencia</h3>
           <p class="small mut" style="margin:4px 0 10px">Solo cambia cómo la ves tú; se guarda en tu cuenta y te sale igual en el móvil y en el ordenador.</p>
           <div id="aparList" class="prefs"></div>
         </div>
-        <div class="card pad"><h3>Tu actividad</h3><div id="pfAct" style="margin-top:8px"></div></div>
-      </div>
-      <div class="grid" style="align-content:start">
-        <div class="card pad" id="prefCard">
+<div data-ap="avisos" class="card pad" id="prefCard">
           <h3>Avisos y Resumen</h3>
           <p class="small mut" style="margin:4px 0 10px">Qué avisos y tarjetas quieres ver.</p>
           <div id="prefList" class="prefs"></div>
         </div>
-        <div class="card pad">
+<div data-ap="actividad" class="card pad"><h3>Tu actividad</h3><div id="pfAct" style="margin-top:8px"></div></div>
+<div data-ap="actividad" class="card pad">
           <h3>Guía</h3>
           <p class="small mut" style="margin:4px 0 10px">Rufo te enseña la app paso a paso.</p>
           <button class="btn" type="button" id="verTuto">Ver la guía otra vez</button>
-        </div>
-        <div class="card pad">
-          <h3>Borrar todo</h3>
-          <p class="small mut" style="margin:4px 0 10px">Elimina todos tus movimientos, reglas y ajustes. No se puede deshacer, salvo con una copia de seguridad.</p>
-          <button class="btn dan" id="wipe">Borrar todos mis datos</button>
         </div>
       </div>
     </div>
@@ -290,7 +291,7 @@
       <div class="apcont">
 <div data-ap="faq" class="card">
         <div class="ghead"><span class="t">Preguntas frecuentes</span></div>
-        <div class="pad" style="padding-bottom:4px"><input type="search" id="faqBuscar" placeholder="Busca tu duda… (p. ej. Bizum, nómina, efectivo)" style="width:100%"></div>
+        <div class="pad" style="padding-bottom:4px"><input type="search" id="faqBuscar" placeholder="Busca tu duda… (p. ej. Bizum, nómina, efectivo)" style="width:100%"><div class="faqtemas" id="faqTemas"></div></div>
         <div id="faqList" class="pad" style="padding-top:6px"></div>
       </div>
 <div data-ap="privacidad" class="card pad" id="privCard" ></div>

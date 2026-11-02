@@ -213,6 +213,32 @@ module.exports = {
     })();
   },
 
+  'histórico por pestañas, grupos del resumen que se pliegan y preguntas por temas'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      await p.evaluate(() => { const m = mesDe(hoy()); S.mov.push({ id: 'h1', fecha: m + '-02', mes: m, concepto: 'Cena', importe: -30, cat: 'OCIO', cuenta: 'EVO' }); save(); go('hist'); });
+      assert.ok(await p.isVisible('#chart')); assert.ok(!(await p.isVisible('#histTable')));
+      await p.click('.apchip[data-ap=meses]');
+      assert.ok(await p.isVisible('#histTable')); assert.ok(!(await p.isVisible('#chart')));
+      await p.evaluate(() => go('ayuda'));
+      assert.ok(!(await p.isVisible('#s-hist')), 'el histórico no se queda a la vista');
+      // grupos del resumen
+      await p.evaluate(() => go('resumen'));
+      await p.click('#groups .grupo[data-g=VARIABLES] .gtog');
+      assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')), 'plegado');
+      await p.evaluate(() => { go('movs'); go('resumen'); });
+      assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')), 'lo recuerda');
+      await p.click('#groups .grupo[data-g=VARIABLES] .gtog');
+      assert.ok(await p.isVisible('#groups [data-cat=OCIO]'));
+      // preguntas frecuentes por temas
+      await p.evaluate(() => go('ayuda', { sub: 'faq' }));
+      assert.equal((await p.$$('#faqList h4.faqtema')).length, 5);
+      await p.click('#faqTemas [data-ft=categorias]');
+      const n = (await p.$$('#faqList details')).length;
+      assert.ok(n >= 3 && n <= 6, 'solo las de categorías: ' + n);
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

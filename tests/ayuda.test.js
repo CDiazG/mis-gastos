@@ -107,14 +107,14 @@ module.exports = {
       await p.click('label.pref:has([data-pref="bizumReglas"])');
       assert.equal(await p.evaluate(() => autoCat('PAGO BIZUM DE AMPARO', '', 10)), 'OCIO');
       // quitar el gráfico y el botón flotante
-      await p.evaluate(() => go('perfil'));
+      await p.evaluate(() => go('perfil', { sub: 'avisos' }));
       await p.click('label.pref:has([data-pref="verGrafico"])');
-      await p.click('label.pref:has([data-pref="fab"])');
+      await p.evaluate(() => irApartado('perfil', 'apariencia')); await p.click('label.pref:has([data-pref="fab"])');
       await p.evaluate(() => go('resumen'));
       assert.ok(!(await p.isVisible('#grafCard')));
       assert.ok(!(await p.isVisible('#fabCash')));
       // tema
-      await p.evaluate(() => go('perfil'));
+      await p.evaluate(() => go('perfil', { sub: 'apariencia' }));
       await p.click('#temaSeg [data-v="oscuro"]');
       assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'dark');
       const fondo = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);

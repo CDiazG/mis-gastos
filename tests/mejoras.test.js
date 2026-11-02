@@ -40,7 +40,7 @@ module.exports = {
       await p.evaluate(() => { go('movs'); for (const x of S.mov) if (/ROMA|TRASTEVERE/.test(x.concepto)) SEL.add(x.id); rMovs(); });
       await p.click('#bulkTag'); await p.fill('#btT', 'Viaje a Roma'); await p.click('#dlgF >> text=Etiquetar');
       assert.equal(await p.evaluate(() => S.mov.filter(x => (x.tags || []).includes('Viaje a Roma')).length), 3);
-      await p.evaluate(() => go('hist')); await L.esperar(200);
+      await p.evaluate(() => go('hist', { sub: 'etiquetas' })); await L.esperar(200);
       const t = await p.textContent('#tagsCard');
       assert.match(t, /Viaje a Roma/); assert.match(t, /555,00/);
       await p.click('#tagsCard [data-tag]');
@@ -167,7 +167,7 @@ module.exports = {
       assert.equal(await p.textContent('#uName'), 'Carlos');
       assert.equal(await p.evaluate(() => JSON.parse(localStorage.__mockDb)['perfiles/' + USER.uid].nombre), 'Carlos');
       // el icono de la pestaña sigue a la paleta
-      await p.click('#palSel [data-pal="frambuesa"]');
+      await p.evaluate(() => irApartado('perfil', 'apariencia')); await p.click('#palSel [data-pal="frambuesa"]');
       assert.match(await p.evaluate(() => decodeURIComponent(document.querySelector('link[rel="icon"][type="image/svg+xml"]').href)), /#ad2f5b/);
       await p.click('#palSel [data-pal="verde"]');
       assert.match(await p.evaluate(() => document.querySelector('link[rel="icon"][type="image/svg+xml"]').href), /logo\.svg$/);

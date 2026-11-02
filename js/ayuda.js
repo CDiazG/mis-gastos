@@ -116,10 +116,21 @@ const FAQ=[
   {p:'¿Cómo cambio mi contraseña, mi nombre o mi foto?',r:'En Mi perfil: pulsa tu nombre o tu foto, arriba a la derecha. Si no te acuerdas de la contraseña, en la pantalla de entrada pulsa «¿Has olvidado la contraseña?» y te llega un correo.',ir:{tab:'perfil',sel:'#fotoAj',card:true,t:'Mi perfil',g:'Aquí cambias tu foto y tu contraseña.'}},
   {p:'Algo no funciona o tengo una idea',r:'Escríbelo en el buzón de «Sugerencias y quejas» (aquí, en Ayuda) y le llega al administrador. Si es una duda de uso, pregúntala en el foro.',ir:{tab:'ayuda',sel:'#buzonCard',t:'Sugerencias y quejas',g:'Escribe aquí lo que quieras contarle al administrador.'}},
 ];
-let faqQ='';
+let faqQ='',faqT='';
+// Temas de las preguntas frecuentes (por palabras de la pregunta)
+const FAQ_TEMAS=[
+  {id:'empezar',t:'Empezar',re:/movimientos del banco|Compartir|Trade Republic|instalo/i},
+  {id:'categorias',t:'Categorías',re:/categor|Bizum/i},
+  {id:'ahorro',t:'Ahorro y presupuesto',re:/Ahorro del mes|cuenta como gasto|nómina|año pasado|viaje o una boda/i},
+  {id:'apuntar',t:'Apuntar y corregir',re:/efectivo|equivocado|Deshacer|Excel o un informe/i},
+  {id:'cuenta',t:'Tu cuenta',re:/./},
+];
+const temaFaq=f=>FAQ_TEMAS.find(t=>t.re.test(f.p)).id;
+function faqHtml(f){return `<details class="faq"><summary>${esc(f.p)}</summary><p>${esc(f.r)}</p>${f.ir?`<div class="faqir"><button class="btn sm" type="button" data-ir="${FAQ.indexOf(f)}">Ir a ${esc(f.ir.t)} →</button><button class="btn sm pri" type="button" data-guia="${FAQ.indexOf(f)}">${mascota(18,false)} Que ${MASCOTA} me lo enseñe</button></div>`:''}</details>`}
 function rFaq(){
-  const q=norm(faqQ).trim();const xs=FAQ.filter(f=>!q||norm(f.p+' '+f.r).includes(q));
-  $('#faqList').innerHTML=xs.length?xs.map(f=>`<details class="faq"><summary>${esc(f.p)}</summary><p>${esc(f.r)}</p>${f.ir?`<div class="faqir"><button class="btn sm" type="button" data-ir="${FAQ.indexOf(f)}">Ir a ${esc(f.ir.t)} →</button><button class="btn sm pri" type="button" data-guia="${FAQ.indexOf(f)}">${mascota(18,false)} Que ${MASCOTA} me lo enseñe</button></div>`:''}</details>`).join(''):'<p class="small mut pad">No encuentro nada con eso. Pregúntalo en el foro.</p>';
+  const q=norm(faqQ).trim();const xs=FAQ.filter(f=>(!q||norm(f.p+' '+f.r).includes(q))&&(q||!faqT||temaFaq(f)===faqT));
+  const ch=$('#faqTemas');if(ch){ch.innerHTML=[{id:'',t:'Todas'},...FAQ_TEMAS].map(t=>`<button type="button" class="apchip${t.id===faqT&&!q?' on':''}" data-ft="${t.id}">${t.t}</button>`).join('');$$('[data-ft]',ch).forEach(b=>b.onclick=()=>{faqT=b.dataset.ft;faqQ='';$('#faqBuscar').value='';rFaq()})}
+  $('#faqList').innerHTML=xs.length?(q||faqT?xs.map(faqHtml).join(''):FAQ_TEMAS.map(t=>{const ys=xs.filter(f=>temaFaq(f)===t.id);return ys.length?`<h4 class="faqtema">${t.t}</h4>`+ys.map(faqHtml).join(''):''}).join('')):'<p class="small mut pad">No encuentro nada con eso. Pregúntalo en el foro.</p>';
   $$('#faqList [data-ir]').forEach(b=>b.onclick=()=>{const ir=FAQ[+b.dataset.ir].ir;go(ir.tab);setTimeout(()=>{let el=$(ir.sel);revelar(el);if(el&&ir.card)el=el.closest('.card')||el;if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('resalta');setTimeout(()=>el.classList.remove('resalta'),1600)}},60)});
   $$('#faqList [data-guia]').forEach(b=>b.onclick=()=>{const f=FAQ[+b.dataset.guia];const ir=f.ir;
     guia({tab:ir.tab,sel:ir.padre?null:ir.sel,card:ir.card,t:f.p,d:ir.g||f.r,_padre:ir.padre?[ir.sel,ir.padre]:null});
