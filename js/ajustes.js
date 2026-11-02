@@ -86,29 +86,53 @@ function sugerencia(){
   let resto=100-filas.reduce((a,f)=>a+f.sug,0);
   let extraAhorro=0,deficit=0;
   if(resto>0){fa.sug+=resto;extraAhorro=resto}
-  else if(resto<0){const red=Math.min(fa.sug,-resto);fa.sug-=red;deficit=-resto}
+  else if(resto<0){
+    // No cabe todo: primero se reduce el ahorro, luego la inversión y, si aún no llega,
+    // el ocio que más pesa, punto a punto, para que siempre sume 100 %.
+    deficit=-resto;
+    for(const f of [fa,filas.find(f=>f.c.id==='INVERSION')].filter(Boolean)){const red=Math.min(f.sug,-resto);if(red){f.sug-=red;f.recorte=red;resto+=red}}
+    const vars=filas.filter(f=>f.c.g==='VARIABLES');
+    while(resto<0){const f=vars.filter(x=>x.sug>0).sort((a,b)=>b.sug-a.sug)[0];if(!f)break;f.sug--;f.recorte=(f.recorte||0)+1;resto++}
+  }
+  const difs=filas.filter(f=>f.sug!==f.obj);
+  const aplicada=!difs.length&&fija;
   const cambia=filas.some(f=>f.c.g!=='AHORRO'&&Math.abs(f.sug-f.obj)>=2)||(!fija);
-  return {ms,base,baseSug,fija,filas,extraAhorro,deficit,cambia,ings};
+  return {ms,base,baseSug,fija,filas,extraAhorro,deficit,cambia,ings,difs,aplicada};
 }
 function rSug(){
   const g=sugerencia();const el=$('#sugCard');
   if(!g){el.innerHTML='<h3>Sugerencia de presupuesto</h3><p class="small mut" style="margin:6px 0 0">Hacen falta al menos 3 meses con gastos para poder sugerir un presupuesto.</p>';return}
   const nota=f=>{
     if(f.c.id==='DIEZMO')return f.mean<0.5?'No hay ningún diezmo apuntado en estos meses':'Media '+eur(f.mean,0)+' al mes';
-    if(f.c.g==='AHORRO'&&f.c.id!=='AHORRO')return 'Se mantiene tu objetivo';
-    if(f.c.id==='AHORRO')return (g.extraAhorro?`Incluye ${g.extraAhorro} puntos que sobran del resto`:g.deficit?`Reducido ${g.deficit} puntos porque los gastos habituales no caben`:'Se mantiene tu objetivo');
+    if(f.c.id==='AHORRO')return g.extraAhorro?`Incluye ${g.extraAhorro} puntos que sobran del resto`:f.recorte?`<span class="neg">Reducido ${f.recorte} puntos: los gastos habituales no dejan más</span>`:'Se mantiene tu objetivo';
+    if(f.c.g==='AHORRO')return f.recorte?`<span class="neg">Reducido ${f.recorte} puntos: los gastos habituales no dejan más</span>`:'Se mantiene tu objetivo';
+    if(f.recorte)return `<span class="neg">Recortado ${f.recorte} punto${f.recorte>1?'s':''} por debajo de lo habitual para que todo sume 100 %</span>`;
     if(f.sinDatos)return f.obj>0?'<span class="mut">Sin gastos todavía; se mantiene</span>':'';
     if(f.sug-f.obj>=1)return `<span class="neg">Te pasas en ${f.over} de ${f.n} meses</span>`;
     if(f.obj-f.sug>=2)return `<span class="mut">Sobra presupuesto: sueles gastar ${eur(f.hab,0)}</span>`;
     return '<span class="pos">Bien ajustado</span>';
   };
-  el.innerHTML=`<div class="toolbar" style="margin-top:0"><h3>Sugerencia según los gastos reales</h3><span class="sp"></span><button class="btn pri" id="sugApply">Aplicar sugerencia</button></div>
+  const sigMes=nombreMes(addMes(mesDe(hoy()),1));
+  const tabla=()=>`<div class="tablewrap"><table><thead><tr><th>Categoría</th><th class="r">Gasto habitual</th><th class="r">Ahora</th><th class="r">Sugerido</th><th>Por qué</th></tr></thead><tbody>`+
+   g.filas.map(f=>`<tr${f.sug!==f.obj?' class="sugdif"':''}><td>${f.c.n}</td><td class="r num">${f.c.g==='AHORRO'?'':eur(f.hab,0)+' <span class="mut small">('+fmt(f.habP,1)+'%)</span>'}</td><td class="r num">${f.obj}% <span class="mut small">${eur(g.base*f.obj/100,0)}</span></td><td class="r num">${f.sug===f.obj?'<span class="mut">igual</span>':`<b>${f.sug}%</b> <span class="mut small">${eur(g.base*f.sug/100,0)}</span>`}</td><td class="small">${nota(f)}</td></tr>`).join('')+`</tbody></table></div>`;
+  // Ya aplicada: no hay nada que cambiar
+  if(g.aplicada){
+    el.innerHTML=`<h3>Sugerencia según los gastos reales</h3>
+     <div class="alert" style="background:var(--good-soft);margin:10px 0 0"><span class="grow"><b>✓ Tu presupuesto ya está ajustado</b> a lo que gastas normalmente (calculado con ${g.ms.length} meses, de ${nombreMesC(g.ms[0])} a ${nombreMesC(g.ms[g.ms.length-1])}). Cada mes se vuelve a calcular con el mes que termina: si tus gastos cambian, aquí te avisaré.</span></div>
+     <details style="margin-top:10px"><summary class="small" style="cursor:pointer">Ver el cálculo</summary><div style="margin-top:8px">${tabla()}</div></details>`;
+    return;
+  }
+  const oculta=S.aj.sugOculta===mesDe(hoy());
+  if(oculta){
+    el.innerHTML=`<div class="toolbar" style="margin:0"><h3>Sugerencia según los gastos reales</h3><span class="sp"></span><button class="btn sm" id="sugVer" type="button">Ver la sugerencia</button></div><p class="small mut" style="margin:6px 0 0">La has dejado para más adelante; vuelve a aparecer en ${sigMes}.</p>`;
+    $('#sugVer').onclick=()=>{S.aj.sugOculta='';save();rSug()};return;
+  }
+  el.innerHTML=`<div class="toolbar" style="margin-top:0"><h3>Sugerencia según los gastos reales</h3><span class="sp"></span><button class="btn" id="sugLuego" type="button">Ahora no</button><button class="btn pri" id="sugApply">Aplicar ${g.difs.length} cambio${g.difs.length===1?'':'s'}</button></div>
    <p class="small mut" style="margin:0 0 10px">Calculado con ${g.ms.length} meses (${nombreMesC(g.ms[0])} – ${nombreMesC(g.ms[g.ms.length-1])}). «Gasto habitual» es la media entre el gasto medio y el de un mes normal, para que un mes raro (un viaje, una compra grande) no lo distorsione. El ahorro y el diezmo no se tocan: son objetivos, no hábitos.</p>
    ${g.fija?'':`<div class="alert info" style="margin-bottom:10px"><span class="grow"><b>Base del presupuesto:</b> ahora es lo que entra cada mes, que varía mucho (entre ${eur(Math.min(...g.ings),0)} y ${eur(Math.max(...g.ings),0)} con las pagas extra y los cambios de fecha de la nómina). Se sugiere una cantidad fija de <b>${eur(g.baseSug,0)}</b>, la nómina de un mes normal; las pagas extra quedan como ahorro.</span></div>`}
-   ${g.deficit?`<div class="alert bad" style="margin-bottom:10px"><span class="grow">Con los gastos habituales no llega para el ${S.aj.pct.AHORRO}% de ahorro: faltan ${g.deficit} puntos.</span></div>`:''}
-   <div class="tablewrap"><table><thead><tr><th>Categoría</th><th class="r">Gasto habitual</th><th class="r">Ahora</th><th class="r">Sugerido</th><th>Por qué</th></tr></thead><tbody>`+
-   g.filas.map(f=>`<tr><td>${f.c.n}</td><td class="r num">${f.c.g==='AHORRO'?'':eur(f.hab,0)+' <span class="mut small">('+fmt(f.habP,1)+'%)</span>'}</td><td class="r num">${f.obj}% <span class="mut small">${eur(g.base*f.obj/100,0)}</span></td><td class="r num"><b>${f.sug}%</b> <span class="mut small">${eur(g.base*f.sug/100,0)}</span></td><td class="small">${nota(f)}</td></tr>`).join('')+
-   `</tbody></table></div>`;
+   ${g.deficit?`<div class="alert bad" style="margin-bottom:10px"><span class="grow">Lo que sueles gastar no deja sitio para todo el ahorro (faltan ${g.deficit} puntos). Para que sume 100 % se reduce primero el ahorro, luego la inversión y, si hace falta, el ocio que más pesa.</span></div>`:''}
+   ${tabla()}`;
+  $('#sugLuego').onclick=()=>{S.aj.sugOculta=mesDe(hoy());save();rSug();toast('Vale, te lo vuelvo a enseñar en '+sigMes)};
   $('#sugApply').onclick=()=>confirmar('Aplicar sugerencia',`Se cambiarán los porcentajes${g.fija?'':' y la base pasará a una cantidad fija de '+eur(g.baseSug,0)}. Luego puedes retocarlos a mano.`,'Aplicar',()=>{
     g.filas.forEach(f=>S.aj.pct[f.c.id]=f.sug);if(!g.fija){S.aj.base='fija';S.aj.baseFija=g.baseSug}save();rAjustes();toast('Presupuesto actualizado')});
 }

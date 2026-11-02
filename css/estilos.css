@@ -350,3 +350,5 @@ img.avatar{display:inline-block;padding:0;background:var(--soft)}
 .palopt .sw3{display:flex;gap:4px}.palopt .sw3 i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.08)}
 .palopt b{font-size:13px;font-weight:600}
 @media (max-width:640px){.palopts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+tr.sugdif td{background:var(--acc-soft)}

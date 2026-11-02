@@ -66,6 +66,31 @@ module.exports = {
     })();
   },
 
+  'sugerencia de presupuesto: una vez aplicada deja de sugerirse'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => { const add = (f, c, i, cat) => S.mov.push({ id: uid(), fecha: f, mes: f.slice(0, 7), concepto: c, importe: i, cat, metodo: 'banco', cuenta: 'EVO', origen: 'extracto', key: uid() });
+        for (const m of ['2026-06', '2026-07', '2026-08', '2026-09']) { add(m + '-01', 'NOMINA', 2000, 'INGRESO'); add(m + '-02', 'ALQUILER', -700, 'VIVIENDA'); add(m + '-03', 'CENAS', -300, 'OCIO'); add(m + '-04', 'MERCADONA', -150, 'SUPERMERCADO'); }
+        save(); go('ajustes'); });
+      assert.match(await p.textContent('#sugCard'), /Aplicar \d+ cambio/);
+      await p.click('#sugApply'); await p.click('#dlgF >> text=Aplicar'); await L.esperar(200);
+      assert.equal(await p.evaluate(() => sumaPct()), 100, 'aplicar la sugerencia siempre deja el 100 %');
+      assert.equal(await p.evaluate(() => sugerencia().aplicada), true, 'recalculada con los mismos datos, no cambia nada');
+      assert.match(await p.textContent('#sugCard'), /ya está ajustado/);
+      assert.equal(await p.$('#sugApply'), null, 'sin botón de aplicar');
+      await p.evaluate(() => go('resumen'));
+      assert.ok(!/Hay una sugerencia/.test(await p.textContent('#alerts')));
+      // si cambian los gastos vuelve a sugerir, y se puede dejar para el mes que viene
+      await p.evaluate(() => { for (const m of ['2026-10']) S.mov.push({ id: uid(), fecha: m + '-05', mes: m, concepto: 'VIAJE', importe: -900, cat: 'VIAJES', metodo: 'banco', cuenta: 'EVO', origen: 'extracto', key: uid() }, { id: uid(), fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', metodo: 'banco', cuenta: 'EVO', origen: 'extracto', key: uid() });
+        for (const m of ['2026-07', '2026-08', '2026-09']) S.mov.push({ id: uid(), fecha: m + '-06', mes: m, concepto: 'VIAJE', importe: -400, cat: 'VIAJES', metodo: 'banco', cuenta: 'EVO', origen: 'extracto', key: uid() });
+        save(); go('ajustes'); });
+      assert.match(await p.textContent('#sugCard'), /Aplicar \d+ cambio/);
+      assert.equal(await p.evaluate(() => sugerencia().filas.reduce((a, f) => a + f.sug, 0)), 100, 'aunque no quepa todo el ahorro');
+      await p.click('#sugLuego');
+      assert.match(await p.textContent('#sugCard'), /vuelve a aparecer/);
+    })();
+  },
+
   'preferencias: Bizum sin reglas, interruptores y tema'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
