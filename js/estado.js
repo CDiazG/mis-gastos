@@ -131,6 +131,7 @@ function escuchar(){
     if(n)programarRemoto();
   },e=>console.warn('sync meses',e)));
   if(typeof escucharBuzon==='function')escucharBuzon();
+  if(typeof escucharErrores==='function')escucharErrores();
   if(USER.admin){
     UNSUB.push(onSnapshot(collection(fb.db,'users'),qs=>{
       const us=[];qs.forEach?qs.forEach(d=>us.push({id:d.id,...d.data()})):(qs.docs||[]).forEach(d=>us.push({id:d.id,...d.data()}));

@@ -25,7 +25,7 @@ function rResumen(){
   if(Math.abs(sumaPct()-100)>0.01)al.push(`<div class="alert bad"><span class="grow">Los porcentajes del presupuesto suman <b>${fmt(sumaPct(),1)}%</b> y deberían sumar 100%.</span><button class="btn sm" data-act="aj">Arreglar</button></div>`);
   else{const sg=sugerencia();if(sg&&sg.cambia&&!sg.aplicada&&S.aj.sugOculta!==mesDe(hoy()))al.push(`<div class="alert info"><span class="grow">El presupuesto no se parece a lo que se gasta normalmente. Hay una sugerencia para ajustarlo.</span><button class="btn sm" data-act="sug">Ver sugerencia</button></div>`)}
   if(pref('aviso80')&&MES===mesDe(hoy())&&st.base>0){
-    const cerca=CATS.filter(c=>c.g!=='AHORRO').map(c=>({c,p:st.base*(S.aj.pct[c.id]||0)/100,v:st.by[c.id]||0})).filter(x=>x.p>0&&x.v>=x.p*0.8&&x.v<=x.p+0.5);
+    const cerca=CATS.filter(c=>c.g!=='AHORRO').map(c=>({c,p:presupuestoCat(MES,c.id,st).p,v:st.by[c.id]||0})).filter(x=>x.p>0&&x.v>=x.p*0.8&&x.v<=x.p+0.5);
     if(cerca.length)al.push(`<div class="alert"><span class="grow"><b>Cerca del límite:</b> ${cerca.map(x=>`${esc(x.c.n)} (${Math.round(x.v/x.p*100)}%, quedan ${eur(x.p-x.v,0)})`).join(' · ')}</span></div>`);
   }
   {const hoyM=mesDe(hoy());const fin=new Date(hoyM+'-01');fin.setDate(0);const finAnt=fin.toISOString().slice(0,10);
@@ -54,12 +54,12 @@ function rResumen(){
     return ` · <span class="${d>0?'neg':'pos'}" title="Comparado con ${nombreMes(mAnt)}">${d>0?'▲':'▼'} ${eur(Math.abs(d),0)} vs ${MESES[+mAnt.slice(5)-1].slice(0,3)}</span>`};
   $('#groups').innerHTML=GROUPS.map(g=>{
     const cs=CATS.filter(c=>c.g===g.id);
-    const gp=cs.reduce((a,c)=>a+st.base*(S.aj.pct[c.id]||0)/100,0);
+    const gp=cs.reduce((a,c)=>a+(c.id==='AHORRO'?st.base*(S.aj.pct[c.id]||0)/100:presupuestoCat(MES,c.id,st).p),0);
     const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
     const pctG=cs.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0);
     return `<div class="card"><div class="ghead"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}</span></div>`+
       cs.map(c=>{
-        const p=st.base*(S.aj.pct[c.id]||0)/100, v=st.by[c.id]||0, rest=p-v;
+        const pc=presupuestoCat(MES,c.id,st),p=pc.p, v=st.by[c.id]||0, rest=p-v;
         if(c.id==='OTROS'&&!v)return '';
         const w=p>0?Math.min(100,v/p*100):(v>0?100:0);
         const over=v>p+0.5;
@@ -76,7 +76,7 @@ function rResumen(){
             <div class="b"><span>${dz.pct}% de los ingresos del mes</span>${dz.pendiente>0.5?`<button class="btn sm dzpag" type="button">Marcar ${eur(dz.pendiente,0)} pagado</button>`:'<span class="pos">pagado</span>'}</div></div>`}
         return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
           <div class="bar ${over&&!isSave?'over':cerca?'warn':''}"><i style="width:${w}%"></i></div>
-          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
+          <div class="b"><span>${S.aj.pct[c.id]||0}% · presupuesto ${eur(p,0)}${pc.extra?` <span class="tag acc" title="Lo que no gastaste los meses anteriores">↻ ${eur(pc.extra,0)} acumulado</span>`:''}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
       }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
           <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
   }).join('');

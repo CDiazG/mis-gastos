@@ -48,10 +48,15 @@ module.exports = {
       assert.match(await p.textContent('#s-resumen .mesTit'), /mes actual/);
       await p.click('#mPrev');
       assert.match(await p.textContent('#s-resumen .mesTit'), /mes pasado/);
-      assert.ok(await p.isVisible('#mHoy'));
+      assert.equal(await p.evaluate(() => getComputedStyle(document.getElementById('mHoy')).visibility), 'visible');
       await p.click('#s-resumen .mtHoy');
       assert.match(await p.textContent('#mLabel'), /mes actual/);
-      assert.ok(!(await p.isVisible('#mHoy')), '«Hoy» se esconde en el mes actual');
+      assert.equal(await p.evaluate(() => getComputedStyle(document.getElementById('mHoy')).visibility), 'hidden', '«Hoy» se esconde en el mes actual sin mover las flechas');
+      // las flechas no se mueven aunque el nombre del mes sea más largo
+      const pos = () => p.evaluate(() => [document.getElementById('mPrev').getBoundingClientRect().x, document.getElementById('mNext').getBoundingClientRect().x]);
+      await p.evaluate(() => setMes('2026-05')); const a = await pos();
+      await p.evaluate(() => setMes('2026-09')); const b = await pos();
+      assert.deepEqual(a, b, 'mayo y septiembre dejan las flechas en el mismo sitio');
     })();
   },
 
@@ -121,29 +126,72 @@ module.exports = {
     })();
   },
 
-  'tutorial con la mascota: sale la primera vez y se puede saltar'(browser, estado) {
+  'guía inicial: personalizar (foto, colores, diezmo, categorías) y recorrido completo'(browser, estado) {
     return (async () => {
-      const p = await dentro(browser, estado, { conTutorial: true });
+      const p = await dentro(browser, estado, { conTutorial: true, inicio: true });
       await p.waitForSelector('#tuto:not(.hide)', { timeout: 5000 });
-      assert.match(await p.textContent('#tuto'), /Soy /);
+      assert.match(await p.textContent('#tuto'), /Soy Rufo/);
       assert.ok(await p.$('#tuto svg.mascota'));
-      await p.click('#tutoSig'); await L.esperar(150);
-      assert.match(await p.textContent('#tuto'), /mes que estás viendo/);
-      assert.ok(await p.isVisible('#tutoSpot'));
-      await p.click('#tutoSig'); await p.click('#tutoSig'); await p.click('#tutoSig'); await L.esperar(100);
-      assert.equal(await p.evaluate(() => TAB), 'importar', 'va enseñando las pestañas');
-      await p.click('#tutoSkip');
+      await p.click('#tutoSig');
+      assert.match(await p.textContent('#tuto'), /Tu foto/);
+      assert.ok(await p.$('#gFoto'));
+      await p.click('#tutoSkip'); // omitir la foto
+      assert.match(await p.textContent('#tuto'), /Tus colores/);
+      await p.click('[data-gpal="oceano"]'); await p.click('[data-gtema="oscuro"]');
+      assert.equal(await p.evaluate(() => [document.documentElement.dataset.pal, document.documentElement.dataset.theme].join()), 'oceano,dark');
+      await p.click('#tutoSig');
+      assert.match(await p.textContent('#tuto'), /diezmo/);
+      await p.click('[data-gdz="0"]');
+      assert.equal(await p.evaluate(() => [diezmoOn(), CATS.some(c => c.id === 'DIEZMO'), sumaPct()].join()), 'false,false,100');
+      await p.click('#tutoSig');
+      assert.match(await p.textContent('#tuto'), /categorías/);
+      await p.click('[data-gcat="Mascotas"]');
+      assert.ok(await p.evaluate(() => S.cats.some(c => c.n === 'Mascotas') && autoCat('KIWOKO VALENCIA', '', -20) === S.cats.find(c => c.n === 'Mascotas').id));
+      // recorrido por las pestañas
+      const vistas = new Set();
+      for (let i = 0; i < 20 && await p.isVisible('#tuto'); i++) { vistas.add(await p.evaluate(() => TAB)); if (await p.textContent('#tutoSig') === '¡Empezar!') break; await p.click('#tutoSig'); }
+      for (const t of ['inicio', 'resumen', 'efectivo', 'movs', 'importar', 'hist', 'patri', 'ajustes', 'ayuda']) assert.ok(vistas.has(t), 'la guía pasa por ' + t);
+      await p.click('#tutoSig');
       assert.ok(!(await p.isVisible('#tuto')));
-      assert.equal(await p.evaluate(() => S.aj.tutoVisto), true);
-      await p.reload(); await L.esperar(600);
+      assert.equal(await p.evaluate(() => S.aj.guiaV), await p.evaluate(() => GUIA_V));
+      // no vuelve a salir sola, pero sí desde Ayuda
+      await p.reload(); await L.esperar(1500);
       if (await p.isVisible('#lCont:not(.hide)')) await p.click('#lCont .btn.pri').catch(() => {});
-      await L.esperar(1500);
-      assert.ok(!(await p.isVisible('#tuto')), 'no vuelve a salir solo');
+      await L.esperar(1200);
+      assert.ok(!(await p.isVisible('#tuto')), 'no vuelve a salir sola');
       await p.evaluate(() => go('ayuda'));
       await p.click('#ayTuto');
       assert.ok(await p.isVisible('#tuto'));
       await p.keyboard.press('Escape');
       assert.ok(!(await p.isVisible('#tuto')));
+    })();
+  },
+
+  'quien ya vio la guía antigua la ve una vez con esta versión'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado, { conTutorial: true, inicio: true });
+      await p.waitForSelector('#tuto:not(.hide)', { timeout: 5000 });
+      await p.evaluate(() => { cerrarTuto(); S.aj.tutoVisto = true; delete S.aj.guiaV; tutorial(false); });
+      assert.ok(await p.isVisible('#tuto'), 'tutoVisto de la 2.11 no basta: sale la guía nueva');
+    })();
+  },
+
+  'preguntas frecuentes: «Ir allí» y «Que Rufo me lo enseñe»'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => go('ayuda'));
+      await p.fill('#faqBuscar', 'Bizum no se clasifican');
+      await p.click('#faqList [data-ir]');
+      assert.equal(await p.evaluate(() => TAB), 'ajustes');
+      await p.evaluate(() => go('ayuda'));
+      await p.fill('#faqBuscar', 'nómina llega');
+      await p.click('#faqList [data-guia]');
+      assert.equal(await p.evaluate(() => TAB), 'ajustes');
+      assert.ok(await p.isVisible('#tuto')); assert.ok(await p.isVisible('#tutoSpot'));
+      assert.equal(await p.textContent('#tutoSig'), 'Entendido');
+      await p.click('#tutoSig');
+      assert.ok(!(await p.isVisible('#tuto')));
+      assert.equal(await p.evaluate(() => S.aj.guiaV || 0), 0, 'una sola pista no cuenta como guía completa');
     })();
   },
 

@@ -31,10 +31,12 @@ const RE_INVERSION=/ (TRADE|TRADE REPUBLIC|ORO|ETF|ETFS|ACCIONES|FONDO|FONDOS|IN
 const RE_ACTIVIDAD=/ (GIMNASIO|GIMANSIO|GYM|SYNERGYM|ALTAFIT|BASIC FIT|BELLALBA|BALLET|BAILE|YOGA|PILATES|PADEL|PISCINA|CROSSFIT|DEPORTE|DEPORTES|ACTIVIDADES|ESCALADA|TENIS|NATACION|CLUB)/
 const FIJAS=new Set(['AHORRO','DIEZMO','OTROS']); // no se pueden borrar
 let CATS=[],ALLC=[],CONSUMO=[];
+const diezmoOn=()=>!(typeof S!=='undefined'&&S&&S.aj&&S.aj.diezmo===false);
 function refreshCats(){
   if(!Array.isArray(S.cats)||!S.cats.length)S.cats=CATS_DEF.map(({id,n,g})=>({id,n,g}));
   for(const id of FIJAS)if(!S.cats.some(c=>c.id===id)){const d=CATS_DEF.find(c=>c.id===id);S.cats.push({id,n:d.n,g:d.g})}
-  CATS=S.cats.map(c=>({...c}));ALLC=[...CATS,...SPECIAL];CONSUMO=CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id);
+  // El diezmo se puede desactivar en Preferencias (quien no lo da no lo ve en ningún sitio)
+  CATS=S.cats.filter(c=>c.id!=='DIEZMO'||diezmoOn()).map(c=>({...c}));ALLC=[...CATS,...SPECIAL];CONSUMO=CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id);
 }
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MABR={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,sept:9,set:9,oct:10,nov:11,dic:12};

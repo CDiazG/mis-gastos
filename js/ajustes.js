@@ -5,15 +5,15 @@ function rAjustes(){
   $$('#baseSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.b===S.aj.base);b.onclick=()=>{S.aj.base=b.dataset.b;save();rAjustes()}});
   $('#baseFija').classList.toggle('hide',S.aj.base!=='fija');$('#baseFija').value=S.aj.baseFija?fmt(S.aj.baseFija):'';
   $('#baseFija').onchange=e=>{const v=parseNum(e.target.value);S.aj.baseFija=isFinite(v)?v:0;save()};
-  refreshCats();rPrefs();rFotoAj();
+  refreshCats();rPrefs();rFotoAj();rCatSug();const dzc=$('#dzAuto').closest('.card');if(dzc)dzc.classList.toggle('hide',!diezmoOn());
   const gOpts=sel=>GROUPS.map(g=>`<option value="${g.id}"${g.id===sel?' selected':''}>${g.n}</option>`).join('');
   $('#caGrupo').innerHTML=gOpts('VARIABLES');
-  $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id);
+  $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id&&(c.id!=='DIEZMO'||diezmoOn()));
     return `<tr><td colspan="4" class="small mut" style="padding-top:12px"><b>${g.n}</b></td></tr>`+cs.map((c,k)=>`<tr data-cid="${c.id}">
       <td><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:170px">${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que no gastas ni inviertes</div>':''}</td>
       <td><select class="cg" style="max-width:118px;font-size:13px" ${FIJAS.has(c.id)?'disabled title="Esta categoría no se puede mover de grupo"':''}>${gOpts(c.g)}</select></td>
       <td class="r" style="white-space:nowrap"><input type="number" min="0" max="100" step="0.5" data-p="${c.id}" value="${S.aj.pct[c.id]??0}" style="width:72px" class="right"> %</td>
-      <td style="white-space:nowrap"><button type="button" class="btn sm icon cu" title="Subir" ${k===0?'disabled':''}>↑</button><button type="button" class="btn sm icon cd" title="Bajar" ${k===cs.length-1?'disabled':''}>↓</button>${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
+      <td style="white-space:nowrap"><button type="button" class="btn sm icon cu" title="Subir" ${k===0?'disabled':''}>↑</button><button type="button" class="btn sm icon cd" title="Bajar" ${k===cs.length-1?'disabled':''}>↓</button>${c.g==='AHORRO'?'':`<button type="button" class="btn sm icon ac${S.aj.acumula&&S.aj.acumula[c.id]?' on':''}" title="${S.aj.acumula&&S.aj.acumula[c.id]?'Acumula: lo que sobra pasa al mes siguiente (pulsa para quitarlo)':'Pulsa para que lo que sobre pase al mes siguiente'}">↻</button>`}${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
   $$('#pctTable tr[data-cid]').forEach(tr=>{const id=tr.dataset.cid;const c=S.cats.find(x=>x.id===id);
     $('.cn',tr).onchange=e=>{const n=e.target.value.trim();if(!n){e.target.value=c.n;return}
       if(S.cats.some(x=>x!==c&&norm(x.n)===norm(n))){toast('Ya hay una categoría con ese nombre',true);e.target.value=c.n;return}
@@ -22,6 +22,7 @@ function rAjustes(){
     const mover=d=>{const cs=S.cats.filter(x=>x.g===c.g);const k=cs.indexOf(c),o=cs[k+d];if(!o)return;const i=S.cats.indexOf(c),j=S.cats.indexOf(o);[S.cats[i],S.cats[j]]=[S.cats[j],S.cats[i]];save();rAjustes()};
     $('.cu',tr).onclick=()=>mover(-1);$('.cd',tr).onclick=()=>mover(1);
     const cx=$('.cx',tr);if(cx)cx.onclick=()=>borrarCat(c);
+    const ac=$('.ac',tr);if(ac)ac.onclick=()=>{const a=S.aj.acumula||(S.aj.acumula={});if(a[id]){delete a[id];toast(c.n+': ya no acumula')}else{a[id]=mesDe(hoy());toast(c.n+': lo que sobre de '+nombreMes(a[id])+' pasará al mes siguiente')}save();rAjustes()};
   });
   $('#catAdd').onsubmit=e=>{e.preventDefault();const n=$('#caNombre').value.trim();if(!n)return;
     if(S.cats.some(x=>norm(x.n)===norm(n))){toast('Ya hay una categoría con ese nombre',true);return}
@@ -42,12 +43,12 @@ function rAjustes(){
   $('#umbralNomina').value=fmt(S.aj.umbralNomina||1000,0);$('#umbralNomina').onchange=e=>{const v=parseNum(e.target.value);S.aj.umbralNomina=isFinite(v)&&v>0?v:1000;save();toast('Guardado')};
   $$('#nomMes button').forEach(b=>{b.classList.toggle('on',b.dataset.v===(S.aj.nominaMes||'siguiente'));b.onclick=()=>{S.aj.nominaMes=b.dataset.v;save();rAjustes();toast('Guardado. Se aplica a las nóminas nuevas')}});
   instUI();
-  $('#verTag').textContent='Versión '+VERSION;$('#verList').innerHTML=cambiosHtml(null).replace('<div class="chlog">','');
+  $('#verTagAj').textContent='Versión '+VERSION;$('#irAyuda').onclick=()=>go('ayuda');
   $('#bkInfo').textContent=S.ultimaCopia?'Última copia: '+new Date(S.ultimaCopia).toLocaleDateString('es-ES'):'Aún no hay ninguna copia.';
   const nh=S.mov.filter(x=>x.origen==='excel').length;const hm=S.histMeta;
   $('#histInfo').textContent=nh?`Hay ${nh} apuntes que vienen del Excel${hm?` (${nombreMes(hm.desde)} – ${nombreMes(hm.hasta)})`:''}.`:'Si tienes el archivo del historial del Excel (historial-mis-gastos.json), puedes cargarlo aquí.';
   $('#histLoad').disabled=!!nh;$('#histDel').disabled=!nh;
-  rReglas();rFijosAj();rBuzon();cargarMias();
+  rReglas();rFijosAj();
   $('#rCat').innerHTML=catOptions('',{blank:false});
 }
 function borrarCat(c){
@@ -207,6 +208,7 @@ function cargarHist(H){
 
 /* ---- Preferencias (interruptores) ---- */
 const PREFS=[
+  {k:'diezmo',t:'Diezmo',d:'Desactívalo si no das diezmo: desaparece del presupuesto y su porcentaje pasa al ahorro.'},
   {k:'bizumReglas',t:'Aprender la categoría de los Bizum',d:'Desactivado: cada Bizum se clasifica a mano, porque la misma persona te puede pagar por motivos distintos.'},
   {k:'aprender',t:'Aprender reglas al cambiar una categoría',d:'Al poner categoría a un movimiento del banco, los siguientes con el mismo comercio se clasifican solos.'},
   {k:'aviso80',t:'Avisar al llegar al 80 % de una categoría',d:'Aviso en el Resumen cuando te acercas al presupuesto.'},
@@ -226,7 +228,7 @@ function rPrefs(){
     `<div class="toolbar" style="margin:10px 0 0"><button class="btn sm" type="button" id="verTuto">Ver el tutorial otra vez</button></div>`;
   $$('#palSel .palopt').forEach(b=>b.onclick=()=>{S.aj.paleta=b.dataset.pal;aplicarTema();save();rPrefs();toast('Colores: '+PALETAS[b.dataset.pal].n)});
   $$('#temaSeg button').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.v;aplicarTema();save();rPrefs()});
-  $$('[data-pref]').forEach(c=>c.onchange=()=>{S.aj[c.dataset.pref]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(c.dataset.pref==='fab')render()});
+  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab')render()});
   const vt=$('#verTuto');if(vt)vt.onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
 }
 const PALETAS={"verde": {"n": "Verde", "l": ["#0f6b5c", "#e1f0eb", "#f5f4ef"], "d": ["#4db6a0", "#16332d", "#131615"]}, "lavanda": {"n": "Lavanda", "l": ["#6b4fbb", "#ece6fb", "#f6f4fa"], "d": ["#a58cf0", "#2b2445", "#15131c"]}, "oceano": {"n": "Océano", "l": ["#1f5fa8", "#e2edf8", "#f2f6f9"], "d": ["#6aa7ec", "#172b42", "#10151b"]}, "terracota": {"n": "Terracota", "l": ["#b9532f", "#f8e5dc", "#faf5ef"], "d": ["#e58a6b", "#3a241b", "#171311"]}, "frambuesa": {"n": "Frambuesa", "l": ["#ad2f5b", "#f9e1ea", "#fbf4f6"], "d": ["#ec7ca3", "#3d1f2b", "#181215"]}, "ciruela": {"n": "Ciruela", "l": ["#5b3a6e", "#efe7f3", "#f7f5f1"], "d": ["#b88fd0", "#33263b", "#151217"]}};
@@ -235,3 +237,53 @@ function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.pal
   if(p==='verde'||!PALETAS[p])delete de.dataset.pal;else de.dataset.pal=p;
   try{localStorage.setItem('mg-tema',t);localStorage.setItem('mg-paleta',p)}catch(_){}
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=(PALETAS[p]||PALETAS.verde).l[0];}
+// Activar o desactivar el diezmo sin descuadrar el 100 %: su porcentaje va y viene del ahorro.
+function ponerDiezmo(on){
+  const p=S.aj.pct;
+  if(!on){p.AHORRO=r2((+p.AHORRO||0)+(+p.DIEZMO||0));p.DIEZMO=0;S.aj.diezmo=false;S.aj.diezmoAuto=false;toast('Diezmo desactivado: su porcentaje pasa al ahorro')}
+  else{const d=Math.min(10,+p.AHORRO||0);p.DIEZMO=d;p.AHORRO=r2((+p.AHORRO||0)-d);S.aj.diezmo=true;toast(d?'Diezmo activado con el '+d+' %, que sale del ahorro':'Diezmo activado: ponle su porcentaje en el presupuesto')}
+  save();refreshCats();if(TAB==='ajustes')rAjustes();else render();
+}
+
+/* ---- Más categorías: sugerencias que se añaden con un toque, con sus palabras para clasificar solas ---- */
+const CAT_SUG=[
+  {n:'Mascotas',g:'FIJOS',e:'🐾',r:['KIWOKO','TIENDANIMAL','ZOOPLUS','VETERINARI','CLINICA VETERINARIA','PIENSO','MASCOTA']},
+  {n:'Hijos y colegio',g:'FIJOS',e:'🎒',r:['GUARDERIA','ESCUELA INFANTIL','COLEGIO','MATERIAL ESCOLAR','COMEDOR ESCOLAR','EXTRAESCOLAR']},
+  {n:'Seguros',g:'FIJOS',e:'🛡️',r:['MAPFRE','MUTUA MADRILENA','AXA','ALLIANZ','GENERALI','LINEA DIRECTA','SANITAS','ADESLAS','DKV','ASISA','SEGURO']},
+  {n:'Teléfono e internet',g:'FIJOS',e:'📱',r:['MOVISTAR','VODAFONE','ORANGE','DIGI','MASMOVIL','PEPEPHONE','YOIGO','JAZZTEL','LOWI','SIMYO','O2 ']},
+  {n:'Luz, agua y gas',g:'FIJOS',e:'💡',r:['IBERDROLA','ENDESA','NATURGY','HOLALUZ','TOTALENERGIES','EMIVASA','AGUAS DE','CANAL DE ISABEL']},
+  {n:'Coche',g:'FIJOS',e:'🚗',r:['ITV','TALLER','NORAUTO','MIDAS','FEU VERT','NEUMATICO','CONFORTAUTO']},
+  {n:'Farmacia',g:'FIJOS',e:'💊',r:['FARMACIA','PARAFARMACIA']},
+  {n:'Impuestos y tasas',g:'FIJOS',e:'🏛️',r:['AEAT','AGENCIA TRIBUTARIA','AYUNTAMIENTO','IBI','TASA','DGT','HACIENDA']},
+  {n:'Suscripciones',g:'VARIABLES',e:'📺',r:['NETFLIX','SPOTIFY','HBO','MAX ','DISNEY','PRIME VIDEO','AMAZON PRIME','YOUTUBE','ICLOUD','APPLE COM','GOOGLE ONE','FILMIN','DAZN']},
+  {n:'Comida a domicilio',g:'VARIABLES',e:'🛵',r:['GLOVO','JUST EAT','UBER EATS','DELIVEROO','TELEPIZZA']},
+  {n:'Hogar y decoración',g:'VARIABLES',e:'🛋️',r:['IKEA','LEROY MERLIN','BRICOMART','BRICODEPOT','ZARA HOME','MAISONS DU MONDE','JYSK','KAVE HOME']},
+  {n:'Belleza y cuidado',g:'VARIABLES',e:'💅',r:['PELUQUERIA','ESTETICA','SEPHORA','DRUNI','PRIMOR','MANICURA','UNAS','CEJAS']},
+  {n:'Tecnología',g:'VARIABLES',e:'💻',r:['MEDIA MARKT','MEDIAMARKT','PCCOMPONENTES','WORTEN','APPLE STORE','XIAOMI','BACK MARKET']},
+  {n:'Formación',g:'VARIABLES',e:'📚',r:['ACADEMIA','UDEMY','COURSERA','MATRICULA','UNIVERSIDAD','CURSO']},
+  {n:'Donativos',g:'AHORRO',e:'🤝',r:['UNICEF','CARITAS','CRUZ ROJA','MEDICOS SIN FRONTERAS','ACNUR','SAVE THE CHILDREN','DONATIVO','DONACION']},
+];
+const catSugDisponibles=()=>CAT_SUG.filter(c=>!S.cats.some(x=>norm(x.n)===norm(c.n)));
+function rCatSug(){
+  const el=$('#catSug');if(!el)return;const xs=catSugDisponibles();
+  el.innerHTML=xs.length?`<div style="margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--line)"><b>Más categorías</b><p class="small mut" style="margin:2px 0 8px">Añade las que te encajen con un toque. Ya traen sus palabras para clasificar solas (por ejemplo, Netflix o Spotify en Suscripciones). Empiezan con 0 %: luego les pones su parte del presupuesto.</p>
+    <div class="chips">${xs.map(c=>`<button type="button" class="chip" data-sug="${esc(c.n)}">${c.e} ${esc(c.n)}</button>`).join('')}</div></div>`:'';
+  $$('#catSug [data-sug]').forEach(b=>b.onclick=()=>anadirCatSug(CAT_SUG.find(c=>c.n===b.dataset.sug)));
+}
+function anadirCatSug(sg,{silencio=false}={}){
+  if(!sg||S.cats.some(x=>norm(x.n)===norm(sg.n)))return null;
+  const id='C'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,4).toUpperCase();
+  const ult=S.cats.map((x,i)=>x.g===sg.g?i:-1).filter(i=>i>=0).pop();
+  S.cats.splice(ult==null?S.cats.length:ult+1,0,{id,n:sg.n,g:sg.g});S.aj.pct[id]=0;
+  // sus palabras van primero para que ganen a las reglas de serie
+  for(const t of sg.r.slice().reverse())if(!S.reglas.some(r=>!r.u&&norm(r.t)===norm(t)&&r.c===id))S.reglas.unshift({t,c:id,u:0});
+  save();refreshCats();
+  if(silencio)return id;
+  // movimientos de antes que encajan (sin contar los Bizum ni los clasificados a mano como préstamo, traspaso…)
+  const enc=S.mov.filter(x=>x.cat!==id&&!isBizum(x.concepto)&&!SPECIAL.some(c=>c.id===x.cat)&&(()=>{const r=matchRule(x.concepto+' '+(x.detalle||''));return r&&r.c===id})());
+  if(TAB==='ajustes')rAjustes();
+  if(enc.length)dialog('«'+sg.n+'» añadida',`<p>He encontrado <b>${enc.length}</b> movimiento${enc.length>1?'s':''} de antes que encaja${enc.length>1?'n':''} (por ejemplo «${esc(enc[0].concepto)}»). ¿Los paso a «${esc(sg.n)}»?</p><p class="small mut">Si no te convence, luego puedes pulsar «Deshacer».</p>`,
+    [{t:'No, solo los nuevos'},{t:'Pasarlos',cls:'pri',fn:()=>conDeshacer(enc.length+' movimientos pasados a «'+sg.n+'»',()=>{const ids=new Set(enc.map(x=>x.id));for(const x of S.mov)if(ids.has(x.id))x.cat=id})}]);
+  else toast('«'+sg.n+'» añadida: ponle su porcentaje en el presupuesto');
+  return id;
+}

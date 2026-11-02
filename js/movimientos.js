@@ -1,13 +1,14 @@
 // Cuentas Claras · Pestañas Movimientos y Añadir
 "use strict";
 /* ============ Movimientos ============ */
-const F={q:'',cat:'',sinCat:false,todos:false};
+const F={q:'',cat:'',sinCat:false,todos:false,tag:''};
 const SEL=new Set();
 function pagoOptions(sel){return S.cuentas.map(c=>`<option${c.n===sel?' selected':''}>${esc(c.n)}</option>`).join('')+`<option value="__efectivo"${sel==='__efectivo'?' selected':''}>Efectivo</option>`}
 function rMovs(){
   $('#fCat').innerHTML=catOptions(F.cat,{blankText:'Todas las categorías'});
   $('#fSinCat').checked=F.sinCat;$('#fBuscar').value=F.q;
-  let list=F.todos&&F.cat?S.mov.filter(x=>x.cat===F.cat):S.mov.filter(x=>x.mes===MES);
+  pintarTagList();
+  let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):F.todos&&F.cat?S.mov.filter(x=>x.cat===F.cat):S.mov.filter(x=>x.mes===MES);
   if(F.cat)list=list.filter(x=>x.cat===F.cat);
   if(F.sinCat)list=list.filter(x=>!x.cat);
   if(F.q){const q=norm(F.q).trim();list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')).includes(q))}
@@ -21,6 +22,8 @@ function rMovs(){
     if(x.origen==='excel')tags.push('<span class="tag">Excel</span>');
     if(x.origen==='manual')tags.push('<span class="tag">a mano</span>');
     if(x.nomina&&x.cat==='INGRESO')tags.push('<span class="tag good">nómina</span>');
+    if(x.divDe||x.dividido)tags.push('<span class="tag" title="Parte de un gasto dividido">dividido</span>');
+    for(const t of tagsDe(x))tags.push(`<span class="tag tg" data-tag="${esc(t)}" title="Ver todo lo de «${esc(t)}»">#${esc(t)}</span>`);
     return `<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''}></td>
       <td class="num">${fFecha(x.fecha)}</td>
       <td><div>${esc(x.concepto)}${tags.join('')}</div>${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
@@ -29,10 +32,14 @@ function rMovs(){
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
     :`<tr><td colspan="6" class="empty">No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.</td></tr>`;
   const tot=list.reduce((a,x)=>a+x.importe,0);
+  const tb2=$('#tagBar');if(F.tag){const g=-list.reduce((a,x)=>a+(x.cat==='INGRESO'?0:x.importe),0);const fs=list.map(x=>x.fecha).sort();
+    tb2.innerHTML=`<span class="tag tg">#${esc(F.tag)}</span><span class="small">${list.length} movimientos${fs.length?` · ${fFecha(fs[0])} – ${fFecha(fs[fs.length-1])}`:''} · <b>${eur(g)}</b> en total</span><span class="sp" style="flex:1"></span><button class="btn sm" type="button" id="tagQuitar">Quitar filtro</button>`;
+    tb2.classList.remove('hide');$('#tagQuitar').onclick=()=>{F.tag='';rMovs()}}else tb2.classList.add('hide');
   $('#movFoot').textContent=`${list.length} movimientos · salidas ${eur(-list.filter(x=>x.importe<0).reduce((a,x)=>a+x.importe,0))} · entradas ${eur(list.filter(x=>x.importe>0).reduce((a,x)=>a+x.importe,0))}`+(F.todos&&F.cat?' · todos los meses':'');
   $$('#movTable tbody tr[data-id]').forEach(tr=>{
     const id=tr.dataset.id,x=S.mov.find(m=>m.id===id);
-    $('.cat',tr).onchange=e=>{x.cat=e.target.value;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel'){marcarNomina(x)};save();rMovs();toast('Categoría cambiada')};
+    $('.cat',tr).onchange=e=>{const c=e.target.value;conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x)})};
+    $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.cat='';F.sinCat=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);
     $('.sel',tr).onchange=e=>{e.target.checked?SEL.add(id):SEL.delete(id);selUI()};
   });
@@ -42,11 +49,15 @@ function rMovs(){
 }
 function selUI(){
   const n=SEL.size;$('#selInfo').textContent=n?n+' marcados':'';
-  ['#bulkCat','#bulkApply','#bulkDel'].forEach(s=>$(s).classList.toggle('hide',!n));
+  ['#bulkCat','#bulkApply','#bulkTag','#bulkDel'].forEach(s=>$(s).classList.toggle('hide',!n));
   if(n&&!$('#bulkCat').options.length)$('#bulkCat').innerHTML=catOptions('',{blankText:'Categoría…'});
 }
-$('#bulkApply').onclick=()=>{const c=$('#bulkCat').value;for(const x of S.mov)if(SEL.has(x.id)){x.cat=c;if(x.origen!=='excel')marcarNomina(x)}save();toast(SEL.size+' movimientos actualizados');SEL.clear();rMovs()};
-$('#bulkDel').onclick=()=>confirmar('Borrar movimientos',`¿Borrar ${SEL.size} movimientos?`,'Borrar',()=>{S.mov=S.mov.filter(x=>!SEL.has(x.id));SEL.clear();save();rMovs();toast('Borrados')});
+$('#bulkApply').onclick=()=>{const c=$('#bulkCat').value,n=SEL.size;conDeshacer(n+' movimientos cambiados a '+(c?catN(c):'sin categoría'),()=>{for(const x of S.mov)if(SEL.has(x.id)){x.cat=c;if(x.origen!=='excel')marcarNomina(x)}SEL.clear()})};
+$('#bulkDel').onclick=()=>{const n=SEL.size;conDeshacer(n+' movimiento'+(n>1?'s':'')+' borrado'+(n>1?'s':''),()=>{S.mov=S.mov.filter(x=>!SEL.has(x.id));SEL.clear()})};
+$('#bulkTag').onclick=()=>{pintarTagList();dialog('Etiquetar '+SEL.size+' movimientos',`<p class="small mut" style="margin-top:0">Por ejemplo «Boda Ana» o «Viaje a Roma». Luego verás cuánto ha costado en total en Histórico → Etiquetas.</p><input type="text" id="btT" list="tagList" maxlength="40" style="width:100%" placeholder="Nombre de la etiqueta">${todasEtiquetas().length?'<div class="chips" style="margin-top:8px">'+todasEtiquetas().slice(0,12).map(t=>`<button type="button" class="chip" data-t="${esc(t)}">#${esc(t)}</button>`).join('')+'</div>':''}`,
+  [{t:'Cancelar'},{t:'Etiquetar',cls:'pri',fn:()=>{const t=parseTags($('#btT').value)[0];if(!t){toast('Escribe una etiqueta',true);return false}const n=SEL.size;
+    conDeshacer(n+' movimientos con #'+t,()=>{for(const x of S.mov)if(SEL.has(x.id)&&!tagsDe(x).some(y=>norm(y)===norm(t)))x.tags=[...tagsDe(x),t];SEL.clear()})}}]);
+  $$('#dlgB .chip[data-t]').forEach(b=>b.onclick=()=>{$('#btT').value=b.dataset.t})};
 $('#fBuscar').oninput=e=>{F.q=e.target.value;rMovs();$('#fBuscar').focus()};
 $('#fCat').onchange=e=>{F.cat=e.target.value;if(!F.cat)F.todos=false;rMovs()};
 $('#fSinCat').onchange=e=>{F.sinCat=e.target.checked;rMovs()};
@@ -74,18 +85,23 @@ function editar(x){
     <label>Pagado con</label><select id="eP">${pagoOptions(x.metodo==='efectivo'?'__efectivo':x.cuenta)}</select>
     <label>Nota</label><input type="text" id="eN" value="${esc(x.nota||'')}">
     <label>Persona (préstamos)</label><input type="text" id="ePer" value="${esc(x.persona||'')}" placeholder="${esc(x.cat==='PRESTAMO'?personaDe(x):'')}">
+    <label>Etiquetas</label><input type="text" id="eT" list="tagList" value="${esc(tagsDe(x).join(', '))}" placeholder="p. ej. Viaje a Roma (separa varias con comas)">
     </div><p class="small mut" style="margin:10px 0 0">Importe en negativo = salida; en positivo = entrada (ingresos, devoluciones, Bizum que te mandan).${x.detalle?'<br>Banco: '+esc(x.detalle):''}</p>`,
-   [{t:'Borrar',cls:'dan',fn:()=>{confirmar('Borrar','¿Borrar «'+x.concepto+'»?','Borrar',()=>{S.mov=S.mov.filter(m=>m!==x);save();render()});return false}},
+   [{t:'Borrar',cls:'dan',fn:()=>{conDeshacer('Borrado «'+x.concepto+'»',()=>{S.mov=S.mov.filter(m=>m!==x)})}},
+    {t:'Dividir',fn:()=>{dividir(x);return false}},
     {t:'Cancelar'},
     {t:'Guardar',cls:'pri',fn:()=>{
       const v=parseNum($('#eI').value);if(!isFinite(v)){toast('Importe no válido',true);return false}
-      const nf=$('#eF').value,eraMes=x.mes,nom=$('#eNom').checked&&$('#eK').value==='INGRESO',cambioNom=nom!==!!x.nomina;
-      x.nomina=nom;x.cat=$('#eK').value;
-      x.mes=((nf!==x.fecha||cambioNom)&&$('#eM').value===eraMes)?mesPara({...x,fecha:nf}):$('#eM').value;x.fecha=nf;
-      x.concepto=$('#eC').value.trim();x.importe=r2(v);x.cat=$('#eK').value;
-      if($('#ePer').value.trim())x.persona=$('#ePer').value.trim();else delete x.persona;
-      const p=$('#eP').value;x.metodo=p==='__efectivo'?'efectivo':'banco';x.cuenta=p==='__efectivo'?'':p;x.nota=$('#eN').value.trim();
-      save();render();toast('Guardado')}}]);
+      const vals={nf:$('#eF').value,nom:$('#eNom').checked,m:$('#eM').value,c:$('#eC').value.trim(),k:$('#eK').value,per:$('#ePer').value.trim(),p:$('#eP').value,n:$('#eN').value.trim(),t:parseTags($('#eT').value)};
+      conDeshacer('Guardado «'+vals.c+'»',()=>{
+      const nf=vals.nf,eraMes=x.mes,nom=vals.nom&&vals.k==='INGRESO',cambioNom=nom!==!!x.nomina;
+      x.nomina=nom;x.cat=vals.k;
+      x.mes=((nf!==x.fecha||cambioNom)&&vals.m===eraMes)?mesPara({...x,fecha:nf}):vals.m;x.fecha=nf;
+      x.concepto=vals.c;x.importe=r2(v);
+      if(vals.per)x.persona=vals.per;else delete x.persona;
+      if(vals.t.length)x.tags=vals.t;else delete x.tags;
+      const p=vals.p;x.metodo=p==='__efectivo'?'efectivo':'banco';x.cuenta=p==='__efectivo'?'':p;x.nota=vals.n})}}]);
+  pintarTagList();
 }
 
 /* ============ Añadir (gasto o ingreso a mano) ============ */
@@ -128,9 +144,35 @@ $('#cashForm').onsubmit=e=>{
   if(!cCat){toast('Elige una categoría',true);return}
   const fecha=$('#cFecha').value,ef=aPago==='__efectivo',g=aTipo==='gasto';
   const x={id:uid(),fecha,mes:mesDe(fecha),concepto:$('#cCon').value.trim(),importe:r2(Math.abs(v)*(g?-1:1)),cat:cCat,metodo:ef?'efectivo':'banco',cuenta:ef?'':aPago,origen:'manual'};
+  const tg=parseTags($('#aTag').value);if(tg.length)x.tags=tg;
   if(cCat==='PRESTAMO'&&$('#aPer').value.trim())x.persona=$('#aPer').value.trim();
   marcarNomina(x);S.mov.push(x);save();
-  $('#cImp').value='';$('#cCon').value='';$('#aPer').value='';cCat='';cCatManual=false;
+  $('#cImp').value='';$('#cCon').value='';$('#aPer').value='';cCat='';cCatManual=false;pintarTagList();
   if(x.mes!==MES)MES=x.mes;
   render();$('#cImp').focus();toast('Apuntado: '+x.concepto+' '+(x.importe>0?'+':'')+eur(x.importe)+(ef?' (efectivo)':' ('+x.cuenta+')'));
 };
+
+/* ---- Dividir un movimiento en varias categorías ---- */
+function dividir(x){
+  const signo=x.importe<0?-1:1,total=Math.abs(x.importe);
+  const fila=(imp,cat,con)=>`<div class="dvrow"><input type="text" class="dvi right" inputmode="decimal" value="${imp?fmt(imp):''}" placeholder="€"><select class="dvk">${catOptions(cat)}</select><input type="text" class="dvc" value="${esc(con)}" placeholder="Concepto"><button type="button" class="btn sm icon dvx" title="Quitar">✕</button></div>`;
+  dialog('Dividir «'+x.concepto+'»',`<p class="small mut" style="margin-top:0">Reparte los ${eur(total)} en varias categorías (por ejemplo, una compra que es parte supermercado y parte casa). Las partes tienen que sumar el total.</p>
+    <div id="dvRows">${fila(total,x.cat,x.concepto)}${fila(0,'',x.concepto)}</div>
+    <div class="toolbar" style="margin:4px 0 0"><button type="button" class="btn sm" id="dvMas">＋ Otra parte</button><span class="sp"></span><span class="small" id="dvFalta"></span></div>`,
+   [{t:'Cancelar'},{t:'Dividir',cls:'pri',fn:()=>{
+     const ps=$$('#dvRows .dvrow').map(r=>({v:parseNum($('.dvi',r).value),k:$('.dvk',r).value,c:$('.dvc',r).value.trim()||x.concepto})).filter(p=>isFinite(p.v)&&p.v!==0);
+     if(ps.length<2){toast('Pon al menos dos partes',true);return false}
+     if(ps.some(p=>p.v<0)){toast('Escribe las partes sin signo',true);return false}
+     if(Math.abs(ps.reduce((a,p)=>a+p.v,0)-total)>0.005){toast('Las partes no suman '+eur(total),true);return false}
+     conDeshacer('Dividido en '+ps.length+' partes',()=>{
+       const [p0,...resto]=ps;x.importe=r2(signo*p0.v);x.cat=p0.k;x.concepto=p0.c;x.dividido=true;
+       resto.forEach((p,i)=>S.mov.push({...JSON.parse(JSON.stringify(x)),id:uid(),importe:r2(signo*p.v),cat:p.k,concepto:p.c,dividido:undefined,divDe:x.id,key:x.key?x.key+'#'+(i+2):undefined}));
+     })}}]);
+  const falta=()=>{const s=$$('#dvRows .dvi').reduce((a,i)=>a+(isFinite(parseNum(i.value))?parseNum(i.value):0),0),d=r2(total-s);
+    $('#dvFalta').innerHTML=Math.abs(d)<0.005?'<span class="pos">✓ Cuadra</span>':d>0?`Falta por repartir: <b>${eur(d)}</b>`:`<span class="neg">Te pasas en ${eur(-d)}</span>`};
+  const enlazar=()=>{$$('#dvRows .dvi').forEach(i=>i.oninput=falta);$$('#dvRows .dvx').forEach(b=>b.onclick=()=>{if($$('#dvRows .dvrow').length>2){b.closest('.dvrow').remove();falta()}});falta()};
+  // al escribir la segunda parte, la primera se ajusta sola
+  const auto=()=>{const is=$$('#dvRows .dvi');if(is.length<2)return;const otros=is.slice(1).reduce((a,i)=>a+(isFinite(parseNum(i.value))?parseNum(i.value):0),0);if(otros<total)is[0].value=fmt(r2(total-otros));falta()};
+  $('#dvMas').onclick=()=>{$('#dvRows').insertAdjacentHTML('beforeend',fila(0,'',x.concepto));enlazar();$$('#dvRows .dvi').slice(1).forEach(i=>i.addEventListener('change',auto))};
+  enlazar();$$('#dvRows .dvi').slice(1).forEach(i=>i.addEventListener('change',auto));
+}

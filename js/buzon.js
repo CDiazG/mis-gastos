@@ -20,7 +20,7 @@ async function cargarMias(){
   if(!NUBE||!USER)return;
   try{const {collection,query,where,getDocs}=fb.fsM;const r=[];
     (await getDocs(query(collection(fb.db,'sugerencias'),where('uid','==',USER.uid)))).forEach(d=>r.push({id:d.id,...d.data()}));
-    BZ_MIAS=r.sort((a,b)=>b.fecha-a.fecha);if(TAB==='ajustes')rBuzon()}catch(e){console.warn('buzón',e.code||e)}
+    BZ_MIAS=r.sort((a,b)=>b.fecha-a.fecha);if(TAB==='ayuda')rBuzon()}catch(e){console.warn('buzón',e.code||e)}
 }
 $('#buzonF').onsubmit=async e=>{
   e.preventDefault();const texto=$('#bzTxt').value.trim();if(!texto||!NUBE||!USER)return;

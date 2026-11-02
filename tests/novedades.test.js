@@ -83,6 +83,7 @@ module.exports = {
     return (async () => {
       const ctx = await browser.newContext(); (estado.contextos ||= []).push(ctx);
       await ctx.route('**/js/config.js*', r => r.fulfill({ contentType: 'text/javascript', body: 'window.MG_CONFIG={firebase:null};' }));
+      await ctx.addInitScript(() => { window.__TAB_INICIAL = 'resumen'; try { localStorage.setItem('mg-sin-tuto', '1'); } catch (e) {} });
       // datos guardados con la versión anterior (sin la categoría nueva)
       await ctx.addInitScript(() => { if (localStorage.getItem('mis-gastos-v1')) return;
         const pct = { VIVIENDA: 25, SUPERMERCADO: 10, PROFESIONAL: 5, SALUD: 5, TRANSPORTE: 5, OCIO: 8, PERSONAL: 5, VIAJES: 5, REGALOS: 2, OTROS: 0, AHORRO: 20, DIEZMO: 10 };

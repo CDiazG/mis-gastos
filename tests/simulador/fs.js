@@ -12,6 +12,7 @@ function can(path,op,data){
     if(op==='create')return !!u&&!!data&&data.uid===u.uid&&data.estado==='nueva'&&!d;
     return isAdmin();}
   const activoU=()=>{const pr=u&&db()['users/'+u.uid];return !!(pr&&pr.activo===true)};
+  if(p[0]==='errores'){const d=db()[path];if(op==='create')return !!u&&!!data&&data.uid===u.uid&&!d&&String(data.mensaje).length<=1000;return isAdmin();}
   if(p[0]==='foro'){const d=db()[path];
     if(op==='read'||op==='list')return activoU();
     if(op==='create')return activoU()&&!!data&&data.uid===u.uid&&!d&&typeof data.texto==='string'&&data.texto.length<=3000;

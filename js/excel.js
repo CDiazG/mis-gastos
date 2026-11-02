@@ -102,7 +102,7 @@ function hojaMes(m,st){
   const [y,mm]=m.split('-');H.set('A1',nombreMes(m).replace(/^./,c=>c.toUpperCase()),T);H.merges.push('A1:D2');H.alto(1,22);H.alto(2,22);
   H.set('F1',NUBE&&USER?'Cuentas de '+USER.nombre:'Cuentas Claras',st({c:XC.mut,i:true}));H.set('F2','Exportado el '+fFecha(hoy()),st({c:XC.mut,i:true,sz:9}));
   // cifras del mes
-  const kp=[['INGRESOS',s.ingresos,bigOk],['GASTADO',s.consumo,big],['AHORRO DEL MES',s.ahorro,s.ahorro<0?big:bigOk],['% AHORRO',s.ingresos?R(s.ahorro/s.ingresos*100)/100:'',bigP],['INVERTIDO',s.by.INVERSION||0,big],['DIEZMO',s.diezmo,big]];
+  const kp=[['INGRESOS',s.ingresos,bigOk],['GASTADO',s.consumo,big],['AHORRO DEL MES',s.ahorro,s.ahorro<0?big:bigOk],['% AHORRO',s.ingresos?R(s.ahorro/s.ingresos*100)/100:'',bigP],['INVERTIDO',s.by.INVERSION||0,big],...(diezmoOn()||s.diezmo?[['DIEZMO',s.diezmo,big]]:[])];
   kp.forEach(([t,v,sv],i)=>{const c=String.fromCharCode(65+i);H.set(c+'4',t,hd);H.set(c+'5',typeof v==='number'?R(v):v,sv)});H.alto(5,24);
   // categorías
   let r=7;
@@ -117,12 +117,12 @@ function hojaMes(m,st){
     const ini=gr+1,fin=gr+cs.length+(extra?1:0);
     H.set('C'+gr,R(cs.reduce((a,c)=>a+(+S.aj.pct[c.id]||0),0))/100,gP);
     for(const col of ['D','E','F','G'])H.set(col+gr,null,col==='G'?gT:gE,`SUM(${col}${ini}:${col}${fin})`);
-    const gv=cs.reduce((a,c)=>a+(s.by[c.id]||0),0)+(extra?s.by.SINCAT:0),gp=cs.reduce((a,c)=>a+s.base*(+S.aj.pct[c.id]||0)/100,0);
+    const gv=cs.reduce((a,c)=>a+(s.by[c.id]||0),0)+(extra?s.by.SINCAT:0),gp=cs.reduce((a,c)=>a+(c.id==='AHORRO'?s.base*(+S.aj.pct[c.id]||0)/100:presupuestoCat(m,c.id,s).p),0);
     H.c['G'+gr].v=R(gv);H.c['D'+gr].v=R(gp);
     const sumB=cs.filter(c=>c.id!=='AHORRO').reduce((a,c)=>a+banco(c.id),0)+(extra?banco(''):0),sumE=cs.filter(c=>c.id!=='AHORRO').reduce((a,c)=>a+efe(c.id),0)+(extra?efe(''):0);
     H.c['E'+gr].v=R(sumB);H.c['F'+gr].v=R(sumE);
     H.set('H'+gr,G.id==='AHORRO'?(gv>=gp-0.5?'CUMPLIDO':'POR DEBAJO'):(gv>gp+0.5?'SOBRE PRESUPUESTO':'DENTRO'),G.id==='AHORRO'?(gv>=gp-0.5?okS:warnS):(gv>gp+0.5?badS:okS));
-    for(const c of cs){r++;const p=R(s.base*(+S.aj.pct[c.id]||0)/100),v=R(s.by[c.id]||0);
+    for(const c of cs){r++;const p=c.id==='AHORRO'?R(s.base*(+S.aj.pct[c.id]||0)/100):presupuestoCat(m,c.id,s).p,v=R(s.by[c.id]||0);
       H.set('A'+r,'',txt);H.set('B'+r,c.n+(c.id==='AHORRO'?' (lo que sobra)':''),txt);H.set('C'+r,(+S.aj.pct[c.id]||0)/100,pct);H.set('D'+r,p,pres);
       if(c.id==='AHORRO'){H.set('E'+r,'',txt);H.set('F'+r,'',txt)}else{H.set('E'+r,R(banco(c.id)),eur);H.set('F'+r,R(efe(c.id)),eur)}
       H.set('G'+r,v,totC,c.id==='AHORRO'?undefined:`E${r}+F${r}`);
@@ -172,11 +172,11 @@ function hojaResumen(meses,st){
 // Hoja «Movimientos»: todo en una tabla con filtros
 function hojaMovs(movs,st){
   const H=hoja();const hd=st({b:true,c:'FFFFFF',bg:XC.hdr,bd:'thin'}),dt=st({fmt:'date',bd:'thin',al:'center'}),tx=st({bd:'thin'}),eu=st({fmt:'eurneg',bd:'thin'}),sinC=st({bd:'thin',i:true,c:XC.bad});
-  ['FECHA','MES','CONCEPTO','DETALLE DEL BANCO','CATEGORÍA','GRUPO','PAGADO CON','IMPORTE','ORIGEN','NOTA'].forEach((t,i)=>H.set(colL(i)+'1',t,hd));
+  ['FECHA','MES','CONCEPTO','DETALLE DEL BANCO','CATEGORÍA','GRUPO','PAGADO CON','IMPORTE','ORIGEN','NOTA','ETIQUETAS'].forEach((t,i)=>H.set(colL(i)+'1',t,hd));
   movs.forEach((x,k)=>{const r=2+k;H.set('A'+r,dSerial(x.fecha),dt);H.set('B'+r,nombreMesC(x.mes),tx);H.set('C'+r,x.concepto,tx);H.set('D'+r,x.detalle||'',tx);
     H.set('E'+r,x.cat?catN(x.cat):'Sin categoría',x.cat?tx:sinC);H.set('F'+r,x.cat==='AHORRO'?'':grupoN(x.cat),tx);H.set('G'+r,x.metodo==='efectivo'?'Efectivo':(x.cuenta||''),tx);H.set('H'+r,r2(x.importe),eu);
-    H.set('I'+r,{extracto:'Extracto',excel:'Excel antiguo',manual:'A mano'}[x.origen]||x.origen||'',tx);H.set('J'+r,x.nota||'',tx)});
-  return {name:'Movimientos',H,opt:{widths:[11,10,36,34,22,18,13,12,13,22],freeze:1,filter:`A1:J${movs.length+1}`,tab:'76B59A'}};
+    H.set('I'+r,{extracto:'Extracto',excel:'Excel antiguo',manual:'A mano'}[x.origen]||x.origen||'',tx);H.set('J'+r,x.nota||'',tx);H.set('K'+r,tagsDe(x).join(', '),tx)});
+  return {name:'Movimientos',H,opt:{widths:[11,10,36,34,22,18,13,12,13,22,20],freeze:1,filter:`A1:K${movs.length+1}`,tab:'76B59A'}};
 }
 function exportarExcel(alcance){
   let meses;const all=mesesConDatos();
@@ -194,7 +194,7 @@ function exportarExcel(alcance){
 /* ============ Informe para imprimir ============ */
 function informeMes(m){
   const st=stats(m),ant=stats(addMes(m,-1)),libre=st.ahorro;
-  const filas=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].map(c=>{const p=st.base*(S.aj.pct[c.id]||0)/100,v=st.by[c.id]||0,d=v-(ant.by[c.id]||0);
+  const filas=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].map(c=>{const p=c.id==='SINCAT'?0:presupuestoCat(m,c.id,st).p,v=st.by[c.id]||0,d=v-(ant.by[c.id]||0);
     return (v||p)?`<tr><td>${esc(c.n)}</td><td class="r">${p?eur(p,0):'—'}</td><td class="r">${eur(v)}</td><td class="r ${p&&v>p+0.5?'neg':''}">${p?eur(p-v,0):''}</td><td class="r">${ant.ms.length&&Math.abs(d)>=1?(d>0?'+':'−')+eur(Math.abs(d),0):''}</td></tr>`:''}).join('');
   const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
   const top=st.ms.filter(x=>x.importe<0&&x.cat!=='TRASPASO'&&x.cat!=='EFECTIVO').sort((a,b)=>a.importe-b.importe).slice(0,10);

@@ -15,8 +15,10 @@ async function leerArchivos(files){
   const res=[];
   for(const f of files){
     try{const rs=await leerExtracto(f);if(!rs.length)res.push({archivo:f.name,error:'cancelado',movs:[]});
-      rs.forEach((r,i)=>{r.archivo=f.name+(rs.length>1?' · cuenta '+(r.cuentaTxt||i+1):'');res.push(r)})}
-    catch(e){console.error(e);res.push({archivo:f.name,error:e.message||String(e),movs:[]})}
+      rs.forEach((r,i)=>{r.archivo=f.name+(rs.length>1?' · cuenta '+(r.cuentaTxt||i+1):'');res.push(r);
+        if(!r.movs.length)r.avisado=registrarError('importar','No he encontrado movimientos',`${descArchivo(f)} · banco: ${r.banco||'no reconocido'}`);
+        else if(r.cuadra===false)r.avisado=registrarError('importar','El extracto no cuadra con el saldo',`${descArchivo(f)} · banco: ${r.banco||'no reconocido'} · ${r.movs.length} movimientos · ${r.malos||0} líneas raras · calculado ${r.finCalc} frente a ${r.saldoFin}`)})}
+    catch(e){console.error(e);const r={archivo:f.name,error:e.message||String(e),movs:[]};res.push(r);r.avisado=registrarError('importar','No se ha podido leer: '+(e.message||String(e)),descArchivo(f))}
   }
   prepararRevision(res);
 }
@@ -88,8 +90,9 @@ function rImport(){
   let h='';
   for(const r of IMP.res){
     if(r.error==='cancelado')continue;
-    if(r.error){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no se ha podido leer (${esc(r.error)}).</span></div>`;continue}
-    if(!r.movs.length){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no he encontrado movimientos. Si es un PDF escaneado (una foto), no tiene texto que leer.</span></div>`;continue}
+    const aviso=NUBE&&USER?' Se lo he anotado al administrador para que lo revise.':'';
+    if(r.error){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no se ha podido leer (${esc(r.error)}).${aviso}</span></div>`;continue}
+    if(!r.movs.length){h+=`<div class="alert bad" style="margin-top:14px"><span class="grow"><b>${esc(r.archivo)}</b>: no he encontrado movimientos. Si es un PDF escaneado (una foto), no tiene texto que leer.${aviso}</span></div>`;continue}
     const f=r.movs.map(m=>m.fecha).sort();
     h+=`<div class="card pad" style="margin-top:14px"><div class="sumline">
       <div class="it"><div class="l">Archivo</div><div class="v">${esc(r.archivo)}</div></div>

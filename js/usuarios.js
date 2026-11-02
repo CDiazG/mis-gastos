@@ -6,10 +6,10 @@ function haceCuanto(t){const d=Math.floor((Date.now()-t)/864e5);const h=new Date
 let USERS=[],USERS_VIVO=false;
 function parcheLocal(id,patch){const u=USERS.find(x=>x.id===id);if(u)Object.assign(u,patch);badgeUsuarios()}
 const pendientesN=()=>USERS.filter(u=>u.estado==='pendiente'&&!u.eliminado).length;
-function badgeUsuarios(){const n=pendientesN()+(typeof bzNuevas==='function'?bzNuevas():0);$('#tabUsuarios').innerHTML='Usuarios'+(n?` <span class="tag bad" style="margin-left:4px">${n}</span>`:'')}
+function badgeUsuarios(){const n=pendientesN()+(typeof bzNuevas==='function'?bzNuevas():0)+(typeof ERR_TODOS!=='undefined'?ERR_TODOS.length:0);const t=$('#tabUsuarios');let b=$('.tag',t);if(!n){if(b)b.remove();return}if(!b){b=document.createElement('span');b.className='tag bad';t.appendChild(b)}b.textContent=n}
 async function rUsuarios(){
   if(!USER||!USER.admin)return;
-  rBuzonAdmin();
+  rBuzonAdmin();rErroresAdmin();
   if(!USERS_VIVO){
     const {collection,getDocs}=fb.fsM;
     $('#uTable').innerHTML='<tbody><tr><td class="empty">Cargando…</td></tr></tbody>';

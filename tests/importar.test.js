@@ -113,4 +113,27 @@ module.exports = {
       assert.equal(d.c.inversion, 1);
     })();
   },
+  'un extracto que no se puede leer queda en el registro de errores'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => go('importar'));
+      await p.setInputFiles('#pdfInput', [{ name: 'extracto-raro.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, '<p>Esto no es un extracto</p>') }]);
+      await p.waitForSelector('#impOut .alert.bad', { timeout: 30000 });
+      assert.match(await p.textContent('#impOut'), /anotado al administrador/);
+      await L.esperar(300);
+      const e = await p.evaluate(() => { const d = JSON.parse(localStorage.__mockDb); return Object.keys(d).filter(k => k.startsWith('errores/')).map(k => d[k]); });
+      assert.equal(e.length, 1);
+      assert.match(e[0].mensaje, /No he encontrado movimientos/);
+      assert.match(e[0].detalle, /extracto-raro\.pdf · pdf/);
+      assert.ok(!/Esto no es un extracto/.test(JSON.stringify(e[0])), 'no guarda el contenido del extracto');
+      // el administrador lo ve en Usuarios
+      await p.reload(); await L.esperar(800);
+      if (await p.isVisible('#lCont:not(.hide)')) await p.click('#lCont .btn.pri').catch(() => {});
+      await L.esperar(600);
+      await p.evaluate(() => go('usuarios')); await L.esperar(300);
+      assert.match(await p.textContent('#errAdmin'), /No he encontrado movimientos/);
+      await p.click('#errAdmin .erX'); await L.esperar(300);
+      assert.match(await p.textContent('#errAdmin'), /No hay errores/);
+    })();
+  },
 };

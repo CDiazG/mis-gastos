@@ -26,6 +26,15 @@ service cloud.firestore {
       allow update, delete: if esAdmin();
     }
 
+    // Registro de errores: cada usuario anota los suyos; solo el administrador los lee y borra.
+    match /errores/{id} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'nombre', 'tipo', 'mensaje', 'detalle', 'version', 'dispositivo', 'fecha'])
+        && request.resource.data.mensaje is string && request.resource.data.mensaje.size() <= 1000
+        && request.resource.data.detalle is string && request.resource.data.detalle.size() <= 1000;
+      allow read, delete: if esAdmin();
+    }
+
     // Foro: lo leen y escriben los usuarios activos; cada uno borra lo suyo y el administrador, todo.
     match /foro/{id} {
       allow read: if request.auth != null && activo(request.auth.uid);

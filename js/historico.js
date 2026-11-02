@@ -30,17 +30,26 @@ function rHist(){
   const all=[];for(let m=ms[0];m<=ms[ms.length-1];m=addMes(m,1))all.push(m);
   const data=all.map(m=>{const s=stats(m);return {m,...s,ahorroMes:r2(s.ingresos-s.consumo-s.diezmo),vacio:!s.ms.length}});
   // gráfico últimos 24 meses
-  const d=data.slice(-24);const W=1100,Hh=240,pl=46,pb=26,pt=10;const max=Math.max(1,...d.map(x=>Math.max(x.ingresos,x.consumo)));
+  const d=data.slice(-24);const W=1100,Hh=260,pl=46,pb=26,pt=14;
+  const max=Math.max(1,...d.map(x=>Math.max(x.ingresos,x.consumo,x.ahorroMes))),min=Math.min(0,...d.filter(x=>!x.vacio).map(x=>x.ahorroMes));
   const step=(W-pl-10)/d.length,bw=Math.max(4,step*0.34);
-  const y=v=>pt+(Hh-pt-pb)*(1-v/max);
-  let svg=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Ingresos y gastos por mes">`;
-  const ticks=4;for(let i=0;i<=ticks;i++){const v=max*i/ticks;svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${fmt(v/1000,1)}k</text>`}
+  const y=v=>pt+(Hh-pt-pb)*(max-v)/(max-min);
+  let svg=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Ingresos, gastos y ahorro por mes">`;
+  const ticks=4,paso=(max-min)/ticks;for(let i=0;i<=ticks;i++){const v=min+paso*i;svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${fmt(v/1000,1)}k</text>`}
+  if(min<0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(0)}" y2="${y(0)}" stroke="var(--muted)" stroke-width="1.2"/>`;
   d.forEach((x,i)=>{const cx=pl+step*i+step/2;
-    svg+=`<rect x="${cx-bw-1}" y="${y(x.ingresos)}" width="${bw}" height="${Math.max(0,y(0)-y(x.ingresos))}" rx="2" fill="var(--good)" opacity=".55"><title>${nombreMes(x.m)} · ingresos ${eur(x.ingresos)}</title></rect>`;
-    svg+=`<rect x="${cx+1}" y="${y(x.consumo)}" width="${bw}" height="${Math.max(0,y(0)-y(x.consumo))}" rx="2" fill="var(--acc)"><title>${nombreMes(x.m)} · gastado ${eur(x.consumo)}</title></rect>`;
+    svg+=`<rect x="${cx-bw-1}" y="${y(x.ingresos)}" width="${bw}" height="${Math.max(0,y(0)-y(x.ingresos))}" rx="2" fill="var(--good)" opacity=".5"><title>${nombreMes(x.m)} · ingresos ${eur(x.ingresos)}</title></rect>`;
+    svg+=`<rect x="${cx+1}" y="${y(x.consumo)}" width="${bw}" height="${Math.max(0,y(0)-y(x.consumo))}" rx="2" fill="var(--acc)" opacity=".85"><title>${nombreMes(x.m)} · gastado ${eur(x.consumo)}</title></rect>`;
     if(i%2===0||d.length<14)svg+=`<text x="${cx}" y="${Hh-8}" font-size="11" text-anchor="middle" fill="var(--muted)">${nombreMesC(x.m)}</text>`});
+  // línea del ahorro del mes, sobre el mismo eje en euros (los meses sin datos cortan la línea)
+  let tramo=[],lineas='',puntos='';const cerrarTramo=()=>{if(tramo.length>1)lineas+=`<polyline points="${tramo.join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;tramo=[]};
+  d.forEach((x,i)=>{if(x.vacio){cerrarTramo();return}const cx=pl+step*i+step/2,cy=y(x.ahorroMes);tramo.push(`${cx.toFixed(1)},${cy.toFixed(1)}`);
+    puntos+=`<circle cx="${cx}" cy="${cy}" r="4" fill="${x.ahorroMes<0?'var(--bad)':'var(--ink)'}" stroke="var(--card)" stroke-width="2"><title>${nombreMes(x.m)} · ahorro ${eur(x.ahorroMes)}${x.ingresos?' ('+Math.round(x.ahorroMes/x.ingresos*100)+'% de lo ingresado)':''}</title></circle>`});
+  cerrarTramo();svg+=lineas+puntos;
+  const ult=[...d].reverse().find(x=>!x.vacio);
+  if(ult){const i=d.indexOf(ult),cx=pl+step*i+step/2;svg+=`<text x="${Math.min(cx,W-60)}" y="${Math.max(12,y(ult.ahorroMes)-10)}" font-size="12" font-weight="650" text-anchor="middle" fill="var(--ink)">${eur(ult.ahorroMes,0)}</text>`}
   svg+='</svg>';
-  $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.55"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span></div>`;
+  $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.5"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span><span><i class="lin"></i>Ahorro del mes</span><span class="mut">Pasa el dedo o el ratón por encima para ver las cifras</span></div>`;
   // años
   const years=[...new Set(all.map(m=>m.slice(0,4)))].reverse();
   $('#years').innerHTML=years.map(yr=>{const xs=data.filter(x=>x.m.startsWith(yr)&&!x.vacio);if(!xs.length)return '';
@@ -67,7 +76,7 @@ function rHist(){
       return `<tr data-m="${x.m}" style="cursor:pointer"><td><span style="text-transform:capitalize">${nombreMes(x.m)}</span>${notas[x.m]?` <span class="tag">${esc(notas[x.m])}</span>`:''}</td><td class="r num">${eur(x.ingresos,0)}</td><td class="r num">${eur(x.consumo,0)}</td><td class="r num">${x.ahorro?eur(x.ahorro,0):'–'}</td><td class="r num">${x.diezmo?eur(x.diezmo,0):'–'}</td>
         <td class="r num ${x.ahorroMes<0?'neg':''}">${eur(x.ahorroMes,0)}${t!==null?` <span class="mut small">${t}%</span>`:''}</td><td class="small">${top&&top[1]>0?catN(top[0])+' · '+eur(top[1],0):''}</td></tr>`}).join('')+'</tbody>';
   $$('#histTable tr[data-m]').forEach(tr=>tr.onclick=()=>{MES=tr.dataset.m;go('resumen')});
-  rEvol(data);
+  rEvol(data);rVsAnio();rTagsCard();
 }
 
 /* ============ Patrimonio ============ */
@@ -103,4 +112,32 @@ function rPatri(){
     ${Math.abs(pp)>0.009?`<p class="small" style="margin:8px 0 0">${pp>0?'Más':'Menos'} ${eur(Math.abs(pp))} de préstamos pendientes de devolver.</p>`:''}
     <div style="margin-top:14px">${S.cuentas.filter(c=>c.v).map(c=>{const w=tot>0?Math.max(0,c.v/tot*100):0;return `<div class="small" style="display:flex;justify-content:space-between;margin-top:8px"><span>${esc(c.n)}</span><span class="num">${Math.round(w)}%</span></div><div class="bar"><i style="width:${w}%"></i></div>`}).join('')}</div>
     <p class="small mut" style="margin-top:14px">Para las cuentas sin extracto (inversión, oro…), pon el valor a mano cuando lo mires; se guarda con la fecha de hoy.</p>`;
+}
+
+/* ---- Este mes frente al mismo mes del año pasado ---- */
+let VS_MES='';
+function rVsAnio(){
+  const el=$('#vsAnio');const ms=mesesConDatos().filter(m=>S.mov.some(x=>x.mes===addMes(m,-12)));
+  if(!ms.length){el.innerHTML='<h3>Frente al año pasado</h3><p class="small mut" style="margin:6px 0 0">Cuando tengas el mismo mes de dos años distintos, aquí verás si gastas más o menos que hace un año.</p>';return}
+  if(!ms.includes(VS_MES))VS_MES=ms.includes(MES)?MES:ms[ms.length-1];
+  const a=stats(VS_MES),b=stats(addMes(VS_MES,-12)),ya=VS_MES.slice(0,4),yb=String(+ya-1);
+  const dif=(v1,v0,bueno)=>{const d=r2(v1-v0);if(Math.abs(d)<1)return '<span class="mut">=</span>';const mejor=bueno==='menos'?d<0:d>0;return `<span class="${mejor?'pos':'neg'}">${d>0?'▲':'▼'} ${eur(Math.abs(d),0)}</span>`};
+  const fila=(n,v1,v0,bueno,b)=>`<tr${b?' style="font-weight:650"':''}><td>${n}</td><td class="r num">${eur(v0,0)}</td><td class="r num">${eur(v1,0)}</td><td class="r num">${dif(v1,v0,bueno)}</td></tr>`;
+  const cats=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'}].filter(c=>Math.abs(a.by[c.id]||0)>0.5||Math.abs(b.by[c.id]||0)>0.5);
+  el.innerHTML=`<div class="toolbar" style="margin:0 0 8px"><h3>Frente al año pasado</h3><span class="sp"></span><select id="vsSel">${ms.slice().reverse().map(m=>`<option value="${m}"${m===VS_MES?' selected':''}>${nombreMes(m)}</option>`).join('')}</select></div>
+    <div class="tablewrap"><table><thead><tr><th></th><th class="r">${MESES[+VS_MES.slice(5)-1]} ${yb}</th><th class="r">${MESES[+VS_MES.slice(5)-1]} ${ya}</th><th class="r">Diferencia</th></tr></thead><tbody>
+    ${fila('Ingresos',a.ingresos,b.ingresos,'mas',1)}${fila('Gastado',a.consumo,b.consumo,'menos',1)}${fila('Ahorro',a.ahorro,b.ahorro,'mas',1)}
+    ${cats.map(c=>fila(c.n,a.by[c.id]||0,b.by[c.id]||0,'menos')).join('')}</tbody></table></div>
+    <p class="small mut" style="margin:8px 0 0">▼ en verde = gastas menos que hace un año; ▲ en rojo = gastas más.</p>`;
+  $('#vsSel').onchange=e=>{VS_MES=e.target.value;rVsAnio()};
+}
+/* ---- Etiquetas: cuánto ha costado cada evento ---- */
+function rTagsCard(){
+  const el=$('#tagsCard');const ts=todasEtiquetas();
+  if(!ts.length){el.innerHTML='<h3>Etiquetas</h3><p class="small mut" style="margin:6px 0 0">Etiqueta gastos de distintas categorías con un mismo nombre (por ejemplo «Boda Ana» o «Viaje a Roma») para ver aquí cuánto ha costado en total. Se etiqueta al añadir un gasto, con ✎ en Movimientos o marcando varios y pulsando «Etiquetar».</p>';return}
+  const rows=ts.map(t=>{const xs=S.mov.filter(x=>tagsDe(x).some(y=>norm(y)===norm(t)));const fs=xs.map(x=>x.fecha).sort();
+    return {t,n:xs.length,g:r2(-xs.reduce((a,x)=>a+(x.cat==='INGRESO'?0:x.importe),0)),d:fs[0],h:fs[fs.length-1]}}).sort((a,b)=>b.h.localeCompare(a.h));
+  el.innerHTML=`<h3>Etiquetas</h3><p class="small mut" style="margin:4px 0 8px">Lo que ha costado cada evento, sumando todas sus categorías. Pulsa una para ver sus movimientos.</p>`+
+    rows.map(r=>`<div class="crow" data-tag="${esc(r.t)}"><div class="a"><span><span class="tag tg">#${esc(r.t)}</span></span><span class="num"><b>${eur(r.g)}</b></span></div><div class="b"><span>${r.n} movimiento${r.n>1?'s':''} · ${fFecha(r.d)}${r.d!==r.h?' – '+fFecha(r.h):''}</span></div></div>`).join('');
+  $$('#tagsCard [data-tag]').forEach(r=>r.onclick=()=>{F.tag=r.dataset.tag;F.q='';F.cat='';F.sinCat=false;go('movs')});
 }

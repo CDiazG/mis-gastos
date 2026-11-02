@@ -1,7 +1,7 @@
 // Cuentas Claras · Pestañas y mes seleccionado
 "use strict";
 /* ============ Navegación ============ */
-let MES=mesDe(hoy()),TAB='resumen';
+let MES=mesDe(hoy()),TAB='inicio';
 function setMes(m){MES=m;F.todos=false;render()}
 $('#mPrev').onclick=()=>setMes(addMes(MES,-1));
 $('#mNext').onclick=()=>setMes(addMes(MES,1));
@@ -14,17 +14,20 @@ function go(t){
     dialog('El presupuesto no suma 100%',`<p>Los porcentajes suman <b>${fmt(s,1)}%</b>. ${s>100?`Te pasas en <b>${fmt(s-100,1)} puntos</b>: baja alguna categoría.`:`Faltan <b>${fmt(100-s,1)} puntos</b> por repartir: súbelos a alguna categoría (por ejemplo, al ahorro).`}</p><p class="small mut">Hasta que no sumen 100% no puedes salir de Ajustes.</p>`,[{t:'Arreglarlo',cls:'pri',fn:()=>{$('#pctTable').scrollIntoView({behavior:'smooth',block:'center'})}}]);
     return;
   }
-  TAB=t;$$('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));render()}
+  TAB=t;$$('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
+  const tp=$('#tip');if(tp)tp.classList.remove('on');
+  const sec=$('#s-'+t);if(sec){sec.classList.add('anim');clearTimeout(sec._a);sec._a=setTimeout(()=>sec.classList.remove('anim'),900)}
+  render()}
 function render(){
   refreshCats();
   const act=mesDe(hoy()),esAct=MES===act,estado=esAct?'mes actual':MES<act?'mes pasado':'mes futuro';
   $('#mLabel').innerHTML=`${nombreMes(MES)}<small>${estado}</small>`;
-  $('#monthnav').classList.toggle('pasado',!esAct);$('#mHoy').classList.toggle('hide',esAct);
+  $('#monthnav').classList.toggle('pasado',!esAct);$('#mHoy').classList.toggle('oculto',esAct);
   $$('.mesTit').forEach(el=>{el.innerHTML=`<span class="mt">${nombreMes(MES)}</span>${esAct?'<span class="tag good">mes actual</span>':`<span class="tag cash">${estado}</span><button class="link mtHoy" type="button">Volver a ${nombreMes(act)}</button>`}`;
     const b=$('.mtHoy',el);if(b)b.onclick=()=>setMes(act)});
   $('#monthnav').classList.toggle('nomes',!(TAB==='resumen'||TAB==='movs'||TAB==='efectivo'));
   $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER)||!pref('fab'));
-  ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes,ayuda:rAyuda})[TAB]();
+  ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,inicio:rInicio})[TAB]();
 }
 
 function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;const av=$('#uAv');

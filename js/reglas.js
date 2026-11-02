@@ -55,7 +55,7 @@ function stats(m){
 }
 // Diezmo automático: un porcentaje de los ingresos del mes, pendiente hasta que se paga.
 function diezmoMes(m,st){st=st||stats(m);const pct=+S.aj.pct.DIEZMO||0;
-  if(!S.aj.diezmoAuto||!pct||(S.aj.diezmoDesde&&m<S.aj.diezmoDesde))return null;
+  if(!diezmoOn()||!S.aj.diezmoAuto||!pct||(S.aj.diezmoDesde&&m<S.aj.diezmoDesde))return null;
   const debido=r2(st.ingresos*pct/100),pagado=r2(st.diezmo);return {pct,debido,pagado,pendiente:r2(Math.max(0,debido-pagado))}}
 // Persona de un préstamo: la guardada o, si no, el nombre del Bizum o el concepto
 function personaDe(x){if(x.persona)return x.persona;const m=String(x.concepto||'').match(/BIZUM (?:A|DE) (.+)$/i);return (m?m[1]:x.concepto||'Sin nombre').trim()}
@@ -64,3 +64,12 @@ function prestamosPorPersona(){const g={};
     if(x.importe<0)o.prestado+=-x.importe;else o.devuelto+=x.importe;o.movs.push(x)}
   return Object.values(g).map(o=>({...o,prestado:r2(o.prestado),devuelto:r2(o.devuelto),pendiente:r2(o.prestado-o.devuelto)})).sort((a,b)=>b.pendiente-a.pendiente)}
 function prestamosPendientes(){return r2(-S.mov.filter(x=>x.cat==='PRESTAMO').reduce((a,x)=>a+x.importe,0))}
+
+// Presupuesto de una categoría en un mes. Si la categoría «acumula», lo que no se gastó en los meses
+// anteriores (desde que se activó) se suma; si un mes te pasas, se resta de lo acumulado (nunca baja de 0).
+function presupuestoCat(m,id,st){
+  st=st||stats(m);const base=r2(st.base*(+S.aj.pct[id]||0)/100);
+  const desde=S.aj.acumula&&S.aj.acumula[id];if(!desde||m<=desde)return {p:base,base,extra:0};
+  let carry=0;for(let k=desde;k<m;k=addMes(k,1)){const s=stats(k);carry=Math.max(0,carry+s.base*(+S.aj.pct[id]||0)/100-(s.by[id]||0))}
+  carry=r2(carry);return {p:r2(base+carry),base,extra:carry};
+}
