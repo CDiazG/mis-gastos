@@ -55,6 +55,17 @@ module.exports = {
     })();
   },
 
+  'el gráfico se vacía al quitar el último gasto del mes'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'LIBRO MEDICINA', -26, 'PROFESIONAL']]);
+      assert.match(await p.textContent('#grafCard'), /Profesional/);
+      await p.evaluate(() => { S.mov.find(x => x.concepto === 'LIBRO MEDICINA').cat = 'PRESTAMO'; save(); go('resumen'); });
+      assert.ok(!(await p.isVisible('#grafCard')), 'sin gastos no se enseña el gráfico');
+      assert.equal(await p.textContent('#grafCard'), '');
+    })();
+  },
+
   'preferencias: Bizum sin reglas, interruptores y tema'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

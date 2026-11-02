@@ -84,7 +84,7 @@ function rResumen(){
   $$('#groups .dzpag').forEach(b=>b.onclick=()=>{aTipo='gasto';cCat='DIEZMO';cCatManual=true;aPago='__efectivo';go('efectivo');$('#cImp').value=fmt(dz.pendiente);$('#cCon').value='Diezmo '+nombreMes(MES);
     const ult=addMes(MES,1)+'-01';const d=new Date(ult);d.setDate(0);const fin=d.toISOString().slice(0,10);$('#cFecha').value=hoy()<fin?hoy():fin;$('#cImp').focus();toast('Revisa el importe y la forma de pago, y pulsa «Añadir gasto»')});
   rGrafico(st);rFijosCard();rObjCard();
-  $('#grafCard').classList.toggle('hide',!pref('verGrafico'));$('#fijosCard').classList.toggle('hide',!pref('verFijos'));$('#objCard').classList.toggle('hide',!pref('verObjetivos'));
+  $('#fijosCard').classList.toggle('hide',!pref('verFijos'));$('#objCard').classList.toggle('hide',!pref('verObjetivos'));
   // especiales
   const esp=SPECIAL.filter(c=>c.id!=='INGRESO').map(c=>({c,v:st.by[c.id]||0})).filter(x=>Math.abs(x.v)>0.009);
   const cuentas=S.cuentas.filter(c=>c.banco&&c.v!=null);
@@ -101,7 +101,7 @@ function barrasHtml(items){if(!items.length)return '';const tot=items.reduce((a,
 function rGrafico(st){
   const el=$('#grafCard');
   const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);
-  if(!items.length){el.classList.add('hide');return}
+  if(!items.length||!pref('verGrafico')){el.classList.add('hide');el.innerHTML='';return}
   el.classList.remove('hide');
   const tot=items.reduce((a,x)=>a+x.v,0);
   el.innerHTML=`<div class="toolbar" style="margin:0 0 8px"><h3>En qué se ha ido el dinero</h3><span class="sp"></span><span class="small mut num">${eur(tot,0)} en ${nombreMes(MES)}</span></div>`+barrasHtml(items);
