@@ -22,26 +22,30 @@ async function servidorListo() {
     const browser = await chromium.launch();
     const filtro = process.argv[2] || '';
     const archivos = fs.readdirSync(__dirname).filter(f => f.endsWith('.test.js') && f.includes(filtro)).sort();
-    for (const a of archivos) {
-      const pruebas = require(path.join(__dirname, a));
-      for (const [nombre, fn] of Object.entries(pruebas)) {
-        total++;
-        const t0 = Date.now();
-        const estado = { paginas: [] };
-        try {
-          await Promise.race([fn(browser, estado), new Promise((_, rej) => setTimeout(() => rej(new Error('Tiempo agotado (120 s)')), 120000))]);
-          const errores = estado.paginas.flatMap(p => p.errores || []);
-          if (errores.length) throw new Error('Errores de JavaScript en la página:\n  ' + errores.join('\n  '));
-          console.log(`  ✓ ${a} › ${nombre} (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
-        } catch (e) {
-          fallos++;
-          console.log(`  ✗ ${a} › ${nombre}\n    ${String(e && e.stack || e).split('\n').slice(0, 6).join('\n    ')}`);
-          for (const [i, p] of estado.paginas.entries()) { try { await p.screenshot({ path: path.join(SALIDA, `${a}-${nombre}-${i}.png`.replace(/[^\w.-]+/g, '_')), fullPage: true }); } catch (_) {} }
-        } finally {
-          for (const c of estado.contextos || []) { try { await c.close(); } catch (_) {} }
-        }
+    // Las pruebas son independientes (cada una con su propio navegador aislado), así que van varias a la vez.
+    const cola = [];
+    for (const a of archivos) for (const [nombre, fn] of Object.entries(require(path.join(__dirname, a)))) cola.push({ a, nombre, fn });
+    total = cola.length;
+    const PARALELO = Math.max(1, +process.env.PRUEBAS_PARALELO || 4);
+    const una = async ({ a, nombre, fn }) => {
+      const t0 = Date.now();
+      const estado = { paginas: [] };
+      try {
+        await Promise.race([fn(browser, estado), new Promise((_, rej) => setTimeout(() => rej(new Error('Tiempo agotado (120 s)')), 120000))]);
+        const errores = estado.paginas.flatMap(p => p.errores || []);
+        if (errores.length) throw new Error('Errores de JavaScript en la página:\n  ' + errores.join('\n  '));
+        console.log(`  ✓ ${a} › ${nombre} (${((Date.now() - t0) / 1000).toFixed(1)} s)`);
+      } catch (e) {
+        fallos++;
+        console.log(`  ✗ ${a} › ${nombre}\n    ${String(e && e.stack || e).split('\n').slice(0, 6).join('\n    ')}`);
+        for (const [i, p] of estado.paginas.entries()) { try { await p.screenshot({ path: path.join(SALIDA, `${a}-${nombre}-${i}.png`.replace(/[^\w.-]+/g, '_')), fullPage: true }); } catch (_) {} }
+      } finally {
+        for (const c of estado.contextos || []) { try { await c.close(); } catch (_) {} }
       }
-    }
+    };
+    const t0 = Date.now();
+    await Promise.all(Array.from({ length: PARALELO }, async () => { while (cola.length) await una(cola.shift()); }));
+    console.log(`\n(${((Date.now() - t0) / 1000).toFixed(0)} s, ${PARALELO} a la vez)`);
     await browser.close();
   } finally { srv.kill(); }
   console.log(`\n${total - fallos} de ${total} pruebas correctas${fallos ? ` · ${fallos} con fallos (capturas en tests/resultados)` : ''}`);

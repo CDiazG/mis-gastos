@@ -23,9 +23,17 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+      # Guardar entre publicaciones las dependencias y el navegador de pruebas (no se descargan cada vez)
+      - name: Recordar dependencias
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/ms-playwright
+          key: pruebas-${{ runner.os }}-${{ hashFiles('package.json') }}
       - name: Instalar Playwright
         run: |
-          npm install --no-audit --no-fund
+          npm install --no-audit --no-fund --prefer-offline
           npx playwright install --with-deps chromium
       - name: Ejecutar las pruebas
         run: npm test
