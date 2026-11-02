@@ -18,7 +18,7 @@ function tipHtml(tit,filas){return `<div class="tt">${tit}</div>`+filas.map(([c,
 // Rosco de categorías con el total en el centro y la leyenda al lado (cada fila lleva a sus movimientos)
 function rosco(items){
   const tot=items.reduce((a,x)=>a+x.v,0)||1,R=40,L=2*Math.PI*R,hueco=items.length>1?1.2:0;let ac=0;
-  const segs=items.map((x,k)=>{const f=x.v/tot*L,s=`<circle class="rseg" r="${R}" cx="50" cy="50" fill="none" stroke="${x.id?`var(--c${k+1})`:'var(--muted)'}" stroke-width="15" stroke-dasharray="${Math.max(0.01,f-hueco).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-ac).toFixed(2)}" transform="rotate(-90 50 50)" data-tiph="${esc(tipHtml(x.n,[[x.id?`var(--c${k+1})`:'var(--muted)','Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %']]))}"></circle>`;ac+=f;return s}).join('');
+  const segs=items.map((x,k)=>{const f=x.v/tot*L,s=`<circle class="rseg" r="${R}" cx="50" cy="50" fill="none" stroke="${x.id?`var(--c${k+1})`:'var(--muted)'}" stroke-width="15" stroke-dasharray="${Math.max(0.01,f-hueco).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-ac).toFixed(2)}" transform="rotate(-90 50 50)" data-cat="${x.id||''}" data-tiph="${esc(tipHtml(esc(x.n),[[x.id?`var(--c${k+1})`:'var(--muted)','Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %'],...(x.id?[['','',IR_TXT('sus movimientos')]]:[])]))}"></circle>`;ac+=f;return s}).join('');
   return `<div class="rosco"><svg viewBox="0 0 100 100" role="img" aria-label="Reparto del gasto"><circle r="${R}" cx="50" cy="50" fill="none" stroke="var(--soft)" stroke-width="15"/>${segs}
       <text x="50" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">${eur(tot,0)}</text><text x="50" y="60" text-anchor="middle" font-size="6.5" fill="var(--muted)">gastado</text></svg>
     <div class="rleyenda">${items.map((x,k)=>`<div class="gbar rfila" data-cat="${x.id}" ${x.id?'title="Ver movimientos"':''}><span class="gn"><i style="background:${x.id?`var(--c${k+1})`:'var(--muted)'}"></i>${esc(x.n)}</span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}</div></div>`}
@@ -88,7 +88,8 @@ function rInicio(){
   $$('#inicio details.icard').forEach(d=>d.addEventListener('toggle',()=>{d.open?INI_PLEGADAS.delete(d.dataset.ic):INI_PLEGADAS.add(d.dataset.ic);guardarPlegadas();botonTodo()}));
   $$('#inicio [data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   $$('#inicio [data-mes]').forEach(b=>b.onclick=()=>{MES=b.dataset.mes;go('resumen')});
-  $$('#inicio .gbar').forEach(r=>r.onclick=()=>{if(!r.dataset.cat)return;F.cat=r.dataset.cat==='SINCAT'?'':r.dataset.cat;F.sinCat=r.dataset.cat==='SINCAT';F.todos=false;MES=hoyM;go('movs')});
+  // el reparto es del año: al tocar una categoría se ven todos sus movimientos (no solo los de este mes)
+  $$('#inicio .gbar[data-cat],#inicio .rseg[data-cat]').forEach(r=>r.onclick=()=>{const c=r.dataset.cat;if(!c)return;F.q='';F.tag='';if(c==='SINCAT'){F.cat='';F.sinCat=true;F.todos=false;MES=hoyM}else{F.cat=c;F.sinCat=false;F.todos=true}go('movs');scrollTo(0,0)});
   $$('#inicio .iitem').forEach(b=>b.onclick=()=>{const a=b.dataset.acc;
     if(a==='sincat'){F.sinCat=true;F.cat='';const m=[...st12].reverse().find(x=>x.sinCat);if(m)MES=m.m;go('movs')}
     else if(a.startsWith('dz:')){MES=a.slice(3);go('resumen')}else if(a==='copia')exportar();else if(a==='chat'){CH_MODO='admin';abrirChat(true)}else go(a)});

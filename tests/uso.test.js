@@ -289,8 +289,8 @@ module.exports = {
         for (const mm of [addMes(h, -3), a, h]) S.mov.push({ id: uid(), fecha: mm + '-01', mes: mm, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: uid(), fecha: mm + '-04', mes: mm, concepto: 'TAXI', importe: mm === a ? -90 : -20, cat: 'TRANSPORTE', cuenta: 'EVO' }, { id: uid(), fecha: mm + '-05', mes: mm, concepto: 'CENA', importe: -30, cat: 'OCIO', cuenta: 'EVO' });
         save(); EVO = 'TRANSPORTE'; go('hist'); return a; });
       const banda = `#evoChart .hz[data-m="${m}"]`;
-      await p.$eval(banda, e => e.scrollIntoView({ block: 'center' })); await L.esperar(150);
-      await p.hover(banda);
+      await p.$eval(banda, e => e.scrollIntoView({ block: 'center' })); await L.esperar(400);
+      await p.mouse.move(1, 1); await p.hover(banda);
       await p.waitForSelector('#tip.on', { timeout: 2000 });
       const t = await p.textContent('#tip');
       assert.match(t, /Gastado\s*90/); assert.match(t, /Más que la media/); assert.match(t, /ver los movimientos/);
@@ -300,7 +300,7 @@ module.exports = {
       assert.ok(!/CENA/.test(await p.textContent('#s-movs')), 'solo los de esa categoría');
       // la gráfica principal lleva al resumen del mes
       await p.evaluate(() => { F.cat = ''; go('hist'); });
-      await p.mouse.move(1, 1); await p.$eval(`#chart .hz[data-m="${m}"]`, e => e.scrollIntoView({ block: 'center' })); await L.esperar(150);
+      await p.mouse.move(1, 1); await p.$eval(`#chart .hz[data-m="${m}"]`, e => e.scrollIntoView({ block: 'center' })); await L.esperar(400);
       await p.hover(`#chart .hz[data-m="${m}"]`); await p.waitForSelector('#tip.on');
       assert.match(await p.textContent('#tip'), /Ingresos\s*2\.000/);
       await p.click(`#chart .hz[data-m="${m}"]`);

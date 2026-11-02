@@ -670,3 +670,4 @@ svg .hz:hover{fill:var(--acc-soft);opacity:.7}
 #tip .tipir{color:var(--acc);font-weight:500;font-size:12px}
 svg .hz[data-ir],.cbars .col[data-ir]{cursor:pointer}
 #tip .tr:has(.tipir){margin-top:4px;padding-top:5px;border-top:1px solid var(--line)}#tip .tr:has(.tipir)>span,#tip .tr:has(.tipir)>i{display:none}#tip .tr:has(.tipir)>b{font-weight:500}
+.rosco .rseg[data-cat]:not([data-cat='']){cursor:pointer}
