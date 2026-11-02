@@ -7,7 +7,7 @@ function privacidadHtml(){return `
   <p><b>Quién lo ve:</b> solo tú. La app no deja que nadie vea las cuentas de otra persona, tampoco el administrador. Por honestidad: como dueño de la base de datos, el administrador podría técnicamente verlas desde la consola de Firebase. Se compromete a no hacerlo.</p>
   <p><b>Lo que ven los demás usuarios:</b> tu nombre y tu foto solo en el foro, si escribes en él. Nada de tus cuentas.</p>
   <p><b>Lo que no se hace:</b> no hay anuncios, no se venden ni se comparten datos y no se registra cómo usas la app. Si algo falla al leer un extracto, se anota el error (el nombre y el formato del archivo, nunca su contenido) para poder arreglarlo.</p>
-  <p><b>Borrar tus datos:</b> en Mi perfil → «Borrar todos mis datos». Para eliminar también tu cuenta, pídeselo al administrador.</p>
+  <p><b>Borrar tus datos:</b> en Mi perfil → Tus datos → «Borrar todos mis datos». Para eliminar también tu cuenta, pídeselo al administrador.</p>
   <p><b>El código es abierto:</b> cualquiera puede revisarlo en <a href="${REPO}" target="_blank" rel="noopener">GitHub</a>.</p>`}
 function verPrivacidad(){dialog('Privacidad',`<div class="priv">${privacidadHtml()}</div>`,[{t:'Entendido',cls:'pri'}])}
 $$('[data-priv]').forEach(b=>b.onclick=verPrivacidad);

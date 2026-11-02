@@ -188,7 +188,7 @@ module.exports = {
       await p.fill('#faqBuscar', 'nómina llega');
       await p.click('#faqList [data-guia]');
       assert.equal(await p.evaluate(() => TAB), 'ajustes');
-      assert.ok(await p.isVisible('#tuto')); assert.ok(await p.isVisible('#tutoSpot'));
+      assert.ok(await p.isVisible('#tuto')); await p.waitForSelector('#tutoSpot:not(.hide)', { timeout: 2000 });
       assert.equal(await p.textContent('#tutoSig'), 'Entendido');
       await p.click('#tutoSig');
       assert.ok(!(await p.isVisible('#tuto')));
@@ -247,6 +247,32 @@ module.exports = {
       assert.ok(txt.includes('TE PASAS'), 'estado de la categoría que se pasa');
       assert.ok(txt.includes('PRESUPUESTO') && txt.includes('EFECTIVO'), 'columnas de siempre');
       assert.ok(txt.includes('FF8CCFAC'), 'los verdes del Excel');
+    })();
+  },
+
+  'guía: en cada paso el recuadro se ve y la tarjeta de Rufo no lo tapa (móvil y ordenador)'(browser, estado) {
+    return (async () => {
+      for (const vp of [{ width: 1280, height: 800 }, { width: 390, height: 844, movil: true }]) {
+        const ctx = await L.nuevoContexto(browser, { viewport: { width: vp.width, height: vp.height }, isMobile: !!vp.movil, hasTouch: !!vp.movil }); (estado.contextos ||= []).push(ctx);
+        const p = await L.nuevaPagina(ctx); estado.paginas.push(p);
+        await L.crearAdminYEntrar(p);
+        await p.evaluate(() => { const m = mesDe(hoy()); for (let k = 0; k < 40; k++) S.mov.push({ id: 'g' + k, fecha: m + '-0' + (1 + k % 9), mes: m, concepto: 'GASTO ' + k, importe: -5 - k, cat: 'OCIO', cuenta: 'EVO' }); S.cuentas.push({ n: 'EVO', v: 100, f: hoy(), banco: 1 }); save(); go('inicio'); tutorial(true); });
+        for (let k = 0; k < 40; k++) {
+          await L.esperar(450);
+          const r = await p.evaluate(() => { const st = PASOS[tutoI]; if (!st) return null; const sp = $('#tutoSpot'), c = $('#tuto').getBoundingClientRect();
+            const s = sp.classList.contains('hide') ? null : sp.getBoundingClientRect();
+            return { i: tutoI, t: st.t, sel: !!st.sel, s: s && [s.top, s.bottom], c: [c.top, c.bottom], ult: tutoI === PASOS.length - 1 }; });
+          if (!r) break;
+          const donde = (vp.movil ? 'móvil' : 'ordenador') + ' · paso «' + r.t + '»';
+          if (r.sel) {
+            assert.ok(r.s, donde + ': no se ve el recuadro');
+            assert.ok(r.s[1] - r.s[0] >= 24, donde + ': recuadro demasiado pequeño');
+            assert.ok(r.s[1] <= r.c[0] + 1 || r.s[0] >= r.c[1] - 1, donde + ': la tarjeta tapa el recuadro ' + JSON.stringify(r));
+          }
+          if (r.ult) break;
+          await p.click('#tutoSig');
+        }
+      }
     })();
   },
 };

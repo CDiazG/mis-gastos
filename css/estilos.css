@@ -695,3 +695,5 @@ svg .hz[data-ir],.cbars .col[data-ir]{cursor:pointer}
 @keyframes deslD{from{transform:translateX(-24px);opacity:.4}to{transform:none;opacity:1}}
 section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:deslD .22s ease-out}
 .sinanim section.desliza-i,.sinanim section.desliza-d{animation:none}
+#tuto.arriba{bottom:auto;top:12px}
+@media (min-width:641px){#tuto.arriba{top:110px}}

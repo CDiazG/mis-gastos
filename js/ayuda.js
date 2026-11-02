@@ -46,10 +46,10 @@ const RECORRIDO=[
   {tab:'movs',sel:'#movTable',t:'Movimientos',d:'Cambia la categoría y aprendo para la próxima vez (los Bizum se clasifican a mano). Con ✎ puedes editar, dividir un gasto en varias categorías o etiquetarlo. Si te equivocas, pulsa «Deshacer».'},
   {tab:'importar',sel:'#drop',t:'Importar el extracto',d:'Sube el extracto del banco (PDF, Excel, CSV o Norma 43), también el de Trade Republic. Yo pongo las categorías y tú solo revisas antes de guardar.'},
   {tab:'hist',sel:'#chart',t:'Histórico',d:'Ingresos, gastos y la línea de tu ahorro mes a mes. Debajo: comparación con el mismo mes del año pasado y cuánto ha costado cada etiqueta.'},
-  {tab:'patri',sel:'[data-t="patri"]',t:'Patrimonio',d:'El saldo de tus cuentas, lo que te deben y tus objetivos de ahorro (huchas).'},
-  {tab:'ajustes',sel:'#pctTable',card:true,t:'Ajustes',d:'Cómo funcionan tus cuentas: presupuesto y categorías, cómo se clasifican los movimientos, nómina, diezmo, gastos fijos y copia de seguridad.'},
+  {tab:'patri',sel:'#patTable',card:true,t:'Patrimonio',d:'El saldo de tus cuentas, lo que te deben y tus objetivos de ahorro (huchas).'},
+  {tab:'ajustes',sel:'.apmenu[data-menu="ajustes"]',t:'Ajustes',d:'Cómo funcionan tus cuentas, por apartados: el presupuesto (en % o en €), las reglas de categorías, los gastos fijos, la nómina, el diezmo y las copias de seguridad. Toca uno y verás solo eso.'},
   {tab:'perfil',sel:'#uWho',t:'Mi perfil',d:'Pulsa en tu foto o tu nombre, arriba a la derecha: ahí cambias tu foto, tu nombre, los colores, los avisos y la contraseña.'},
-  {tab:'ayuda',sel:'#faqList',t:'Ayuda',d:'Preguntas frecuentes (con un botón para que te lleve al sitio), el foro para preguntar a los demás y el buzón de sugerencias. ¡Ya está, a ahorrar! 🌱'},
+  {tab:'ayuda',sel:'.apmenu[data-menu="ayuda"]',t:'Ayuda',d:'Preguntas frecuentes (con un botón para que te lleve al sitio), privacidad, el foro para preguntar a los demás y el buzón de sugerencias. Y si tienes una duda, pregúntame a mí en la esquina. ¡Ya está, a ahorrar! 🌱'},
 ];
 let tutoI=-1,PASOS=[],GUIA_COMPLETA=false;
 function tutorial(forzar){
@@ -60,18 +60,30 @@ function tutorial(forzar){
 function guia(paso){PASOS=[{...paso,ult:true}];GUIA_COMPLETA=false;tutoI=0;pintarTuto()}
 function cerrarTuto(){const completa=GUIA_COMPLETA;tutoI=-1;$('#tuto').classList.add('hide');$('#tutoSpot').classList.add('hide');window.removeEventListener('resize',colocarSpot);
   if(completa&&S&&(S.aj.guiaV||0)<GUIA_V){S.aj.guiaV=GUIA_V;S.aj.tutoVisto=true;save()}}
+// alto de lo que queda fijo arriba (la cabecera en el ordenador; en el móvil no se queda fija)
+function altoCabecera(){const h=$('header');return h&&getComputedStyle(h).position==='sticky'?h.getBoundingClientRect().height:0}
+// lleva el elemento arriba, justo debajo de la cabecera, para que la tarjeta de Rufo (abajo) no lo tape
+function subirAlTutorial(el){const y=el.getBoundingClientRect().top+scrollY-altoCabecera()-14;window.scrollTo({top:Math.max(0,y),behavior:'instant'})}
 function colocarSpot(){
   const p=PASOS[tutoI];const sp=$('#tutoSpot');if(!p||!p.sel){sp.classList.add('hide');return}
   let el=$(p.sel);if(el&&p.card)el=el.closest('.card')||el;if(!el||!el.offsetParent){sp.classList.add('hide');return}
   const r=el.getBoundingClientRect(),m=6;sp.classList.remove('hide');
-  Object.assign(sp.style,{left:(r.left-m)+'px',top:(r.top-m)+'px',width:(r.width+2*m)+'px',height:Math.min(r.height+2*m,window.innerHeight*0.55)+'px'});
+  // el recuadro nunca se mete bajo la cabecera fija ni bajo la tarjeta de Rufo
+  // la tarjeta de Rufo va abajo; si lo señalado queda en la mitad de abajo y no se puede subir más, la tarjeta pasa arriba
+  const tu=$('#tuto'),enCab=!!el.closest('header');
+  tu.classList.toggle('arriba',!enCab&&r.top>window.innerHeight*0.5);
+  const arriba=tu.classList.contains('arriba'),tuTop=tu.offsetTop,tuBot=tuTop+tu.offsetHeight;
+  const tope=enCab?0:arriba?tuBot+10:altoCabecera()+2,fondo=arriba?window.innerHeight:tuTop-10;
+  const top=Math.max(tope,r.top-m),bottom=Math.min(fondo,r.bottom+m);
+  if(bottom-top<24){sp.classList.add('hide');return}
+  Object.assign(sp.style,{left:(r.left-m)+'px',top:top+'px',width:(r.width+2*m)+'px',height:(bottom-top)+'px'});
 }
 function pintarTuto(){
   const p=PASOS[tutoI];if(!p){cerrarTuto();return}
   if(p.tab&&TAB!==p.tab)go(p.tab);
   let el=p.sel&&$(p.sel);if(el&&p.card)el=el.closest('.card')||el;
   if(el)revelar(el);
-  if(el)el.scrollIntoView({block:el.offsetHeight>window.innerHeight*0.45?'start':'center',behavior:'instant'});
+  if(el)subirAlTutorial(el);
   const ult=p.ult||tutoI===PASOS.length-1,uno=PASOS.length===1;
   $('#tuto').innerHTML=`<div class="tcard">${mascota(76,tutoI===0||ult)}<div class="tbody"><div class="tt">${p.t}</div><div class="td">${p.d}</div>${p.html?p.html():''}
     ${uno?'':`<div class="tdots">${PASOS.map((_,i)=>`<i class="${i===tutoI?'on':''}"></i>`).join('')}</div>`}
@@ -80,7 +92,7 @@ function pintarTuto(){
   const sk=$('#tutoSkip');if(sk)sk.onclick=()=>{if(p.html&&!ult){tutoI++;pintarTuto()}else{cerrarTuto();if(ult&&!uno)go('inicio')}};
   const a=$('#tutoAnt');if(a)a.onclick=()=>{tutoI--;pintarTuto()};
   $('#tutoSig').onclick=()=>{if(ult){cerrarTuto();if(!uno)go('inicio')}else{tutoI++;pintarTuto()}};
-  requestAnimationFrame(colocarSpot);window.addEventListener('resize',colocarSpot);
+  requestAnimationFrame(colocarSpot);clearTimeout(pintarTuto._t);pintarTuto._t=setTimeout(colocarSpot,350);window.addEventListener('resize',colocarSpot);
 }
 document.addEventListener('keydown',e=>{if(tutoI>=0&&e.key==='Escape'){if(GUIA_COMPLETA&&S){S.aj.guiaV=GUIA_V;save()}cerrarTuto()}});
 window.addEventListener('scroll',()=>{if(tutoI>=0)colocarSpot()},{passive:true});
@@ -105,14 +117,14 @@ const FAQ=[
   {p:'¿Cómo apunto un gasto en efectivo?',r:'En «Añadir» (o con el botón «＋ Añadir» del móvil): importe, concepto, categoría y «Efectivo». Si lo pagaste desde una cuenta que no importas, elígela o pulsa «＋ Otra cuenta».',ir:{tab:'efectivo',sel:'#cashForm',t:'Añadir',g:'Rellena el importe, qué es y la categoría, y elige «Efectivo».'}},
   {p:'¿Puedo repartir un gasto en varias categorías?',r:'Sí. En «Movimientos» pulsa ✎ en el gasto y luego «Dividir»: por ejemplo, una compra de 80 € que es 60 de supermercado y 20 de casa. Las partes tienen que sumar el total.',ir:{tab:'movs',sel:'#movTable',t:'Movimientos',g:'Pulsa ✎ en el gasto y después «Dividir».'}},
   {p:'¿Cómo sé cuánto me ha costado un viaje o una boda?',r:'Ponle una etiqueta (por ejemplo «Viaje a Roma») a todos sus gastos, aunque sean de categorías distintas: al añadirlos, con ✎, o marcando varios en Movimientos y pulsando «Etiquetar». En Histórico → Etiquetas ves el total.',ir:{tab:'hist',sel:'#tagsCard',t:'Histórico → Etiquetas',g:'Aquí ves lo que ha costado cada etiqueta, sumando todas sus categorías.'}},
-  {p:'Me he equivocado al borrar o cambiar algo',r:'Justo después, abajo aparece «Deshacer» durante unos segundos. Si ya no está, restaura una copia de seguridad en Ajustes → Copia de seguridad.'},
-  {p:'¿Qué significa la flecha ↻ de las categorías?',r:'Que esa categoría acumula: lo que no gastas de ella pasa al mes siguiente. Útil para Regalos, Viajes o Ropa, que no se gastan todos los meses. Se activa en Ajustes, en la tabla de categorías.',ir:{tab:'ajustes',sel:'#pctTable',t:'Ajustes → Categorías',g:'Pulsa ↻ en la categoría que quieras que acumule.'}},
+  {p:'Me he equivocado al borrar o cambiar algo',r:'Justo después, abajo aparece «Deshacer» durante unos segundos. Si ya no está, restaura una copia de seguridad en Ajustes → Copias de seguridad.'},
+  {p:'¿Qué significa la flecha ↻ de las categorías?',r:'Que esa categoría acumula: lo que no gastas de ella pasa al mes siguiente. Útil para Regalos, Viajes o Ropa, que no se gastan todos los meses. Se activa en Ajustes → Presupuesto y categorías.',ir:{tab:'ajustes',sel:'#pctTable',t:'Ajustes → Presupuesto y categorías',g:'Pulsa ↻ en la categoría que quieras que acumule.'}},
   {p:'¿Gasto más o menos que el año pasado?',r:'En Histórico → «Frente al año pasado» comparas un mes con el mismo mes del año anterior, categoría a categoría.',ir:{tab:'hist',sel:'#vsAnio',t:'Histórico',g:'Elige el mes y compáralo con el mismo mes del año pasado.'}},
   {p:'Tengo Trade Republic, ¿cómo se cuenta?',r:'Sube su «Certificado de saldo y movimientos» en PDF. Las compras de fondos cuentan como Inversión el día que se hacen y el dinero que mandas desde tus otras cuentas es un traspaso, así no se cuenta dos veces.',ir:{tab:'importar',sel:'#drop',t:'Importar extracto',g:'Sube aquí el PDF de Trade Republic.'}},
-  {p:'¿Cómo instalo la app en el móvil o en el ordenador?',r:'En Ajustes → «Acceso directo en el escritorio» tienes los pasos. En el iPhone: Safari → Compartir → «Añadir a pantalla de inicio». En Android: Chrome → menú ⋮ → «Instalar aplicación».',ir:{tab:'ajustes',sel:'#instTxt',card:true,t:'Ajustes',g:'Aquí tienes los pasos para tu móvil u ordenador.'}},
+  {p:'¿Cómo instalo la app en el móvil o en el ordenador?',r:'En Ajustes → «Instalar la app» tienes los pasos. En el iPhone: Safari → Compartir → «Añadir a pantalla de inicio». En Android: Chrome → menú ⋮ → «Instalar aplicación».',ir:{tab:'ajustes',sel:'#instTxt',card:true,t:'Ajustes',g:'Aquí tienes los pasos para tu móvil u ordenador.'}},
   {p:'¿Puedo cambiar los colores o ponerla en modo oscuro?',r:'Sí: en Mi perfil (pulsa tu nombre o tu foto, arriba) → Apariencia: seis paletas de colores y el tema Claro, Oscuro o Automático (como tu dispositivo).',ir:{tab:'perfil',sel:'#aparCard',t:'Mi perfil',g:'Elige los colores y el tema; se ve al momento.'}},
   {p:'¿Cómo saco un Excel o un informe?',r:'En «Movimientos» o «Histórico», «Exportar a Excel»: una hoja por mes como el Excel de siempre, un resumen y todos los movimientos. En el Resumen, «Informe para imprimir» crea un PDF del mes o del año.',ir:{tab:'hist',sel:'#s-hist [data-export]',t:'Histórico',g:'Este botón descarga el Excel.'}},
-  {p:'He borrado algo sin querer y ya no sale «Deshacer»',r:'Restaura una copia de seguridad en Ajustes → Copia de seguridad. Guarda una copia de vez en cuando (el Resumen te lo recuerda cada mes).',ir:{tab:'ajustes',sel:'#bkExport',card:true,t:'Copia de seguridad',g:'Guarda una copia o restaura una anterior.'}},
+  {p:'He borrado algo sin querer y ya no sale «Deshacer»',r:'Restaura una copia de seguridad en Ajustes → Copias de seguridad. Guarda una copia de vez en cuando (el Resumen te lo recuerda cada mes).',ir:{tab:'ajustes',sel:'#bkExport',card:true,t:'Copia de seguridad',g:'Guarda una copia o restaura una anterior.'}},
   {p:'¿Cómo cambio mi contraseña, mi nombre o mi foto?',r:'En Mi perfil: pulsa tu nombre o tu foto, arriba a la derecha. Si no te acuerdas de la contraseña, en la pantalla de entrada pulsa «¿Has olvidado la contraseña?» y te llega un correo.',ir:{tab:'perfil',sel:'#fotoAj',card:true,t:'Mi perfil',g:'Aquí cambias tu foto y tu contraseña.'}},
   {p:'Algo no funciona o tengo una idea',r:'Escríbelo en el buzón de «Sugerencias y quejas» (aquí, en Ayuda) y le llega al administrador. Si es una duda de uso, pregúntala en el foro.',ir:{tab:'ayuda',sel:'#buzonCard',t:'Sugerencias y quejas',g:'Escribe aquí lo que quieras contarle al administrador.'}},
 ];
