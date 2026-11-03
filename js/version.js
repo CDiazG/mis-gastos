@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.23.0';
+const VERSION='2.23.1';
 const CAMBIOS=[
+ {v:'2.23.1',f:'2026-11-03',c:['Tablas en el móvil: «Por categoría», Patrimonio, Gastos fijos y la sugerencia de presupuesto ya caben en la pantalla (las dos últimas, como fichas). «Mes a mes», que tiene muchas columnas, avisa de que se desliza y deja el mes fijo a la izquierda.']},
  {v:'2.23.0',f:'2026-11-03',c:['Traspasos entre tus cuentas: si subes los extractos de las dos, la salida y la entrada se unen solas («Santander → EVO»; toca para ver el otro lado).','Si solo tienes un lado, al marcarlo como traspaso te pregunta a qué cuenta va o de cuál viene (o «Sin especificar»), y en Añadir eliges «Desde» y «Hacia».','Las cuentas sin extracto (una hucha, el broker, el oro…) actualizan solas su saldo en Patrimonio con los traspasos.','Rufo tiene más vida: parpadea, mueve la cola y las orejas. En la guía saluda, te señala lo que explica, piensa contigo en «Cuéntame un poco» y celebra al terminar. Lee con lupa tus extractos, celebra cuando cuadran al céntimo y cuando consigues tu objetivo, se preocupa si el mes sale en negativo y te guiña un ojo al importar. Si quitas las animaciones en Mi perfil, se queda quieto.']},
  {v:'2.22.1',f:'2026-11-03',c:['Guía de Rufo: en el ordenador, cuando señala un menú lateral (Ajustes, Ayuda) la tarjeta se pone a su lado y se ve el menú entero.','Preguntas frecuentes: al abrir una se cierra la que tenías abierta.']},
  {v:'2.22.0',f:'2026-11-03',c:['Cuentas nuevas: categorías pensadas para cualquiera, con el reparto 50 / 30 / 20 (necesidades, caprichos y ahorro): llegan Facturas (luz, agua, móvil…), Ropa y compras, Viajes y escapadas y Suscripciones; Profesional pasa a «Más categorías» como Trabajo, y el diezmo empieza apagado. A quien ya la usa no se le cambia nada.','La guía de Rufo pregunta, si quieres, cómo cobras, tu vivienda, si tienes coche, hijos o mascota y para qué la quieres, y deja las categorías y el presupuesto a tu medida (y crea tu objetivo de ahorro).']},

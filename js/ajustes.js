@@ -124,8 +124,8 @@ function rSug(){
     return '<span class="pos">Bien ajustado</span>';
   };
   const sigMes=nombreMes(addMes(mesDe(hoy()),1));
-  const tabla=()=>`<div class="tablewrap"><table><thead><tr><th>Categoría</th><th class="r">Gasto habitual</th><th class="r">Ahora</th><th class="r">Sugerido</th><th>Por qué</th></tr></thead><tbody>`+
-   g.filas.map(f=>`<tr${f.sug!==f.obj?' class="sugdif"':''}><td>${f.c.n}</td><td class="r num">${f.c.g==='AHORRO'?'':eur(f.hab,0)+' <span class="mut small">('+fmt(f.habP,1)+'%)</span>'}</td><td class="r num">${f.obj}% <span class="mut small">${eur(g.base*f.obj/100,0)}</span></td><td class="r num">${f.sug===f.obj?'<span class="mut">igual</span>':`<b>${f.sug}%</b> <span class="mut small">${eur(g.base*f.sug/100,0)}</span>`}</td><td class="small">${nota(f)}</td></tr>`).join('')+`</tbody></table></div>`;
+  const tabla=()=>`<div class="tablewrap"><table class="sugtab"><thead><tr><th>Categoría</th><th class="r">Gasto habitual</th><th class="r">Ahora</th><th class="r">Sugerido</th><th>Por qué</th></tr></thead><tbody>`+
+   g.filas.map(f=>`<tr${f.sug!==f.obj?' class="sugdif"':''}><td class="sgn">${f.c.n}</td><td class="r num" data-l="Gasto habitual">${f.c.g==='AHORRO'?'':eur(f.hab,0)+' <span class="mut small">('+fmt(f.habP,1)+'%)</span>'}</td><td class="r num" data-l="Ahora">${f.obj}% <span class="mut small">${eur(g.base*f.obj/100,0)}</span></td><td class="r num" data-l="Sugerido">${f.sug===f.obj?'<span class="mut">igual</span>':`<b>${f.sug}%</b> <span class="mut small">${eur(g.base*f.sug/100,0)}</span>`}</td><td class="small sgnota">${nota(f)}</td></tr>`).join('')+`</tbody></table></div>`;
   // Ya aplicada: no hay nada que cambiar
   if(g.aplicada){
     el.innerHTML=`<h3>Sugerencia según los gastos reales</h3>
@@ -150,14 +150,14 @@ function rSug(){
 function rFijosAj(){
   const fs=S.fijos||(S.fijos=[]);
   $('#fjTable').innerHTML=fs.length?`<thead><tr><th>Nombre</th><th>Texto del concepto</th><th class="r">Importe</th><th>Cada</th><th>Día</th><th>Categoría</th><th>Desde</th><th></th></tr></thead><tbody>`+fs.map((f,i)=>`<tr data-i="${i}">
-    <td><input type="text" data-k="nombre" value="${esc(f.nombre)}" style="width:150px"></td>
-    <td><input type="text" data-k="texto" value="${esc(f.texto||'')}" placeholder="(opcional)" style="width:150px"></td>
-    <td class="r"><input type="text" data-k="importe" value="${fmt(f.importe)}" inputmode="decimal" class="right" style="width:90px"></td>
-    <td><select data-k="cada">${[1,2,3,6,12].map(n=>`<option value="${n}"${n==(f.cada||1)?' selected':''}>${n===1?'mes':n+' meses'}</option>`).join('')}</select></td>
-    <td><input type="number" data-k="dia" min="1" max="31" value="${f.dia||''}" style="width:60px"></td>
-    <td><select data-k="cat">${catOptions(f.cat,{blankText:'—'})}</select></td>
-    <td><input type="month" data-k="desde" value="${f.desde||''}"></td>
-    <td><button class="btn sm icon dan fx" title="Quitar">✕</button></td></tr>`).join('')+'</tbody>':'<tbody><tr><td class="empty">Aún no hay gastos fijos. Pulsa «Detectar automáticamente» o «＋ Añadir».</td></tr></tbody>';
+    <td data-l="Nombre" class="fjn"><input type="text" data-k="nombre" value="${esc(f.nombre)}" style="width:150px"></td>
+    <td data-l="Texto del concepto" class="fjt"><input type="text" data-k="texto" value="${esc(f.texto||'')}" placeholder="(opcional)" style="width:150px"></td>
+    <td class="r" data-l="Importe"><input type="text" data-k="importe" value="${fmt(f.importe)}" inputmode="decimal" class="right" style="width:90px"></td>
+    <td data-l="Cada"><select data-k="cada">${[1,2,3,6,12].map(n=>`<option value="${n}"${n==(f.cada||1)?' selected':''}>${n===1?'mes':n+' meses'}</option>`).join('')}</select></td>
+    <td data-l="Día"><input type="number" data-k="dia" min="1" max="31" value="${f.dia||''}" style="width:60px"></td>
+    <td data-l="Categoría"><select data-k="cat">${catOptions(f.cat,{blankText:'—'})}</select></td>
+    <td data-l="Desde"><input type="month" data-k="desde" value="${f.desde||''}"></td>
+    <td class="fjx"><button class="btn sm icon dan fx" title="Quitar">✕</button></td></tr>`).join('')+'</tbody>':'<tbody><tr><td class="empty">Aún no hay gastos fijos. Pulsa «Detectar automáticamente» o «＋ Añadir».</td></tr></tbody>';
   $$('#fjTable tr[data-i]').forEach(tr=>{const f=fs[+tr.dataset.i];
     $$('[data-k]',tr).forEach(el=>el.onchange=()=>{const k=el.dataset.k;let v=el.value;
       if(k==='importe'){v=parseNum(v);if(!isFinite(v)||v<=0){toast('Importe no válido',true);el.value=fmt(f.importe);return}v=r2(v)}

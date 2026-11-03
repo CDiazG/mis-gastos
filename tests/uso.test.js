@@ -503,6 +503,28 @@ module.exports = {
     })();
   },
 
+  'tablas en el móvil: caben o avisan de que se deslizan'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      await p.evaluate(() => { const h = mesDe(hoy()); for (let k = 0; k < 6; k++) { const m = addMes(h, -k); S.mov.push({ id: 'i' + k, fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: 'g' + k, fecha: m + '-03', mes: m, concepto: 'ALQUILER', importe: -700, cat: 'VIVIENDA', cuenta: 'EVO' }); }
+        S.cuentas.push({ n: 'EVO', v: 1000, f: hoy(), banco: 1 }); S.fijos = [{ nombre: 'Alquiler', texto: 'ALQUILER', importe: 700, cada: 1, dia: 3, cat: 'VIVIENDA' }]; save(); });
+      const desborda = () => p.evaluate(() => [...document.querySelectorAll('section.on .tablewrap')].filter(w => w.offsetParent && w.scrollWidth > w.clientWidth + 2).map(w => (w.querySelector('table') || w).id || 'tabla'));
+      const avisos = () => p.evaluate(() => [...document.querySelectorAll('.deslizaHint')].filter(h => !h.classList.contains('hide') && h.offsetParent).length);
+      await p.evaluate(() => go('hist', { sub: 'meses' })); await L.esperar(200);
+      assert.deepEqual(await desborda(), ['histTable']);
+      assert.equal(await avisos(), 1, 'avisa de que se desliza');
+      for (const [t, sb] of [['hist', 'categorias'], ['patri', ''], ['ajustes', 'fijos']]) {
+        await p.evaluate(([t, sb]) => go(t, sb ? { sub: sb } : {}), [t, sb]); await L.esperar(200);
+        assert.deepEqual(await desborda(), [], t + ' ' + sb + ' cabe en la pantalla');
+        assert.equal(await avisos(), 0, 'sin avisos de deslizar donde no hace falta (' + t + ')');
+      }
+      await p.evaluate(() => go('hist', { sub: 'meses' })); await L.esperar(200);
+      await p.evaluate(() => { const w = document.querySelector('#histTable').closest('.tablewrap'); w.scrollLeft = 120; w.dispatchEvent(new Event('scroll')); }); await L.esperar(100);
+      assert.equal(await avisos(), 0, 'el aviso se va al deslizar');
+      assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('#histTable td')).position), 'sticky', 'el mes se queda fijo');
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

@@ -112,7 +112,7 @@ function pintarApartado(t){
 }
 function irApartado(t,sub,{hist=false}={}){
   if(TAB!==t){go(t,{sub,hist});return}
-  SUB[t]=sub;pintarApartado(t);if(!hist)navGuardar();
+  SUB[t]=sub;pintarApartado(t);if(!hist)navGuardar();requestAnimationFrame(marcarDeslizables);
   if(t==='hist'&&typeof rHist==='function')rHist(); // las gráficas se dibujan con el ancho que tienen al verse
   if(esChips(t)){const n=$('#s-'+t+' .apchips');if(n&&n.getBoundingClientRect().top<0)n.scrollIntoView({block:'start'})}else scrollTo(0,0);
 }
@@ -172,6 +172,19 @@ function go(t,{sub,hist=false}={}){
   if(APARTADOS[t])pintarApartado(t);
   if(!hist)navGuardar();
   render()}
+// Tablas que no caben en el móvil: sombra a la derecha y un aviso «Desliza» hasta que la mueves
+function marcarDeslizables(){
+  $$('.deslizaHint').forEach(h=>{const w=h.nextElementSibling;if(!w||!w.offsetParent)h.classList.add('hide')});
+  $$('section.on .tablewrap').forEach(w=>{if(!w.offsetParent)return;
+    const mas=w.scrollWidth>w.clientWidth+2;w.classList.toggle('hayMas',mas);
+    let h=w.previousElementSibling;if(!(h&&h.classList.contains('deslizaHint'))){h=null}
+    if(mas&&!h&&!w._visto){h=document.createElement('div');h.className='deslizaHint';h.innerHTML='<span>Desliza para ver más columnas</span><i aria-hidden="true">→</i>';w.before(h)}
+    if(h)h.classList.toggle('hide',!mas||!!w._visto);
+    const fin=()=>w.classList.toggle('fin',w.scrollLeft+w.clientWidth>=w.scrollWidth-2);fin();
+    if(!w._oyente){w._oyente=1;w.addEventListener('scroll',()=>{fin();if(w.scrollLeft>8&&!w._visto){w._visto=1;const hh=w.previousElementSibling;if(hh&&hh.classList.contains('deslizaHint'))hh.classList.add('hide')}},{passive:true})}
+  });
+}
+addEventListener('resize',()=>requestAnimationFrame(marcarDeslizables));
 function render(){
   refreshCats();
   const act=mesDe(hoy()),esAct=MES===act,estado=esAct?'mes actual':MES<act?'mes pasado':'mes futuro';
@@ -183,6 +196,7 @@ function render(){
   $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER)||!pref('fab'));
   if(typeof rChatBtn==='function')rChatBtn();
   ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,inicio:rInicio,perfil:rPerfil})[TAB]();
+  requestAnimationFrame(marcarDeslizables);
 }
 
 function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;const av=$('#uAv');

@@ -816,3 +816,46 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 @keyframes apuntaArr{0%,100%{transform:rotate(14deg) translateY(0)}50%{transform:rotate(14deg) translateY(-3px)}}
 .mascota.pose-senala-abajo .m-brazo{transform:rotate(-100deg)}
 .mascota.pose-senala-abajo .m-ojos{transform:translateY(2px);animation:none}
+
+/* ===== Tablas en el móvil ===== */
+.pfm{display:none}
+.deslizaHint{display:none}
+.tablewrap.hayMas:not(.fin){-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
+@media (max-width:640px){
+  .deslizaHint{display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:12.5px;color:var(--acc);font-weight:550;margin:0 4px 6px}
+  .deslizaHint.hide{display:none}
+  .deslizaHint i{font-style:normal;animation:empuja 1.2s ease-in-out infinite}
+  @keyframes empuja{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+  /* Mes a mes: el mes se queda fijo a la izquierda al deslizar */
+  #histTable th:first-child,#histTable td:first-child{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:1px 0 0 var(--line)}
+  #histTable td,#histTable th{white-space:nowrap}
+  /* Por categoría: cabe entera con la letra un poco más pequeña */
+  #catAvg table th,#catAvg table td{font-size:13px;padding:7px 5px}
+  #catAvg table th{white-space:normal;line-height:1.2}
+  /* Patrimonio: sin la columna de fecha (va debajo del nombre) */
+  #patTable th:nth-child(3),#patTable tr[data-i] td:nth-child(3){display:none}
+  #patTable .pn{width:100%!important;min-width:0}#patTable .pv{width:104px!important}
+  #patTable .pfm{display:block;margin-top:3px}
+  #patTable td{padding-left:6px;padding-right:6px}
+  /* Gastos fijos: cada uno como una ficha */
+  #fjTable thead{display:none}
+  #fjTable,#fjTable tbody{display:block;width:100%}
+  #fjTable tr[data-i]{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:12px 2px;border-bottom:1px solid var(--line);position:relative}
+  #fjTable tr[data-i] td{display:flex;flex-direction:column;gap:3px;padding:0;border:0}
+  #fjTable tr[data-i] td::before{content:attr(data-l);font-size:12px;color:var(--muted)}
+  #fjTable tr[data-i] td.fjn,#fjTable tr[data-i] td.fjt{grid-column:1/-1}
+  #fjTable tr[data-i] td.fjn{padding-right:44px}
+  #fjTable tr[data-i] td.fjx{position:absolute;right:0;top:30px}
+  #fjTable tr[data-i] td.fjx::before{display:none}
+  #fjTable input,#fjTable select{width:100%!important;max-width:none!important}
+  #fjTable td.r{text-align:left}
+  /* Sugerencia de presupuesto: cada categoría en dos líneas */
+  .sugtab thead{display:none}
+  .sugtab,.sugtab tbody{display:block;width:100%}
+  .sugtab tr{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 8px;padding:9px 2px;border-bottom:1px solid var(--line)}
+  .sugtab td{padding:0;border:0;text-align:left!important}
+  .sugtab td.sgn{grid-column:1/-1;font-weight:600}
+  .sugtab td[data-l]::before{content:attr(data-l);display:block;font-size:11.5px;color:var(--muted)}
+  .sugtab td.sgnota{grid-column:1/-1}
+  .sugtab td.sgnota:empty{display:none}
+}
