@@ -279,13 +279,17 @@ module.exports = {
           await L.esperar(450);
           const r = await p.evaluate(() => { const st = PASOS[tutoI]; if (!st) return null; const sp = $('#tutoSpot'), c = $('#tuto').getBoundingClientRect();
             const s = sp.classList.contains('hide') ? null : sp.getBoundingClientRect();
-            return { i: tutoI, t: st.t, sel: !!st.sel, s: s && [s.top, s.bottom], c: [c.top, c.bottom], ult: tutoI === PASOS.length - 1 }; });
+            const choca = !!s && s.left < c.right - 1 && s.right > c.left + 1 && s.top < c.bottom - 1 && s.bottom > c.top + 1;
+            let el = st.sel && document.querySelector(st.sel); if (el && st.card) el = el.closest('.card') || el; const e = el && el.getBoundingClientRect();
+            const entero = !e || !s || e.height > innerHeight * 0.6 || (s.top <= Math.max(e.top, 0) + 8 && s.bottom >= Math.min(e.bottom, innerHeight) - 8);
+            return { i: tutoI, t: st.t, sel: !!st.sel, s: s && [s.top, s.bottom], c: [c.top, c.bottom], choca, entero, ult: tutoI === PASOS.length - 1 }; });
           if (!r) break;
           const donde = (vp.movil ? 'móvil' : 'ordenador') + ' · paso «' + r.t + '»';
           if (r.sel) {
             assert.ok(r.s, donde + ': no se ve el recuadro');
             assert.ok(r.s[1] - r.s[0] >= 24, donde + ': recuadro demasiado pequeño');
-            assert.ok(r.s[1] <= r.c[0] + 1 || r.s[0] >= r.c[1] - 1, donde + ': la tarjeta tapa el recuadro ' + JSON.stringify(r));
+            assert.ok(!r.choca, donde + ': la tarjeta tapa el recuadro ' + JSON.stringify(r));
+            if (!vp.movil) assert.ok(r.entero, donde + ': el recuadro corta lo que señala ' + JSON.stringify(r));
           }
           if (r.ult) break;
           await p.click('#tutoSig');

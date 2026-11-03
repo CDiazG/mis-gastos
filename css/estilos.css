@@ -751,3 +751,4 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 .cnota{background:var(--soft);border-radius:10px;padding:8px 10px;line-height:1.4}
 #tuto .tcard{max-height:calc(100vh - 110px);overflow:auto}
 @media (max-width:640px){#tuto .tcard:has(.cuest)>.mascota{display:none}#tuto .tcard:has(.cuest){padding:14px}.cuest .chips .chip{padding:5px 10px}}
+#tuto.lado{bottom:auto;transform:none}

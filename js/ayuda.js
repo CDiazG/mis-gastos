@@ -89,7 +89,7 @@ function tutorial(forzar){
 }
 // Un solo paso: «Que Rufo me lo enseñe» desde una pregunta frecuente
 function guia(paso){PASOS=[{...paso,ult:true}];GUIA_COMPLETA=false;tutoI=0;pintarTuto()}
-function cerrarTuto(){const completa=GUIA_COMPLETA;tutoI=-1;$('#tuto').classList.add('hide');$('#tutoSpot').classList.add('hide');window.removeEventListener('resize',colocarSpot);
+function cerrarTuto(){const completa=GUIA_COMPLETA;tutoI=-1;$('#tuto').classList.add('hide');$('#tuto').classList.remove('lado','arriba');Object.assign($('#tuto').style,{left:'',top:'',width:''});$('#tutoSpot').classList.add('hide');window.removeEventListener('resize',colocarSpot);
   if(completa&&S&&(S.aj.guiaV||0)<GUIA_V){S.aj.guiaV=GUIA_V;S.aj.tutoVisto=true;save()}}
 // alto de lo que queda fijo arriba (la cabecera en el ordenador; en el móvil no se queda fija)
 function altoCabecera(){const h=$('header');return h&&getComputedStyle(h).position==='sticky'?h.getBoundingClientRect().height:0}
@@ -101,10 +101,15 @@ function colocarSpot(){
   const r=el.getBoundingClientRect(),m=6;sp.classList.remove('hide');
   // el recuadro nunca se mete bajo la cabecera fija ni bajo la tarjeta de Rufo
   // la tarjeta de Rufo va abajo; si lo señalado queda en la mitad de abajo y no se puede subir más, la tarjeta pasa arriba
-  const tu=$('#tuto'),enCab=!!el.closest('header');
-  tu.classList.toggle('arriba',!enCab&&r.top>window.innerHeight*0.5);
+  const tu=$('#tuto'),enCab=!!el.closest('header'),W=window.innerWidth,H=window.innerHeight;
+  // en el ordenador, si lo señalado es estrecho y alto (un menú lateral), la tarjeta va a su lado y el recuadro se ve entero
+  const hueco=W-r.right-24,lado=!enCab&&W>900&&r.width<W*0.45&&hueco>=Math.min(560,W*0.4)&&r.bottom+m>tu.offsetTop-10;
+  tu.classList.toggle('lado',lado);
+  if(lado){tu.style.left=Math.round(r.right+24)+'px';tu.style.width=Math.round(Math.min(520,hueco-12))+'px';tu.style.top=Math.round(Math.max(altoCabecera()+12,Math.min(r.top,H-tu.offsetHeight-16)))+'px'}
+  else{tu.style.left='';tu.style.width='';tu.style.top=''}
+  tu.classList.toggle('arriba',!lado&&!enCab&&r.top>H*0.5);
   const arriba=tu.classList.contains('arriba'),tuTop=tu.offsetTop,tuBot=tuTop+tu.offsetHeight;
-  const tope=enCab?0:arriba?tuBot+10:altoCabecera()+2,fondo=arriba?window.innerHeight:tuTop-10;
+  const tope=enCab?0:arriba?tuBot+10:altoCabecera()+2,fondo=lado?H-8:arriba?H:tuTop-10;
   const top=Math.max(tope,r.top-m),bottom=Math.min(fondo,r.bottom+m);
   if(bottom-top<24){sp.classList.add('hide');return}
   Object.assign(sp.style,{left:(r.left-m)+'px',top:top+'px',width:(r.width+2*m)+'px',height:(bottom-top)+'px'});
@@ -174,6 +179,7 @@ function rFaq(){
   const q=norm(faqQ).trim();const xs=FAQ.filter(f=>(!q||norm(f.p+' '+f.r).includes(q))&&(q||!faqT||temaFaq(f)===faqT));
   const ch=$('#faqTemas');if(ch){ch.innerHTML=[{id:'',t:'Todas'},...FAQ_TEMAS].map(t=>`<button type="button" class="apchip${t.id===faqT&&!q?' on':''}" data-ft="${t.id}">${t.t}</button>`).join('');$$('[data-ft]',ch).forEach(b=>b.onclick=()=>{faqT=b.dataset.ft;faqQ='';$('#faqBuscar').value='';rFaq()})}
   $('#faqList').innerHTML=xs.length?(q||faqT?xs.map(faqHtml).join(''):FAQ_TEMAS.map(t=>{const ys=xs.filter(f=>temaFaq(f)===t.id);return ys.length?`<h4 class="faqtema">${t.t}</h4>`+ys.map(faqHtml).join(''):''}).join('')):'<p class="small mut pad">No encuentro nada con eso. Pregúntalo en el foro.</p>';
+  $$('#faqList details.faq').forEach(d=>d.addEventListener('toggle',()=>{if(d.open&&!faqQ)$$('#faqList details.faq[open]').forEach(o=>{if(o!==d)o.open=false})}));
   $$('#faqList [data-ir]').forEach(b=>b.onclick=()=>{const ir=FAQ[+b.dataset.ir].ir;go(ir.tab);setTimeout(()=>{let el=$(ir.sel);revelar(el);if(el&&ir.card)el=el.closest('.card')||el;if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('resalta');setTimeout(()=>el.classList.remove('resalta'),1600)}},60)});
   $$('#faqList [data-guia]').forEach(b=>b.onclick=()=>{const f=FAQ[+b.dataset.guia];const ir=f.ir;
     guia({tab:ir.tab,sel:ir.padre?null:ir.sel,card:ir.card,t:f.p,d:ir.g||f.r,_padre:ir.padre?[ir.sel,ir.padre]:null});
