@@ -25,7 +25,7 @@ module.exports = {
       assert.equal(f('MERCADONA').i, -25.5); assert.equal(f('MERCADONA').cat, 'SUPERMERCADO'); assert.equal(f('MERCADONA').f, '2026-10-03');
       assert.equal(f('NOMINA').nom, true); assert.equal(f('NOMINA').cat, 'INGRESO');
       assert.equal(f('cajero').cat, 'EFECTIVO', 'la retirada en cajero se reconoce por el código 11');
-      assert.equal(f('IBERDROLA').cat, 'VIVIENDA');
+      assert.equal(f('IBERDROLA').cat, 'FACTURAS');
       assert.ok(await p.evaluate(() => S.cuentas.some(c => c.n === 'Santander')), 'crea la cuenta del banco');
     })();
   },

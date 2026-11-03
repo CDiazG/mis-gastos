@@ -30,7 +30,7 @@ module.exports = {
       const f = c => r.filas.find(x => x.c.startsWith(c));
       assert.equal(f('MERCADONA').cat, 'SUPERMERCADO');
       assert.equal(f('MERCADONA').i, -20.9);
-      assert.equal(f('RECIB /IBERDROLA').cat, 'VIVIENDA');
+      assert.equal(f('RECIB /IBERDROLA').cat, 'FACTURAS');
       assert.equal(f('PARKING').cat, 'TRANSPORTE');
       assert.equal(f('ZARA').cat, 'PERSONAL');
       assert.equal(f('COMERCIO DESCONOCIDO').cat, '', 'lo desconocido queda sin categoría');

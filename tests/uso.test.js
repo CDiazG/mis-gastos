@@ -45,20 +45,20 @@ module.exports = {
       await p.evaluate(() => go('ajustes'));
       const ah = () => p.evaluate(() => Math.round(pctAhorro(0) * 10) / 10);
       assert.equal(await ah(), 10, 'de serie el ahorro es el 10 %');
-      await p.fill('[data-p=OCIO]', '5');
+      await p.fill('[data-p=OCIO]', '7');
       assert.equal(await ah(), 13, 'baja ocio 3 puntos y el ahorro sube 3');
       assert.match(await p.textContent('#pctTable [data-ah]'), /13/);
       await p.evaluate(() => go('resumen'));
       assert.equal(await p.evaluate(() => TAB), 'resumen', 'ya no hace falta cuadrar a mano');
       await p.evaluate(() => go('ajustes'));
-      await p.fill('[data-p=OCIO]', '20');
+      await p.fill('[data-p=OCIO]', '22');
       assert.equal(await ah(), 0);
       assert.match(await p.textContent('#pctAlert'), /Te pasas del 100/);
       await p.evaluate(() => go('resumen'));
       assert.equal(await p.evaluate(() => TAB), 'ajustes', 'si te pasas no deja salir');
       assert.match(await p.textContent('#dlgB'), /102/);
       await p.click('#dlgF >> text=Arreglarlo');
-      await p.fill('[data-p=OCIO]', '8');
+      await p.fill('[data-p=OCIO]', '10');
       await p.evaluate(() => go('resumen'));
       assert.equal(await p.evaluate(() => TAB), 'resumen');
     })();
@@ -69,11 +69,11 @@ module.exports = {
       const { p } = await dentro(browser, estado);
       const m = await p.evaluate(() => { const m = mesDe(hoy()); S.mov.push({ id: 'n', fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: 'c', fecha: m + '-03', mes: m, concepto: 'CENA', importe: -40, cat: 'OCIO', cuenta: 'EVO' }); MES = m; save(); go('ajustes'); return m; });
       await p.click('#pctTable .un[data-u=OCIO]');
-      assert.equal(await p.inputValue('[data-e=OCIO]'), '160', 'el 8 % de 2.000 € pasa a 160 €');
+      assert.equal(await p.inputValue('[data-e=OCIO]'), '200', 'el 10 % de 2.000 € pasa a 200 €');
       await p.fill('[data-e=OCIO]', '50');
       const r = await p.evaluate(m => { const st = stats(m); return { p: presupuestoCat(m, 'OCIO', st).p, ah: Math.round(pctAhorro(st.base) * 10) / 10 }; }, m);
       assert.equal(r.p, 50, 'el presupuesto de restaurantes es 50 € cobres lo que cobres');
-      assert.equal(r.ah, 15.5, 'los 110 € que sobran van al ahorro');
+      assert.equal(r.ah, 17.5, 'los 150 € que sobran van al ahorro');
       await p.evaluate(() => go('resumen'));
       assert.match(await p.textContent('#groups [data-cat=OCIO]'), /fijo · presupuesto 50/);
       // con otros ingresos el presupuesto sigue en 50 €
@@ -437,6 +437,24 @@ module.exports = {
       assert.ok(r.desliza, 'los meses que no caben se ven deslizando');
       assert.ok(r.alFinal, 'empieza en los meses más recientes');
       assert.ok(r.ancho <= 391, 'la página no se sale');
+    })();
+  },
+
+  'categorías nuevas solo para cuentas nuevas: a quien ya la usa no se le toca nada'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const nueva = await p.evaluate(() => ({ cats: S.cats.map(c => c.id), dz: diezmoOn(), pct: [S.aj.pct.VIVIENDA, S.aj.pct.FACTURAS, S.aj.pct.OCIO, S.aj.pct.DIEZMO], net: autoCat('NETFLIX.COM', '', -13), luz: autoCat('IBERDROLA CLIENTES', '', -60) }));
+      assert.ok(!nueva.cats.includes('PROFESIONAL') && nueva.cats.includes('FACTURAS') && nueva.cats.includes('SUSCRIPCIONES'));
+      assert.equal(nueva.dz, false); assert.deepEqual(nueva.pct, [25, 7, 10, 0]);
+      assert.equal(nueva.net, 'SUSCRIPCIONES'); assert.equal(nueva.luz, 'FACTURAS');
+      assert.equal(await p.evaluate(() => Math.round(sumaOtrosPct() + pctAhorro(0))), 100);
+      // una cuenta de antes: con Profesional, diezmo (sin la marca «diezmo») y sus porcentajes
+      const vieja = await p.evaluate(() => { const viejo = JSON.parse(JSON.stringify(S));
+        viejo.cats = [{ id: 'VIVIENDA', n: 'Vivienda', g: 'FIJOS' }, { id: 'PROFESIONAL', n: 'Profesional', g: 'FIJOS' }, { id: 'OCIO', n: 'Restaurantes y ocio', g: 'VARIABLES' }, { id: 'OTROS', n: 'Otros', g: 'VARIABLES' }, { id: 'AHORRO', n: 'Ahorro', g: 'AHORRO' }, { id: 'DIEZMO', n: 'Diezmo', g: 'AHORRO' }];
+        viejo.aj.pct = { VIVIENDA: 30, PROFESIONAL: 5, OCIO: 45, OTROS: 0, AHORRO: 10, DIEZMO: 10 }; delete viejo.aj.diezmo;
+        S = viejo; completar(); refreshCats();
+        return { cats: S.cats.map(c => c.id).join(), dz: diezmoOn(), pct: S.aj.pct.DIEZMO, prof: S.aj.pct.PROFESIONAL }; });
+      assert.deepEqual(vieja, { cats: 'VIVIENDA,PROFESIONAL,OCIO,OTROS,AHORRO,DIEZMO', dz: true, pct: 10, prof: 5 });
     })();
   },
 

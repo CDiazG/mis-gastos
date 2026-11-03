@@ -30,7 +30,38 @@ const PERSONALIZAR=[
       <span class="seg" style="margin-top:8px">${[['claro','☀️ Claro'],['oscuro','🌙 Oscuro'],['auto','Auto']].map(([k,t])=>`<button type="button" data-gtema="${k}" class="${k===tema?'on':''}">${t}</button>`).join('')}</span>`},
     init:()=>{$$('[data-gpal]').forEach(b=>b.onclick=()=>{S.aj.paleta=b.dataset.gpal;aplicarTema();save();pintarTuto()});$$('[data-gtema]').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.gtema;aplicarTema();save();pintarTuto()})}},
 ];
-PERSONALIZAR.push({t:'¿Das diezmo?',d:'Si lo das, tendrá su sitio en el presupuesto y te avisaré si queda pendiente. Si no, lo quito de todas partes (se puede cambiar en Ajustes → Diezmo).',
+// Cuestionario corto: cada respuesta cambia algo de verdad (categorías, presupuesto u objetivo). Todo se puede omitir.
+const PREG=[
+  {k:'cobro',t:'¿Cómo cobras?',o:[['nomina','Nómina'],['varios','De más de un sitio'],['autonomo','Soy autónomo'],['variable','Ingresos variables']]},
+  {k:'vivienda',t:'¿Tu vivienda?',o:[['alquiler','Alquiler'],['hipoteca','Hipoteca'],['propia','Es mía, sin pagos'],['familia','Vivo con mi familia']]},
+  {k:'tiene',t:'¿Tienes…? (puedes marcar varias)',multi:true,o:[['coche','🚗 Coche'],['hijos','🎒 Hijos'],['mascota','🐾 Mascota']]},
+  {k:'meta',t:'¿Para qué la quieres?',o:[['saber','Saber en qué se me va'],['ahorrar','Ahorrar para algo concreto']]},
+];
+const CAT_POR={autonomo:['Cuota de autónomos','Gestoría','Impuestos y tasas'],coche:['Coche'],hijos:['Hijos y colegio'],mascota:['Mascotas']};
+const VIV_PCT={alquiler:25,hipoteca:25,propia:8,familia:0};
+const NOTA={varios:'Cuando te llegue un ingreso que sea nómina y no lo marque solo, márcalo con ✎ «Es la nómina» y lo recordaré.',
+  variable:'Como tus ingresos cambian, te irá mejor presupuestar sobre una cantidad fija: ponla en Ajustes → Presupuesto («Base: Cantidad fija»).',
+  autonomo:'He añadido Cuota de autónomos, Gestoría e Impuestos y tasas. Luego les das su presupuesto.',
+  propia:'Sin alquiler ni hipoteca, Vivienda queda en un 8 % (comunidad, IBI, seguro…); lo demás va al ahorro.',
+  familia:'Vivienda queda en 0 %: lo que no gastes en casa va al ahorro.'};
+function quitarCatSiVacia(n){const ex=S.cats.find(x=>norm(x.n)===norm(n));if(ex&&!S.mov.some(m=>m.cat===ex.id)&&!(+S.aj.pct[ex.id])&&!(S.aj.eur&&S.aj.eur[ex.id])){S.cats=S.cats.filter(x=>x!==ex);S.reglas=S.reglas.filter(r=>r.c!==ex.id);delete S.aj.pct[ex.id]}}
+function responder(k,v){
+  const P=S.aj.perfil||(S.aj.perfil={});
+  if(k==='tiene'){const a=new Set(P.tiene||[]);if(a.has(v)){a.delete(v);(CAT_POR[v]||[]).forEach(quitarCatSiVacia)}else{a.add(v);(CAT_POR[v]||[]).forEach(n=>anadirCatSug(CAT_SUG.find(c=>c.n===n),{silencio:true}))}P.tiene=[...a]}
+  else{const antes=P[k];P[k]=antes===v?'':v;
+    if(k==='cobro'){if(antes==='autonomo'&&P.cobro!=='autonomo')CAT_POR.autonomo.forEach(quitarCatSiVacia);if(P.cobro==='autonomo')CAT_POR.autonomo.forEach(n=>anadirCatSug(CAT_SUG.find(c=>c.n===n),{silencio:true}))}
+    if(k==='vivienda'&&!enEur('VIVIENDA'))S.aj.pct.VIVIENDA=P.vivienda?VIV_PCT[P.vivienda]:25}
+  refreshCats();syncAhorro();save();pintarTuto();
+}
+PERSONALIZAR.push({t:'Cuéntame un poco',d:'Así te dejo las categorías y el presupuesto a tu medida. Toca lo que te encaje (o pulsa «Omitir»).',
+  html:()=>{const P=S.aj.perfil||{};const notas=[P.cobro,P.vivienda].map(x=>x&&NOTA[x]).filter(Boolean);
+    return `<div class="cuest">${PREG.map(q=>`<div class="cq"><div class="cqt">${q.t}</div><div class="chips">${q.o.map(([v,t])=>{const on=q.multi?(P[q.k]||[]).includes(v):P[q.k]===v;return `<button type="button" class="chip${on?' on':''}" data-pk="${q.k}" data-pv="${v}">${t}</button>`}).join('')}</div></div>`).join('')}
+      ${P.meta==='ahorrar'?`<div class="cobj">${(S.objetivos||[]).length?`<span class="pos small">✓ Objetivo creado: ${esc(S.objetivos[S.objetivos.length-1].nombre)}</span>`:`<input type="text" id="gObjN" placeholder="¿Para qué? (p. ej. Viaje)" maxlength="40"><input type="text" id="gObjM" inputmode="decimal" placeholder="€"><button type="button" class="btn sm pri" id="gObjC">Crear objetivo</button>`}</div>`:''}
+      ${notas.length?`<div class="small mut cnota">${notas.join('<br>')}</div>`:''}</div>`},
+  init:()=>{$$('[data-pk]').forEach(b=>b.onclick=()=>responder(b.dataset.pk,b.dataset.pv));
+    const c=$('#gObjC');if(c)c.onclick=()=>{const n=$('#gObjN').value.trim(),m=parseNum($('#gObjM').value);if(!n||!isFinite(m)||m<=0){toast('Pon para qué es y cuánto',true);return}
+      (S.objetivos||(S.objetivos=[])).push({id:uid(),nombre:n,meta:r2(m),aport:[]});save();pintarTuto();toast('Objetivo «'+n+'» creado. Lo verás en Inicio y en Patrimonio')}}});
+PERSONALIZAR.push({t:'¿Das diezmo?',d:'Si lo das, tendrá su sitio en el presupuesto (un 10 % que sale del ahorro) y te avisaré si queda pendiente. Si no, no aparece por ningún lado. Se puede cambiar en Ajustes → Diezmo.',
   html:()=>`<span class="seg" style="margin-top:10px"><button type="button" data-gdz="1" class="${diezmoOn()?'on':''}">Sí, doy diezmo</button><button type="button" data-gdz="0" class="${diezmoOn()?'':'on'}">No</button></span>`,
   init:()=>$$('[data-gdz]').forEach(b=>b.onclick=()=>{const on=b.dataset.gdz==='1';if(on!==diezmoOn())ponerDiezmo(on);pintarTuto()})});
 PERSONALIZAR.push({t:'¿Te faltan categorías?',d:'Ya tienes las de siempre. Si quieres, añade alguna más: traen sus palabras para clasificar solas. Luego les das su porcentaje en Ajustes.',

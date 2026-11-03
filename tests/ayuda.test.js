@@ -63,8 +63,8 @@ module.exports = {
   'el gráfico se vacía al quitar el último gasto del mes'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
-      await meter(p, [['2026-10-05', 'LIBRO MEDICINA', -26, 'PROFESIONAL']]);
-      assert.match(await p.textContent('#grafCard'), /Profesional/);
+      await meter(p, [['2026-10-05', 'LIBRO MEDICINA', -26, 'PERSONAL']]);
+      assert.match(await p.textContent('#grafCard'), /Ropa y compras/);
       await p.evaluate(() => { S.mov.find(x => x.concepto === 'LIBRO MEDICINA').cat = 'PRESTAMO'; save(); go('resumen'); });
       assert.ok(!(await p.isVisible('#grafCard')), 'sin gastos no se enseña el gráfico');
       assert.equal(await p.textContent('#grafCard'), '');
@@ -141,7 +141,25 @@ module.exports = {
       await p.click('[data-gpal="oceano"]'); await p.click('[data-gtema="oscuro"]');
       assert.equal(await p.evaluate(() => [document.documentElement.dataset.pal, document.documentElement.dataset.theme].join()), 'oceano,dark');
       await p.click('#tutoSig');
+      // cuestionario: autónomo, sin vivienda que pagar, con coche y un objetivo
+      assert.match(await p.textContent('#tuto'), /Cuéntame un poco/);
+      await p.click('[data-pk="cobro"][data-pv="autonomo"]');
+      assert.ok(await p.evaluate(() => ['Cuota de autónomos', 'Gestoría', 'Impuestos y tasas'].every(n => S.cats.some(c => c.n === n))), 'categorías de autónomo');
+      await p.click('[data-pk="vivienda"][data-pv="familia"]');
+      assert.equal(await p.evaluate(() => [+S.aj.pct.VIVIENDA, Math.round(pctAhorro(0))].join()), '0,35', 'sin vivienda, el 25 % va al ahorro');
+      assert.match(await p.textContent('#tuto'), /Vivienda queda en 0 %/);
+      await p.click('[data-pk="tiene"][data-pv="coche"]');
+      assert.ok(await p.evaluate(() => S.cats.some(c => c.n === 'Coche') && autoCat('ITV VALENCIA', '', -40) === S.cats.find(c => c.n === 'Coche').id));
+      await p.click('[data-pk="tiene"][data-pv="coche"]');
+      assert.ok(await p.evaluate(() => !S.cats.some(c => c.n === 'Coche')), 'si lo desmarcas se quita');
+      await p.click('[data-pk="meta"][data-pv="ahorrar"]');
+      await p.fill('#gObjN', 'Viaje a Japón'); await p.fill('#gObjM', '3000'); await p.click('#gObjC');
+      assert.equal(await p.evaluate(() => S.objetivos.map(o => o.nombre + ':' + o.meta).join()), 'Viaje a Japón:3000');
+      await p.click('#tutoSig');
       assert.match(await p.textContent('#tuto'), /diezmo/);
+      assert.equal(await p.evaluate(() => diezmoOn()), false, 'en las cuentas nuevas el diezmo empieza apagado');
+      await p.click('[data-gdz="1"]');
+      assert.equal(await p.evaluate(() => [diezmoOn(), +S.aj.pct.DIEZMO].join()), 'true,10', 'si lo das, un 10 % que sale del ahorro');
       await p.click('[data-gdz="0"]');
       assert.equal(await p.evaluate(() => [diezmoOn(), CATS.some(c => c.id === 'DIEZMO'), sumaPct()].join()), 'false,false,100');
       await p.click('#tutoSig');

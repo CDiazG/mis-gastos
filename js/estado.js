@@ -4,10 +4,10 @@
 const KEY='mis-gastos-v1';
 let S;
 function defState(){
-  return {v:1,mov:[],reglas:SEED_RULES.map(([t,c])=>({t,c,u:0})),
+  return {v:1,mov:[],reglas:reglasDeSerie(),
     cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
     aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente',
-      bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true},
+      diezmo:false,bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true},
     cuentas:[],
     fijos:[],objetivos:[],mig:{actividades:true,inversion:true,ahorroAuto:true,prestamo:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};
@@ -70,7 +70,7 @@ function migrarPrestamo(){
 function prestamosDudosos(){return (S.mov||[]).filter(x=>x.cat==='PRESTAMO'&&x.importe<0&&x.origen!=='manual'&&!x.persona&&/ PRESTAMO| HIPOTEC| AMORTIZ/.test(norm(' '+x.concepto+' '+(x.detalle||''))))}
 let HAY_MIGRACION=false;
 function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(S&&S.aj&&migrarInversion())HAY_MIGRACION=true;if(S&&S.aj&&migrarAhorroAuto())HAY_MIGRACION=true;if(S&&S.aj&&S.reglas&&migrarPrestamo())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
-  const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined)S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
+  const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined&&k!=='diezmo')S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
 function load(){
   try{const t=localStorage.getItem(KEY);if(t){S=JSON.parse(t);completar();return}}catch(e){console.error(e)}
   S=defState();

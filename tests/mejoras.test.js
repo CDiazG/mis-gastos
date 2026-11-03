@@ -106,7 +106,7 @@ module.exports = {
   'diezmo opcional: al quitarlo su porcentaje pasa al ahorro'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
-      await p.evaluate(() => go('ajustes', { sub: 'diezmo' }));
+      await p.evaluate(() => { ponerDiezmo(true); go('ajustes', { sub: 'diezmo' }); });
       const antes = await p.evaluate(() => [S.aj.pct.AHORRO, S.aj.pct.DIEZMO]);
       await p.click('label.pref:has([data-pref="diezmo"])');
       const r = await p.evaluate(() => ({ pa: S.aj.pct.AHORRO, pd: S.aj.pct.DIEZMO, suma: sumaPct(), opt: catOptions('').includes('DIEZMO'), fila: !!document.querySelector('#pctTable tr[data-cid="DIEZMO"]') }));
@@ -124,7 +124,8 @@ module.exports = {
     return (async () => {
       const p = await dentro(browser, estado);
       await meter(p, [['2026-10-03', 'NETFLIX.COM', -13.99, 'PERSONAL'], ['2026-10-04', 'SPOTIFY P1234', -10.99, 'PERSONAL'], ['2026-10-05', 'ZARA', -40, 'PERSONAL']]);
-      await p.evaluate(() => go('ajustes'));
+      // como alguien con las categorías de antes (sin Suscripciones)
+      await p.evaluate(() => { const c = S.cats.find(c => c.id === 'SUSCRIPCIONES'); S.cats = S.cats.filter(x => x !== c); S.reglas = S.reglas.filter(r => r.c !== 'SUSCRIPCIONES'); delete S.aj.pct.SUSCRIPCIONES; save(); go('ajustes'); });
       await p.click('#catSug [data-sug="Suscripciones"]');
       assert.match(await p.textContent('#dlgB'), /2<\/b>|2 movimientos/);
       await p.click('#dlgF >> text=Pasarlos');

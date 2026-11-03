@@ -1,23 +1,36 @@
 // Cuentas Claras · Categorías, grupos y reglas de serie
 "use strict";
 /* ============ Configuración ============ */
+// Categorías de las cuentas nuevas (versión 2.22.0): reparto 50 / 30 / 20.
+// A quien ya tiene las suyas no se le cambia nada.
 const CATS_DEF=[
  {id:'VIVIENDA',n:'Vivienda',g:'FIJOS',p:25},
+ {id:'FACTURAS',n:'Facturas (luz, agua, móvil…)',g:'FIJOS',p:7},
  {id:'SUPERMERCADO',n:'Supermercado',g:'FIJOS',p:10},
- {id:'PROFESIONAL',n:'Profesional',g:'FIJOS',p:5},
- {id:'SALUD',n:'Salud',g:'FIJOS',p:3},
  {id:'TRANSPORTE',n:'Transporte',g:'FIJOS',p:5},
- {id:'OCIO',n:'Restaurantes y ocio',g:'VARIABLES',p:8},
- {id:'PERSONAL',n:'Personal',g:'VARIABLES',p:5},
- {id:'VIAJES',n:'Viajes y conciertos',g:'VARIABLES',p:5},
- {id:'ACTIVIDADES',n:'Deporte y actividades',g:'VARIABLES',p:2},
+ {id:'SALUD',n:'Salud',g:'FIJOS',p:3},
+ {id:'OCIO',n:'Restaurantes y ocio',g:'VARIABLES',p:10},
+ {id:'PERSONAL',n:'Ropa y compras',g:'VARIABLES',p:7},
+ {id:'VIAJES',n:'Viajes y escapadas',g:'VARIABLES',p:5},
+ {id:'SUSCRIPCIONES',n:'Suscripciones',g:'VARIABLES',p:3},
+ {id:'ACTIVIDADES',n:'Deporte y actividades',g:'VARIABLES',p:3},
  {id:'REGALOS',n:'Regalos',g:'VARIABLES',p:2},
  {id:'OTROS',n:'Otros',g:'VARIABLES',p:0},
  {id:'AHORRO',n:'Ahorro',g:'AHORRO',p:10},
  {id:'INVERSION',n:'Inversión',g:'AHORRO',p:10},
- {id:'DIEZMO',n:'Diezmo',g:'AHORRO',p:10},
  {id:'DONATIVOS',n:'Donativos',g:'AHORRO',p:0},
+ {id:'DIEZMO',n:'Diezmo',g:'AHORRO',p:0},
 ];
+// Reglas de serie de las cuentas nuevas: las de siempre, con luz/agua/móvil a Facturas y plataformas a Suscripciones
+const A_FACTURAS=['IBERDROLA','CURENERGIA','NATURGY','ENDESA','EMIVASA','HOLALUZ','TOTALENERGIES','AGUAS DE','CANAL DE ISABEL','MOVISTAR','VODAFONE','ORANGE','DIGI','MASMOVIL','PEPEPHONE','YOIGO','JAZZTEL','LOWI','SIMYO','REPSOL LUZ','GAS NATURAL'];
+const A_SUSCRIP=['NETFLIX','SPOTIFY','HBO','DISNEY','PRIME VIDEO','AMAZON PRIME','YOUTUBE','ICLOUD','APPLE COM','GOOGLE ONE','FILMIN','DAZN','AUDIBLE','DEEZER'];
+function reglasDeSerie(){
+  const out=[],vistos=new Set();
+  const poner=(t,c)=>{const k=norm(t).trim();if(vistos.has(k))return;vistos.add(k);out.push({t,c,u:0})};
+  A_FACTURAS.forEach(t=>poner(t,'FACTURAS'));A_SUSCRIP.forEach(t=>poner(t,'SUSCRIPCIONES'));
+  for(const [t,c] of SEED_RULES){if(c==='PROFESIONAL')continue;poner(t,c)}
+  return out;
+}
 const SPECIAL=[
  {id:'INGRESO',n:'Ingreso'},
  {id:'PRESTAMO',n:'Préstamo (me lo devuelven)'},
