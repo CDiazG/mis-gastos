@@ -697,3 +697,47 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 .sinanim section.desliza-i,.sinanim section.desliza-d{animation:none}
 #tuto.arriba{bottom:auto;top:12px}
 @media (min-width:641px){#tuto.arriba{top:110px}}
+
+/* Exportar */
+.expopts{display:grid;gap:8px}
+.expop{display:flex;gap:12px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;font:inherit;cursor:pointer}
+.expop:hover{border-color:var(--acc);background:var(--acc-soft)}
+.expop .ei{font-size:22px;line-height:1}
+.expop b{display:block;margin-bottom:2px}.expop small{color:var(--muted);font-size:12.5px;line-height:1.35}
+/* Importar más directo */
+.drop .dropic{display:block;font-size:30px;margin-bottom:4px}
+.drop b{font-size:17px}
+.drop .dropsub{font-size:14px}
+.imppriv{margin:10px 2px 0}
+.impmas{margin-top:8px;font-size:14px}.impmas summary{cursor:pointer;color:var(--acc);font-weight:550}.impmas p{margin:6px 0 0}
+
+/* Añadir: atajos con lo de siempre */
+.rapidos .l{display:block;margin-bottom:6px}
+.rapidos .chip.rap{background:var(--acc-soft);border-color:transparent}
+.rapidos .chip.rap .mut{font-size:12px;margin-left:2px}
+@media (max-width:640px){#logout{display:none}}
+
+/* Movimientos: separadores por día y versión compacta en el móvil */
+#movTable tr.sepdia td{background:var(--soft)!important;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 12px;letter-spacing:.01em}
+#movTable .catchip{display:none}
+#s-movs.buscando .mesTit{opacity:.45}
+#movPanel{position:fixed;inset:0;z-index:70}
+#movPanel .msfondo{position:absolute;inset:0;background:rgba(0,0,0,.35);opacity:0;transition:opacity .2s}
+#movPanel.on .msfondo{opacity:1}
+#movPanel .mpanel{position:absolute;left:8px;right:8px;bottom:calc(70px + env(safe-area-inset-bottom));background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 40px rgba(0,0,0,.3);max-height:75vh;overflow:auto;animation:subir .2s ease both}
+#movPanel .mph{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+#movPanel .chips .chip{font-size:14px}
+@media (max-width:640px){
+  #movTable tr.sepdia{display:block;padding:0;border-bottom:0}
+  #movTable tr.sepdia td{display:block;padding:7px 12px}
+  #movTable tr[data-id]{grid-template-columns:24px minmax(0,1fr) auto;grid-template-areas:"chk con imp";padding:10px 12px;cursor:pointer}
+  #movTable tr[data-id] td:nth-child(2),#movTable tr[data-id] td:nth-child(4),#movTable tr[data-id] td:nth-child(6){display:none}
+  #movTable tr[data-id] td:nth-child(5){align-self:start}
+  #movTable .catchip{display:inline-block;margin-top:4px;font-size:12.5px;color:var(--muted);background:var(--soft);border-radius:999px;padding:2px 9px}
+  #movTable .catchip.sin{color:var(--warn);background:var(--warn-soft)}
+  #movTable .det{display:none}
+}
+
+/* Gráficas que se deslizan de lado en el móvil */
+.gscroll{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;margin:0 -4px;padding:0 4px}
+.gscroll svg{display:block}

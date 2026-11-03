@@ -68,7 +68,7 @@ module.exports = {
       const p = await dentro(browser, estado); const m = await p.evaluate(() => MES);
       await mov(p, { fecha: m + '-05', concepto: 'cena', importe: -30, cat: 'OCIO' });
       await p.evaluate(() => { window.print = () => {}; });
-      await p.click('#s-resumen [data-informe]'); await p.click('#dlgF >> text=Imprimir'); await L.esperar(200);
+      await p.click('#s-resumen [data-exportar]'); await p.click('#dlgB [data-ex=inf]'); await L.esperar(100); await p.click('#dlgF >> text=Imprimir'); await L.esperar(200);
       const html = await p.innerHTML('#informe');
       assert.match(html, /Presupuesto por categoría/); assert.match(html, /cena/);
       await p.emulateMedia({ media: 'print' });

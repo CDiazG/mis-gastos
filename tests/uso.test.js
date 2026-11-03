@@ -165,7 +165,7 @@ module.exports = {
       await anadir(p, { imp: '5', con: 'café', cat: 'OCIO' });
       await p.evaluate(() => { S.cuentas.push({ n: 'Banco Inventado', v: 1500, f: hoy(), banco: 1 }, { n: 'Broker · Inversiones', v: 300, f: hoy(), cartera: { f: hoy(), pos: [{ n: 'Oro Imaginario', u: 2.5, v: 300, isin: 'IE0000000003' }] } });
         S.objetivos = [{ id: 'o', nombre: 'Viaje inventado', meta: 1000, aport: [{ f: hoy(), i: 250 }] }]; save(); go('movs'); });
-      await p.click('#s-movs [data-export]'); await p.selectOption('#xAl', 'mes');
+      await p.click('#s-movs [data-exportar]'); await p.click('#dlgB [data-ex=xls]'); await L.esperar(100); await p.selectOption('#xAl', 'mes');
       const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#dlgF >> text=Descargar')]);
       const buf = require('fs').readFileSync(await dl.path());
       assert.equal(buf.slice(0, 2).toString(), 'PK', 'es un archivo zip/xlsx');
@@ -367,6 +367,76 @@ module.exports = {
       assert.deepEqual(await p.evaluate(() => [TAB, F.cat, F.todos]), ['movs', 'PRESTAMO', true]);
       await p.evaluate(() => { S.mov.find(x => x.id === 'h').cat = 'VIVIENDA'; save(); go('resumen'); });
       assert.ok(!/Revisa/.test(await p.textContent('#alerts')), 'cuando se corrige, el aviso desaparece');
+    })();
+  },
+
+  'buscar en todos los meses, separadores por día y panel del móvil'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      await p.evaluate(() => { const h = mesDe(hoy());
+        for (const k of [0, 1, 5]) { const m = addMes(h, -k); S.mov.push({ id: 'a' + k, fecha: m + '-03', mes: m, concepto: 'AMAZON MKTP ES', importe: -10 - k, cat: 'PERSONAL', cuenta: 'EVO', origen: 'extracto' }); }
+        S.mov.push({ id: 'x1', fecha: h + '-03', mes: h, concepto: 'MERCADONA', importe: -40, cat: '', cuenta: 'EVO', origen: 'extracto' });
+        MES = h; save(); go('movs'); });
+      assert.equal((await p.$$('#movTable tr.sepdia')).length, 1, 'un separador por día');
+      await p.fill('#fBuscar', 'amazon'); await L.esperar(100);
+      assert.equal((await p.$$('#movTable tr[data-id]')).length, 3, 'encuentra los de todos los meses');
+      assert.match(await p.textContent('#movFoot'), /todos los meses/);
+      assert.match(await p.textContent('#movFoot'), /salidas 36,00/);
+      await p.fill('#fBuscar', ''); await L.esperar(100);
+      // en el móvil, la categoría va en una etiqueta y al tocar la fila sale el panel
+      assert.ok(!(await p.isVisible('#movTable tr[data-id="x1"] select.cat')), 'sin el desplegable en cada fila');
+      assert.match(await p.textContent('#movTable tr[data-id="x1"] .catchip'), /Sin categoría/);
+      await p.tap('#movTable tr[data-id="x1"] td:nth-child(3)');
+      await p.waitForSelector('#movPanel .chip[data-c="SUPERMERCADO"]');
+      await p.tap('#movPanel .chip[data-c="SUPERMERCADO"]');
+      assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 'x1').cat), 'SUPERMERCADO');
+      assert.equal(await p.$('#movPanel'), null);
+      // atrás cierra el panel
+      await p.tap('#movTable tr[data-id="x1"] td:nth-child(3)'); await p.waitForSelector('#movPanel');
+      await p.evaluate(() => history.back()); await L.esperar(250);
+      assert.equal(await p.$('#movPanel'), null); assert.equal(await p.evaluate(() => TAB), 'movs');
+      // en el móvil, «Salir» solo está en Mi perfil
+      assert.ok(!(await p.isVisible('#logout')));
+    })();
+  },
+
+  'añadir: atajos con lo de siempre y un solo botón de exportar'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      await p.evaluate(() => { const h = mesDe(hoy());
+        for (let k = 0; k < 3; k++) S.mov.push({ id: 'c' + k, fecha: h + '-0' + (k + 1), mes: h, concepto: 'café', importe: -1.5, cat: 'OCIO', metodo: 'efectivo', cuenta: '', origen: 'manual' });
+        S.mov.push({ id: 'u', fecha: h + '-02', mes: h, concepto: 'pan', importe: -1, cat: 'SUPERMERCADO', metodo: 'efectivo', cuenta: '', origen: 'manual' });
+        save(); go('efectivo'); });
+      const chips = await p.$$eval('#aRapidos .chip', b => b.map(x => x.textContent.trim()));
+      assert.equal(chips.length, 1, 'solo lo que se repite'); assert.match(chips[0], /Café/);
+      await p.click('#aRapidos .chip');
+      assert.equal(await p.inputValue('#cCon'), 'Café'); assert.equal(await p.inputValue('#cImp'), '1,50');
+      assert.ok(await p.$('#cChips .chip.on[data-c="OCIO"]'));
+      await p.click('#aGo'); await L.esperar(200);
+      assert.equal(await p.evaluate(() => S.mov.filter(x => norm(x.concepto).includes('CAFE')).length), 4);
+      // Exportar: un solo botón con las dos opciones
+      for (const t of ['resumen', 'movs', 'hist']) {
+        await p.evaluate(t => go(t), t);
+        assert.equal((await p.$$(`#s-${t} [data-exportar]`)).length, 1, 'un botón en ' + t);
+      }
+      await p.click('#s-hist [data-exportar]');
+      assert.equal((await p.$$('#dlgB [data-ex]')).length, 2);
+      await p.click('#dlgB [data-ex=inf]'); await L.esperar(100);
+      assert.match(await p.textContent('#dlgT'), /Informe/);
+    })();
+  },
+
+  'gráficas del histórico legibles en el móvil'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+      await p.evaluate(() => { const h = mesDe(hoy()); for (let k = 0; k < 20; k++) { const m = addMes(h, -k); S.mov.push({ id: 'i' + k, fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: 'g' + k, fecha: m + '-03', mes: m, concepto: 'CENA', importe: -100 - k, cat: 'OCIO', cuenta: 'EVO' }); } save(); go('hist'); });
+      await L.esperar(300);
+      const r = await p.evaluate(() => { const sv = document.querySelector('#chart svg'), vb = sv.viewBox.baseVal.width, w = sv.getBoundingClientRect().width, sc = sv.closest('.gscroll');
+        return { escala: w / vb, desliza: !!sc && sc.scrollWidth > sc.clientWidth, alFinal: !!sc && Math.abs(sc.scrollLeft + sc.clientWidth - sc.scrollWidth) < 3, ancho: document.documentElement.scrollWidth }; });
+      assert.ok(Math.abs(r.escala - 1) < 0.02, 'el texto se ve a su tamaño, no encogido: ' + r.escala);
+      assert.ok(r.desliza, 'los meses que no caben se ven deslizando');
+      assert.ok(r.alFinal, 'empieza en los meses más recientes');
+      assert.ok(r.ancho <= 391, 'la página no se sale');
     })();
   },
 

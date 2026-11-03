@@ -256,11 +256,17 @@ function dlgInforme(){
   dialog('Informe para imprimir',`<p class="small mut" style="margin-top:0">Se abre la ventana de impresión. Para guardarlo como PDF, elige «Guardar como PDF» como impresora.</p><div class="formgrid"><label>Periodo</label><select id="infP"><option value="mes:${MES}">${nombreMes(MES)}</option>${ys.map(y=>`<option value="anio:${y}">Año ${y}</option>`).join('')}</select></div>`,
     [{t:'Cancelar'},{t:'Imprimir',cls:'pri',fn:()=>{const [t,v]=$('#infP').value.split(':');imprimirInforme(t==='mes'?'mes':'anio',v)}}]);
 }
-$$('[data-informe]').forEach(b=>b.onclick=dlgInforme);
+
 
 function dlgExportar(){
   const ys=[...new Set(mesesConDatos().map(m=>m.slice(0,4)))].reverse();
   dialog('Exportar a Excel',`<p class="small mut" style="margin-top:0">Se descarga un Excel con una hoja por mes (presupuesto, gastos y movimientos, como el Excel de siempre), un resumen y la lista de todos los movimientos.</p><div class="formgrid"><label>Periodo</label><select id="xAl"><option value="mes">${nombreMes(MES)}</option>${ys.map(y=>`<option value="${y}">Año ${y}</option>`).join('')}<option value="todo">Todo</option></select></div>`,
     [{t:'Cancelar'},{t:'Descargar',cls:'pri',fn:()=>exportarExcel($('#xAl').value)}]);
 }
-$$('[data-export]').forEach(b=>b.onclick=dlgExportar);
+// Un solo botón «Exportar» en Resumen, Movimientos e Histórico: Excel o informe para imprimir / PDF
+function dlgExportarTodo(){
+  dialog('Exportar',`<div class="expopts"><button type="button" class="expop" data-ex="xls"><span class="ei">📊</span><span><b>Excel</b><small>Una hoja por mes como el Excel de siempre, un resumen, todos los movimientos y tu patrimonio.</small></span></button>
+    <button type="button" class="expop" data-ex="inf"><span class="ei">🖨️</span><span><b>Informe para imprimir o PDF</b><small>Un resumen bonito de un mes o de un año, listo para imprimir o guardar como PDF.</small></span></button></div>`,[{t:'Cancelar'}]);
+  $$('#dlgB [data-ex]').forEach(b=>b.onclick=()=>{$('#dlg').close();setTimeout(b.dataset.ex==='xls'?dlgExportar:dlgInforme,30)});
+}
+$$('[data-exportar]').forEach(b=>b.onclick=dlgExportarTodo);

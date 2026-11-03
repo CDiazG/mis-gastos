@@ -228,7 +228,7 @@ module.exports = {
     return (async () => {
       const p = await dentro(browser, estado);
       await p.evaluate(() => go('importar'));
-      assert.match(await p.textContent('#s-importar'), /nunca se sube/);
+      assert.match(await p.textContent('#s-importar'), /no se sube a ningún sitio/);
       const antes = await p.evaluate(() => [S.mov.length, S.reglas.length, S.cuentas.length]);
       await p.click('#impDemo');
       assert.match(await p.textContent('#impOut'), /ejemplo con movimientos inventados/);

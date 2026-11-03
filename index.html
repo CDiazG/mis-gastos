@@ -11,7 +11,7 @@
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p}catch(e){}</script>
-<link rel="stylesheet" href="css/estilos.css?v=2.20.2">
+<link rel="stylesheet" href="css/estilos.css?v=2.21.0">
 </head>
 <body>
 <header>
@@ -50,7 +50,7 @@
 
   <section id="s-resumen">
     <div class="mesTit"></div>
-    <div class="hola"><span id="hola" class="hola-t"></span><span style="flex:1"></span><button class="btn sm" data-informe type="button" title="Informe para imprimir"><span class="lg">Informe para imprimir</span><span class="ct">Informe</span></button></div>
+    <div class="hola"><span id="hola" class="hola-t"></span><span style="flex:1"></span><button class="btn sm" data-exportar type="button">⤓ Exportar</button></div>
     <div class="grid kpis" id="kpis"></div>
     <div class="alerts" id="alerts"></div>
     <div class="grid groups" id="groups"></div>
@@ -70,6 +70,7 @@
         <p class="sub" style="margin-bottom:14px">Para lo que no sale en los extractos: lo pagado o cobrado en efectivo, o en cuentas que no subes.</p>
         <form class="cashform" id="cashForm" autocomplete="off">
           <div class="seg segbig" id="aTipo"><button type="button" data-v="gasto">Gasto</button><button type="button" data-v="ingreso">Ingreso</button></div>
+          <div id="aRapidos" class="rapidos hide"></div>
           <div><label class="l" for="cImp">Importe</label><div class="bigamt"><input type="text" id="cImp" inputmode="decimal" placeholder="0,00" required><span>€</span></div></div>
           <div><label class="l" for="cCon" id="aConL">¿En qué?</label><input type="text" id="cCon" style="width:100%" required></div>
           <div><label class="l">Categoría</label><div class="chips" id="cChips"></div></div>
@@ -96,7 +97,7 @@
       <label class="pill small"><input type="checkbox" id="fSinCat"> Solo sin categoría</label>
       <span class="sp"></span>
       <button class="btn sm pri" id="movAdd" type="button">＋ Añadir</button>
-      <button class="btn sm" data-export>Exportar a Excel</button>
+      <button class="btn sm" data-exportar type="button">⤓ Exportar</button>
       <span class="small mut" id="selInfo"></span>
       <select id="bulkCat" class="hide"></select>
       <button class="btn sm hide" id="bulkApply">Asignar a marcados</button>
@@ -116,10 +117,10 @@
   <!-- IMPORTAR -->
   <section id="s-importar">
     <h2>Importar extracto</h2>
-    <p class="sub">Sube el extracto del banco: en <b>PDF</b> (EVO, Revolut, Trade Republic y muchos otros bancos), en <b>Norma 43</b> (el formato estándar que dan todos los bancos españoles, a veces llamado «fichero de movimientos» o «CSB43»), en <b>CSV</b> o en <b>Excel</b> (.xlsx o .xls, como el del Santander). El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar.</p>
-    <div class="alert info" style="margin:0 0 12px"><span class="grow">🔒 <b>El extracto se lee aquí mismo, en tu dispositivo: el archivo nunca se sube a ningún sitio.</b> Solo se guardan los movimientos que confirmes (fecha, concepto, importe y categoría), en tu cuenta. <button class="link" type="button" data-priv>Más sobre privacidad</button></span></div>
-    <div class="toolbar" style="margin:0 0 10px"><span class="small mut" style="flex:1">¿Quieres ver cómo funciona antes de subir el tuyo?</span><button class="btn sm" type="button" id="impDemo">Probar con un extracto de ejemplo</button></div>
-    <div class="drop" id="drop"><b>Arrastra aquí el extracto</b> o haz clic para elegirlo<br><span class="small">PDF, Excel (.xlsx o .xls), CSV o Norma 43 · puedes subir varios a la vez</span></div>
+    <div class="drop" id="drop"><span class="dropic" aria-hidden="true">📄</span><b>Sube el extracto del banco</b><br><span class="dropsub">Toca para elegirlo o arrástralo aquí</span><br><span class="small">PDF, Excel (.xlsx o .xls), CSV o Norma 43 · puedes subir varios a la vez</span></div>
+    <p class="small mut imppriv">🔒 Se lee aquí mismo, en tu dispositivo: el archivo no se sube a ningún sitio. <button class="link" type="button" data-priv>Más sobre privacidad</button></p>
+    <details class="impmas"><summary>¿Qué formatos acepta y cómo funciona?</summary><p class="small">Sube el extracto del banco: en <b>PDF</b> (EVO, Revolut, Trade Republic y muchos otros bancos), en <b>Norma 43</b> (el formato estándar que dan todos los bancos españoles, a veces llamado «fichero de movimientos» o «CSB43»), en <b>CSV</b> o en <b>Excel</b> (.xlsx o .xls, como el del Santander). El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar.</p><p class="small">Solo se guardan los movimientos que confirmes (fecha, concepto, importe y categoría), en tu cuenta.</p></details>
+    <div class="toolbar" style="margin:10px 0 0"><span class="small mut" style="flex:1">¿Quieres ver cómo funciona antes de subir el tuyo?</span><button class="btn sm" type="button" id="impDemo">Probar con un extracto de ejemplo</button></div>
     <p class="small mut hide" id="shareTip" style="margin:8px 2px 0">📲 Más rápido: en la app del banco, <b>Compartir → Cuentas Claras</b> y se abre aquí directamente (con la app instalada en el móvil).</p>
     <input type="file" id="pdfInput" accept=".pdf,.csv,.txt,.xlsx,.xls,.n43,.q43,.aeb,.c43,application/pdf,text/csv" multiple class="hide">
     <div id="impOut"></div>
@@ -127,7 +128,7 @@
 
   <!-- HISTORICO -->
   <section id="s-hist" class="conap conchips">
-    <div class="toolbar" style="margin:0"><h2>Histórico</h2><span class="sp"></span><button class="btn" data-informe type="button">Informe para imprimir</button><button class="btn" data-export>Exportar a Excel</button></div>
+    <div class="toolbar" style="margin:0"><h2>Histórico</h2><span class="sp"></span><button class="btn" data-exportar type="button">⤓ Exportar</button></div>
     <p class="sub">Ingresos y gastos de todos los meses guardados. El ahorro del mes es lo que entra menos lo que se gasta (sin contar traspasos, préstamos ni ajustes).</p>
     <nav class="apchips" data-menu="hist" aria-label="Vistas del histórico"></nav>
     <div class="apcont">
@@ -377,31 +378,31 @@
 <div id="undo" role="status"><span id="undoTxt"></span><button class="btn sm" type="button" id="undoBtn">Deshacer</button></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.20.2"></script>
-<script src="js/categorias.js?v=2.20.2"></script>
-<script src="js/version.js?v=2.20.2"></script>
-<script src="js/utilidades.js?v=2.20.2"></script>
-<script src="js/estado.js?v=2.20.2"></script>
-<script src="js/reglas.js?v=2.20.2"></script>
-<script src="js/navegacion.js?v=2.20.2"></script>
-<script src="js/resumen.js?v=2.20.2"></script>
-<script src="js/movimientos.js?v=2.20.2"></script>
-<script src="js/excel.js?v=2.20.2"></script>
-<script src="js/dialogos.js?v=2.20.2"></script>
-<script src="js/pdf.js?v=2.20.2"></script>
-<script src="js/formatos.js?v=2.20.2"></script>
-<script src="js/importar.js?v=2.20.2"></script>
-<script src="js/historico.js?v=2.20.2"></script>
-<script src="js/ajustes.js?v=2.20.2"></script>
-<script src="js/usuarios.js?v=2.20.2"></script>
-<script src="js/errores.js?v=2.20.2"></script>
-<script src="js/buzon.js?v=2.20.2"></script>
-<script src="js/perfil.js?v=2.20.2"></script>
-<script src="js/inicio.js?v=2.20.2"></script>
-<script src="js/privacidad.js?v=2.20.2"></script>
-<script src="js/ayuda.js?v=2.20.2"></script>
-<script src="js/chat.js?v=2.20.2"></script>
-<script src="js/acceso.js?v=2.20.2"></script>
-<script src="js/arranque.js?v=2.20.2"></script>
+<script src="js/config.js?v=2.21.0"></script>
+<script src="js/categorias.js?v=2.21.0"></script>
+<script src="js/version.js?v=2.21.0"></script>
+<script src="js/utilidades.js?v=2.21.0"></script>
+<script src="js/estado.js?v=2.21.0"></script>
+<script src="js/reglas.js?v=2.21.0"></script>
+<script src="js/navegacion.js?v=2.21.0"></script>
+<script src="js/resumen.js?v=2.21.0"></script>
+<script src="js/movimientos.js?v=2.21.0"></script>
+<script src="js/excel.js?v=2.21.0"></script>
+<script src="js/dialogos.js?v=2.21.0"></script>
+<script src="js/pdf.js?v=2.21.0"></script>
+<script src="js/formatos.js?v=2.21.0"></script>
+<script src="js/importar.js?v=2.21.0"></script>
+<script src="js/historico.js?v=2.21.0"></script>
+<script src="js/ajustes.js?v=2.21.0"></script>
+<script src="js/usuarios.js?v=2.21.0"></script>
+<script src="js/errores.js?v=2.21.0"></script>
+<script src="js/buzon.js?v=2.21.0"></script>
+<script src="js/perfil.js?v=2.21.0"></script>
+<script src="js/inicio.js?v=2.21.0"></script>
+<script src="js/privacidad.js?v=2.21.0"></script>
+<script src="js/ayuda.js?v=2.21.0"></script>
+<script src="js/chat.js?v=2.21.0"></script>
+<script src="js/acceso.js?v=2.21.0"></script>
+<script src="js/arranque.js?v=2.21.0"></script>
 </body>
 </html>

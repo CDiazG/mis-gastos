@@ -4,18 +4,41 @@
 const F={q:'',cat:'',sinCat:false,todos:false,tag:''};
 const SEL=new Set();
 function pagoOptions(sel){return S.cuentas.map(c=>`<option${c.n===sel?' selected':''}>${esc(c.n)}</option>`).join('')+`<option value="__efectivo"${sel==='__efectivo'?' selected':''}>Efectivo</option>`}
+// Separador por día: «Hoy», «Ayer» o «lunes 14 de noviembre» (con el año si no es este)
+function diaTxt(f){const h=hoy(),ay=new Date(h+'T12:00');ay.setDate(ay.getDate()-1);const ayer=ay.toISOString().slice(0,10);
+  if(f===h)return 'Hoy';if(f===ayer)return 'Ayer';const d=new Date(f+'T12:00');
+  const t=d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',...(f.slice(0,4)!==h.slice(0,4)?{year:'numeric'}:{})});return t.charAt(0).toUpperCase()+t.slice(1)}
+// Panel del móvil al tocar un movimiento: categorías de un toque, editar o etiquetar
+function panelMov(x){
+  cerrarPanelMov();
+  const cats=[...CATS.map(c=>({id:c.id,n:c.n})),...SPECIAL.filter(s=>s.id!=='AJUSTE').map(s=>({id:s.id,n:s.n}))];
+  const d=document.createElement('div');d.id='movPanel';
+  d.innerHTML=`<div class="msfondo"></div><div class="mscaja mpanel" role="dialog" aria-label="Movimiento"><div class="mph"><div><b>${esc(verConcepto(x))}</b><div class="small mut">${diaTxt(x.fecha)} · ${x.metodo==='efectivo'?'efectivo':esc(x.cuenta||'')}</div></div><b class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</b></div>
+    <div class="small mut" style="margin:10px 0 6px">Categoría</div><div class="chips">${cats.map(c=>`<button type="button" class="chip${c.id===x.cat?' on':''}" data-c="${c.id}">${esc(c.n)}</button>`).join('')}</div>
+    <div class="toolbar" style="margin:12px 0 0"><button type="button" class="btn" data-pm="editar">✎ Editar</button><span class="sp"></span><button type="button" class="btn" data-pm="cerrar">Cerrar</button></div></div>`;
+  document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
+  $$('.msfondo,[data-pm=cerrar]',d).forEach(b=>b.onclick=cerrarPanelMov);
+  $$('[data-pm=editar]',d).forEach(b=>b.onclick=()=>{cerrarPanelMov();editar(x)});
+  $$('[data-c]',d).forEach(b=>b.onclick=()=>{const c=b.dataset.c;cerrarPanelMov();if(c===x.cat)return;
+    conDeshacer('Categoría cambiada: '+catN(c),()=>{x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x)})});
+}
+function cerrarPanelMov(){const d=$('#movPanel');if(d)d.remove()}
 function rMovs(){
   $('#fCat').innerHTML=catOptions(F.cat,{blankText:'Todas las categorías'});
   $('#fSinCat').checked=F.sinCat;$('#fBuscar').value=F.q;
   pintarTagList();
-  let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):F.todos&&F.cat?S.mov.filter(x=>x.cat===F.cat):S.mov.filter(x=>x.mes===MES);
+  // al buscar se busca en todos los meses
+  const qn=norm(F.q).trim(),buscaTodo=qn.length>=2&&!F.tag;
+  let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):buscaTodo||F.todos&&F.cat?S.mov.slice():S.mov.filter(x=>x.mes===MES);
   if(F.cat)list=list.filter(x=>x.cat===F.cat);
   if(F.sinCat)list=list.filter(x=>!x.cat);
-  if(F.q){const q=norm(F.q).trim();list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')).includes(q))}
+  if(qn){list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')+' '+verConcepto(x)+' '+tagsDe(x).join(' ')).includes(qn))}
   list.sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.orden??0)-(b.orden??0));
   for(const id of [...SEL])if(!list.some(x=>x.id===id))SEL.delete(id);
   const tb=$('#movTable tbody');
+  let diaAnt='';
   tb.innerHTML=list.length?list.map(x=>{
+    const sep=x.fecha!==diaAnt?`<tr class="sepdia"><td colspan="6">${diaTxt(x.fecha)}</td></tr>`:'';diaAnt=x.fecha;
     const tags=[];
     if(x.metodo==='efectivo')tags.push('<span class="tag cash">efectivo</span>');else if(x.cuenta)tags.push(`<span class="tag">${esc(x.cuenta)}</span>`);
     if(x.mes!==mesDe(x.fecha))tags.push(`<span class="tag acc">cuenta en ${nombreMesC(x.mes)}</span>`);
@@ -24,23 +47,26 @@ function rMovs(){
     if(x.nomina&&x.cat==='INGRESO')tags.push('<span class="tag good">nómina</span>');
     if(x.divDe||x.dividido)tags.push('<span class="tag" title="Parte de un gasto dividido">dividido</span>');
     for(const t of tagsDe(x))tags.push(`<span class="tag tg" data-tag="${esc(t)}" title="Ver todo lo de «${esc(t)}»">#${esc(t)}</span>`);
-    return `<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''}></td>
+    return sep+`<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''} aria-label="Marcar"></td>
       <td class="num">${fFecha(x.fecha)}</td>
-      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div>${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
+      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${x.cat?'':' sin'}">${x.cat?esc(catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
       <td><select class="cat">${catOptions(x.cat)}</select></td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
-    :`<tr><td colspan="6" class="empty">No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.</td></tr>`;
+    :`<tr><td colspan="6" class="empty">${buscaTodo?`No encuentro «${esc(F.q)}» en ningún mes.`:`No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.`}</td></tr>`;
   const tot=list.reduce((a,x)=>a+x.importe,0);
   const tb2=$('#tagBar');if(F.tag){const g=-list.reduce((a,x)=>a+(x.cat==='INGRESO'?0:x.importe),0);const fs=list.map(x=>x.fecha).sort();
     tb2.innerHTML=`<span class="tag tg">#${esc(F.tag)}</span><span class="small">${list.length} movimientos${fs.length?` · ${fFecha(fs[0])} – ${fFecha(fs[fs.length-1])}`:''} · <b>${eur(g)}</b> en total</span><span class="sp" style="flex:1"></span><button class="btn sm" type="button" id="tagQuitar">Quitar filtro</button>`;
     tb2.classList.remove('hide');$('#tagQuitar').onclick=()=>{F.tag='';rMovs()}}else tb2.classList.add('hide');
-  $('#movFoot').textContent=`${list.length} movimientos · salidas ${eur(-list.filter(x=>x.importe<0).reduce((a,x)=>a+x.importe,0))} · entradas ${eur(list.filter(x=>x.importe>0).reduce((a,x)=>a+x.importe,0))}`+(F.todos&&F.cat?' · todos los meses':'');
+  $('#movFoot').textContent=`${list.length} movimientos · salidas ${eur(-list.filter(x=>x.importe<0).reduce((a,x)=>a+x.importe,0))} · entradas ${eur(list.filter(x=>x.importe>0).reduce((a,x)=>a+x.importe,0))}`+(buscaTodo?` · buscando «${F.q}» en todos los meses`:F.todos&&F.cat?' · todos los meses':'');
+  $('#s-movs').classList.toggle('buscando',buscaTodo);
   $$('#movTable tbody tr[data-id]').forEach(tr=>{
     const id=tr.dataset.id,x=S.mov.find(m=>m.id===id);
     $('.cat',tr).onchange=e=>{const c=e.target.value;conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x)})};
     $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.cat='';F.sinCat=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);
+    // en el móvil, tocar la fila abre un panel para cambiar la categoría o editar
+    tr.onclick=e=>{if(!esMovil()||e.target.closest('input,select,button,.tag.tg,a'))return;panelMov(x)};
     $('.sel',tr).onchange=e=>{e.target.checked?SEL.add(id):SEL.delete(id);selUI()};
   });
   $('#movAll').checked=list.length&&list.every(x=>SEL.has(x.id));
@@ -115,6 +141,14 @@ function editar(x){
 /* ============ Añadir (gasto o ingreso a mano) ============ */
 let aTipo='gasto',cCat='',cCatManual=false,aPago='__efectivo';
 const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO'&&c.id!=='AHORRO').map(c=>c.id),'TRASPASO'];
+function rapidos(gasto){
+  const g={};
+  for(const x of S.mov){if(x.origen!=='manual'||!x.cat||(x.importe<0)!==gasto)continue;const c=String(x.concepto||'').trim();if(!c)continue;
+    const k=norm(c).trim()+'|'+x.cat,o=g[k]||(g[k]={c:c.charAt(0).toUpperCase()+c.slice(1),cat:x.cat,n:0,ult:'',imps:new Set(),pago:''});
+    o.n++;o.imps.add(Math.abs(x.importe));if(x.fecha>o.ult){o.ult=x.fecha;o.pago=x.metodo==='efectivo'?'__efectivo':(x.cuenta||'__efectivo')}}
+  return Object.values(g).filter(o=>o.n>=2).sort((a,b)=>b.n-a.n||b.ult.localeCompare(a.ult)).slice(0,6)
+    .map(o=>({c:o.c,cat:o.cat,pago:o.pago,imp:o.imps.size===1?[...o.imps][0]:0}));
+}
 function rEfectivo(){
   const f=$('#cFecha');if(!f.value||mesDe(f.value)!==MES)f.value=mesDe(hoy())===MES?hoy():MES+'-01';
   const g=aTipo==='gasto';
@@ -135,6 +169,11 @@ function rEfectivo(){
     [{t:'Cancelar'},{t:'Añadir cuenta',cls:'pri',fn:()=>{const n=$('#aOtraN').value.trim();if(!n){toast('Escribe un nombre',true);return false}
       if(!S.cuentas.some(c=>norm(c.n)===norm(n)))S.cuentas.push({n,v:null,f:null});aPago=S.cuentas.find(c=>norm(c.n)===norm(n)).n;save();rEfectivo()}}]);
   $('#aGo').textContent=g?'Añadir gasto':'Añadir ingreso';
+  // Atajos: lo que más apuntas a mano (concepto y categoría; el importe si siempre es el mismo)
+  const rs=rapidos(g);$('#aRapidos').classList.toggle('hide',!rs.length);
+  $('#aRapidos').innerHTML=rs.length?`<span class="l">Lo de siempre</span><div class="chips">${rs.map((r,i)=>`<button type="button" class="chip rap" data-r="${i}" title="${esc(catN(r.cat))}${r.imp?' · '+eur(r.imp):''}">${esc(r.c)}${r.imp?` <span class="mut">${eur(r.imp,r.imp%1?2:0)}</span>`:''}</button>`).join('')}</div>`:'';
+  $$('#aRapidos [data-r]').forEach(b=>b.onclick=()=>{const r=rs[+b.dataset.r];$('#cCon').value=r.c;cCat=r.cat;cCatManual=true;if(r.pago)aPago=r.pago;if(r.imp)$('#cImp').value=fmt(r.imp,r.imp%1?2:0);rEfectivo();
+    const i=$('#cImp');if(!r.imp){i.focus()}else{$('#aGo').focus()}});
   const ms=S.mov.filter(x=>x.mes===MES&&x.origen==='manual').sort((a,b)=>b.fecha.localeCompare(a.fecha));
   const gas=-ms.filter(x=>x.importe<0).reduce((a,x)=>a+x.importe,0),ent=ms.filter(x=>x.importe>0).reduce((a,x)=>a+x.importe,0);
   $('#cashKpis').innerHTML=`<div class="card pad kpi"><div class="l">Gastos apuntados a mano</div><div class="v num">${eur(gas)}</div><div class="s" style="text-transform:capitalize">${nombreMes(MES)}</div></div>

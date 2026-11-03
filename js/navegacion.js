@@ -113,6 +113,7 @@ function pintarApartado(t){
 function irApartado(t,sub,{hist=false}={}){
   if(TAB!==t){go(t,{sub,hist});return}
   SUB[t]=sub;pintarApartado(t);if(!hist)navGuardar();
+  if(t==='hist'&&typeof rHist==='function')rHist(); // las gráficas se dibujan con el ancho que tienen al verse
   if(esChips(t)){const n=$('#s-'+t+' .apchips');if(n&&n.getBoundingClientRect().top<0)n.scrollIntoView({block:'start'})}else scrollTo(0,0);
 }
 // Abre el apartado en el que está un elemento (para los atajos de Ayuda y la guía de Rufo)
@@ -139,6 +140,7 @@ function navGuardar(){
 }
 function cerrarAbierto(){
   if($('#mesPicker')){cerrarMesPicker();return true}
+  if($('#movPanel')){cerrarPanelMov();return true}
   if($('#masSheet')){cerrarMas();return true}
   const d=$('#dlg');if(d&&d.open){d.close();return true}
   const rp=$('#rufoPanel');if(rp&&!rp.classList.contains('hide')&&typeof abrirChat==='function'){abrirChat(false);return true}

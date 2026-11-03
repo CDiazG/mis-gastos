@@ -3,6 +3,16 @@
 /* ============ Histórico ============ */
 let YEAR=null;
 let EVO='OCIO';
+// Ancho de las gráficas en píxeles reales, para que las letras se lean igual en el móvil que en el ordenador.
+// En el móvil, si no caben los meses, la gráfica se desliza de lado (y empieza mostrando los más recientes).
+function anchoGraf(sel,n){const el=$(sel),cs=el&&getComputedStyle(el),w=Math.round(el&&el.clientWidth?el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight):1100),movil=esMovil();
+  const W=movil?Math.max(w,n*38+56):Math.max(w,560);return {W,w,movil,scroll:W>w+2}}
+function desplazable(sel,AG){const c=$(sel);if(!c)return;const sv=c.querySelector('svg');if(!sv)return;
+  if(!AG.scroll){sv.style.width='';return}
+  sv.style.width=AG.W+'px';sv.style.maxWidth='none';let w=sv.parentElement;
+  if(!w.classList.contains('gscroll')){w=document.createElement('div');w.className='gscroll';sv.before(w);w.appendChild(sv)}
+  w.scrollLeft=w.scrollWidth}
+let _rzH=0;addEventListener('resize',()=>{clearTimeout(_rzH);_rzH=setTimeout(()=>{if(TAB==='hist')rHist()},250)});
 const pasoRedondo=x=>{const e=Math.pow(10,Math.floor(Math.log10(x||1))),f=x/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e};
 const IR_TXT=q=>`<span class="tipir">${matchMedia('(hover:none)').matches?'Toca otra vez':'Haz clic'} para ver ${q} →</span>`;
 // Al pulsar un mes de una gráfica: el Resumen de ese mes o sus movimientos (con la categoría de la gráfica).
@@ -25,7 +35,7 @@ function rEvol(data){
   const d=data.slice(-24);const val=x=>EVO==='__TOTAL'?x.consumo:EVO==='__ING'?x.ingresos:(x.by[EVO]||0);
   const vs=d.map(val),con=d.filter(x=>!x.vacio).map(val);
   const media=con.length?con.reduce((a,b)=>a+b,0)/con.length:0;
-  const W=1100,H=210,pl=46,pb=26,pt=10;const pasoE=pasoRedondo(Math.max(1,...vs)/4),max=Math.ceil(Math.max(1,...vs)/pasoE)*pasoE;
+  const AG=anchoGraf('#evoChart',d.length),W=AG.W,H=AG.movil?190:210,pl=46,pb=26,pt=10;const pasoE=pasoRedondo(Math.max(1,...vs)/4),max=Math.ceil(Math.max(1,...vs)/pasoE)*pasoE;
   const step=(W-pl-10)/d.length,bw=Math.max(4,step*0.6);const y=v=>pt+(H-pt-pb)*(1-Math.max(0,v)/max);
   let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución mensual">`;
   // color según la media: en gastos, por debajo verde, algo por encima ámbar y bastante por encima rojo (en ingresos al revés)
@@ -39,6 +49,7 @@ function rEvol(data){
   if(media>0)svg+=`<line x1="${pl}" x2="${W-6}" y1="${y(media)}" y2="${y(media)}" stroke="var(--ink)" opacity=".55" stroke-dasharray="6 5" stroke-width="1.5"/><text x="${W-8}" y="${y(media)<20?y(media)+14:y(media)-5}" font-size="11" text-anchor="end" fill="var(--ink)" paint-order="stroke" stroke="var(--card)" stroke-width="3">media ${eur(media,0)}</text>`;
   svg+='</svg>';
   const ult=d.filter(x=>!x.vacio).slice(-1)[0];
+  setTimeout(()=>desplazable('#evoChart',AG),0);
   $('#evoChart').innerHTML=svg+`<div class="legend">${esIng?'<span><i style="background:var(--good)"></i>En la media o más</span><span><i style="background:var(--warn)"></i>Algo menos</span><span><i style="background:var(--bad)"></i>Bastante menos</span>':'<span><i style="background:var(--good)"></i>En la media o menos</span><span><i style="background:var(--warn)"></i>Algo más (hasta +20%)</span><span><i style="background:var(--bad)"></i>Bastante más</span>'}<span><i class="lin" style="background:var(--ink);opacity:.55"></i>Media</span></div>
     <p class="small mut" style="margin:6px 0 0">${ult?`${nombreMes(ult.m)}: ${eur(val(ult),0)} · media de estos meses: ${eur(media,0)}`:''}</p>`;
 }
@@ -49,7 +60,7 @@ function rHist(){
   const all=[];for(let m=ms[0];m<=ms[ms.length-1];m=addMes(m,1))all.push(m);
   const data=all.map(m=>{const s=stats(m);return {m,...s,ahorroMes:r2(s.ingresos-s.consumo-s.diezmo),vacio:!s.ms.length}});
   // gráfico últimos 24 meses
-  const d=data.slice(-24);const W=1100,Hh=260,pl=46,pb=26,pt=14;
+  const d=data.slice(-24);const AG=anchoGraf('#chart',d.length),W=AG.W,Hh=AG.movil?230:260,pl=46,pb=26,pt=14;
   // eje con valores redondos (500, 1.000…) que pasan por el cero
   const max0=Math.max(1,...d.map(x=>Math.max(x.ingresos,x.consumo,x.ahorroMes))),min0=Math.min(0,...d.filter(x=>!x.vacio).map(x=>x.ahorroMes));
   const paso=pasoRedondo((max0-min0)/4),max=Math.ceil(max0/paso)*paso,min=Math.floor(min0/paso)*paso;
@@ -82,6 +93,7 @@ function rHist(){
   const ult=[...d].reverse().find(x=>!x.vacio);
   if(ult){const i=d.indexOf(ult),cx=pl+step*i+step/2;svg+=`<text x="${Math.min(cx,W-60)}" y="${Math.max(12,y(ult.ahorroMes)-10)}" font-size="12" font-weight="650" text-anchor="middle" fill="${ult.ahorroMes<0?'var(--bad)':'var(--good)'}" paint-order="stroke" stroke="var(--card)" stroke-width="4">${eur(ult.ahorroMes,0)}</text>`}
   svg+='</svg>';
+  setTimeout(()=>desplazable('#chart',AG),0);
   $('#chart').innerHTML=`<h3 style="margin-bottom:8px">Últimos ${d.length} meses</h3>`+svg+`<div class="legend"><span><i style="background:var(--good);opacity:.45"></i>Ingresos</span><span><i style="background:var(--acc)"></i>Gastado</span><span><i class="lin" style="background:var(--good)"></i>Ahorro del mes</span><span><i class="lin" style="background:var(--bad)"></i>Mes en negativo</span><span class="mut">Toca o pasa el ratón por un mes para ver el detalle</span></div>`;
   // años
   const years=[...new Set(all.map(m=>m.slice(0,4)))].reverse();
