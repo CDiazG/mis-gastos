@@ -348,6 +348,28 @@ module.exports = {
     })();
   },
 
+  'hipoteca a Vivienda y las cuotas de préstamo ya no se toman por dinero que te devuelven'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const r = await p.evaluate(() => ({ h: autoCat('RECIBO CUOTA PRESTAMO HIPOTECARIO 0049 0001', '', -620), h2: autoCat('ADEUDO HIPOTECA BANCO', '', -620), c: autoCat('LIQUIDACION PRESTAMO PERSONAL 123', '', -150) }));
+      assert.equal(r.h, 'VIVIENDA'); assert.equal(r.h2, 'VIVIENDA');
+      assert.equal(r.c, '', 'la cuota de un préstamo queda para que la elijas');
+      // alguien con la regla antigua y un recibo ya mal clasificado
+      const m = await p.evaluate(() => { const m = mesDe(hoy());
+        S.reglas.push({ t: 'PRESTAMO', c: 'PRESTAMO', u: 0 }); S.reglas = S.reglas.filter(x => x.t !== 'HIPOTEC');
+        S.mov.push({ id: 'h', fecha: m + '-01', mes: m, concepto: 'CUOTA PRESTAMO HIPOTECARIO', importe: -620, cat: 'PRESTAMO', cuenta: 'EVO', origen: 'extracto' },
+                   { id: 'b', fecha: m + '-02', mes: m, concepto: 'BIZUM A FAVOR DE ANA', importe: -50, cat: 'PRESTAMO', cuenta: 'EVO', origen: 'extracto' });
+        delete S.mig.prestamo; completar(); MES = m; save(); go('resumen'); return m; });
+      const st = await p.evaluate(() => ({ regla: S.reglas.some(r => r.t === 'PRESTAMO' && r.c === 'PRESTAMO'), hip: S.reglas.some(r => r.t === 'HIPOTEC'), cat: S.mov.find(x => x.id === 'h').cat }));
+      assert.deepEqual(st, { regla: false, hip: true, cat: 'PRESTAMO' }, 'quita la regla pero no toca los movimientos');
+      assert.match(await p.textContent('#alerts'), /Revisa 1 movimiento del banco/);
+      await p.click('#alerts [data-act=prestrev]');
+      assert.deepEqual(await p.evaluate(() => [TAB, F.cat, F.todos]), ['movs', 'PRESTAMO', true]);
+      await p.evaluate(() => { S.mov.find(x => x.id === 'h').cat = 'VIVIENDA'; save(); go('resumen'); });
+      assert.ok(!/Revisa/.test(await p.textContent('#alerts')), 'cuando se corrige, el aviso desaparece');
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

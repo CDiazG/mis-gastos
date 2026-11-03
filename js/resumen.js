@@ -20,6 +20,8 @@ function rResumen(){
    <div class="card pad kpi ${logrado?'kok':''}" id="kObj"><div class="l">Objetivo de ahorro ${pObj?`<span class="mut">· ${pObj}%</span>`:''}</div>${!pObj?'<div class="v mut" style="font-size:16px">Sin objetivo</div><div class="s">Ponlo en Ajustes (Ahorro + Inversión)</div>':!st.base?'<div class="v mut" style="font-size:16px">Sin ingresos</div><div class="s">Aún no hay ingresos este mes</div>':logrado?`<div class="v num pos">✓ Conseguido</div><div class="s">${eur(obj,0)} de objetivo · te sobran ${eur(libre-obj,0)}${esteMes?' (de momento)':''}</div>`:`<div class="v num">${eur(obj)}</div><div class="s">Te faltan ${eur(obj-libre,0)} · llevas ${Math.max(0,Math.round(libre/obj*100))}%</div><div class="bar" style="margin-top:8px"><i style="width:${Math.max(0,Math.min(100,libre/obj*100))}%"></i></div>`}</div>`;
   // alertas
   const al=[];
+  if(S.aj.revisarPrestamos){const pd=prestamosDudosos();if(!pd.length)S.aj.revisarPrestamos=false;
+    else al.push(`<div class="alert"><span class="grow"><b>Revisa ${pd.length} movimiento${pd.length>1?'s':''} del banco</b> que ${pd.length>1?'están':'está'} como «Préstamo (me lo devuelven)» pero ${pd.length>1?'parecen cuotas':'parece una cuota'} de una hipoteca o de un préstamo que pagas tú (por ejemplo, «${esc(verConcepto(pd[0]))}»). Si es así, ponles su categoría (la hipoteca, en Vivienda) para que cuenten como gasto.</span><button class="btn sm" data-act="prestrev">Revisar</button><button class="btn sm" data-act="prestok">Están bien</button></div>`)}
   if(st.sinCat)al.push(`<div class="alert"><span class="grow"><b>${st.sinCat} movimiento${st.sinCat>1?'s':''} sin categoría</b> (${eur(-st.sinCatImp)}). Cuentan como «Sin categorizar»; ponles categoría para que el presupuesto sea exacto.</span><button class="btn sm" data-act="sincat">Revisar</button></div>`);
   if(!st.ingresos&&S.aj.base==='ingresos'&&st.ms.length)al.push(`<div class="alert info"><span class="grow">Este mes no tiene ingresos apuntados, así que el presupuesto sale a 0. Puedes usar una base fija en Ajustes.</span></div>`);
   const pp=prestamosPendientes();
@@ -48,7 +50,7 @@ function rResumen(){
     if(a==='copia')exportar();
     if(a==='imp')go('importar');
     if(a==='aj'||a==='sug')go('ajustes');
-    if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
+    if(a==='prestrev'){F.cat='PRESTAMO';F.sinCat=false;F.todos=true;F.q='';F.tag='';go('movs');return}if(a==='prestok'){S.aj.revisarPrestamos=false;save();rResumen();toast('Vale, no te lo vuelvo a decir');return}if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
     if(a==='usu')go('usuarios');
     if(a==='bz'){go('usuarios');setTimeout(()=>$('#bzAdmin').scrollIntoView({behavior:'smooth'}),80)}
     if(a==='dz'){MES=b.dataset.m;render()}

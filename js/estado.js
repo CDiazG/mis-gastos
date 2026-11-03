@@ -9,7 +9,7 @@ function defState(){
     aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente',
       bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true},
     cuentas:[],
-    fijos:[],objetivos:[],mig:{actividades:true,inversion:true,ahorroAuto:true},
+    fijos:[],objetivos:[],mig:{actividades:true,inversion:true,ahorroAuto:true,prestamo:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};
 }
 // Cambios de categorías de la versión 2.8.0: «Salud y bienestar» se separa en «Salud» y «Deporte y actividades»
@@ -55,8 +55,21 @@ function migrarAhorroAuto(){
   for(const f of S.fijos||[])if(f.cat==='AHORRO')f.cat='TRASPASO';
   return true;
 }
+// Versión 2.20.2: la palabra «préstamo» en el banco suele ser la cuota de una hipoteca o un préstamo
+// que pagas tú, no dinero que te devuelven. Se quita esa regla de serie y la hipoteca va a Vivienda.
+// Los movimientos ya clasificados no se tocan: se avisa una vez para que se revisen.
+function migrarPrestamo(){
+  if(!S||(S.mig&&S.mig.prestamo))return false;
+  S.mig={...(S.mig||{}),prestamo:true};
+  S.reglas=(S.reglas||[]).filter(r=>!(!r.u&&norm(r.t).trim()==='PRESTAMO'&&r.c==='PRESTAMO'));
+  if(!S.reglas.some(r=>norm(r.t).trim()==='HIPOTEC'))S.reglas.unshift({t:'HIPOTEC',c:'VIVIENDA',u:0});
+  if(prestamosDudosos().length)S.aj.revisarPrestamos=true;
+  return true;
+}
+// Cuotas del banco que quedaron como «Préstamo (me lo devuelven)» por la regla antigua
+function prestamosDudosos(){return (S.mov||[]).filter(x=>x.cat==='PRESTAMO'&&x.importe<0&&x.origen!=='manual'&&!x.persona&&/ PRESTAMO| HIPOTEC| AMORTIZ/.test(norm(' '+x.concepto+' '+(x.detalle||''))))}
 let HAY_MIGRACION=false;
-function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(S&&S.aj&&migrarInversion())HAY_MIGRACION=true;if(S&&S.aj&&migrarAhorroAuto())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
+function completar(){if(S&&S.aj&&migrarActividades())HAY_MIGRACION=true;if(S&&S.aj&&migrarInversion())HAY_MIGRACION=true;if(S&&S.aj&&migrarAhorroAuto())HAY_MIGRACION=true;if(S&&S.aj&&S.reglas&&migrarPrestamo())HAY_MIGRACION=true;if(Array.isArray(S&&S.mov))for(const x of S.mov)if(x.nomina===undefined&&x.cat==='INGRESO'&&x.importe>0&&/ (NOMI|NOMINA) /.test(norm(x.concepto)))x.nomina=true;
   const d=defState();for(const k in d)if(S[k]===undefined)S[k]=d[k];for(const k in d.aj)if(S.aj[k]===undefined)S.aj[k]=d.aj[k];if(!Array.isArray(S.mov))S.mov=[]}
 function load(){
   try{const t=localStorage.getItem(KEY);if(t){S=JSON.parse(t);completar();return}}catch(e){console.error(e)}

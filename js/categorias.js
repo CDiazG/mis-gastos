@@ -43,6 +43,8 @@ const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','
 const MABR={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,sept:9,set:9,oct:10,nov:11,dic:12};
 
 const SEED_RULES=[
+ // la hipoteca es parte de la vivienda (no un préstamo que te devuelven)
+ ['HIPOTEC','VIVIENDA'],
  // donativos
  ...['UNICEF','CARITAS','CRUZ ROJA','MEDICOS SIN FRONTERAS','ACNUR','SAVE THE CHILDREN','DONATIVO','DONACION'].map(t=>[t,'DONATIVOS']),
  // supermercado
@@ -68,5 +70,5 @@ const SEED_RULES=[
  ['CAJERO','EFECTIVO'],['REINTEGRO','EFECTIVO'],['RETIRADA EFECTIVO','EFECTIVO'],
  ['REVOLUT','TRASPASO'],['RECARGA','TRASPASO'],['TRASPASO','TRASPASO'],
  ['TRADE REPUBLIC','INVERSION'],['MYINVESTOR','INVERSION'],['INDEXA','INVERSION'],['FINIZENS','INVERSION'],['DEGIRO','INVERSION'],['INTERACTIVE BROKERS','INVERSION'],['SCALABLE','INVERSION'],['ETORO','INVERSION'],['BITPANDA','INVERSION'],['FONDO DE INVERSION','INVERSION'],['DIEZMO','DIEZMO'],
- ['PRESTAMO','PRESTAMO'],['DESAJUSTE','AJUSTE'],['DESAJUSTES','AJUSTE'],
+ ['DESAJUSTE','AJUSTE'],['DESAJUSTES','AJUSTE'],
 ];
