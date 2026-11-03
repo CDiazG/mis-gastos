@@ -35,7 +35,7 @@ function rInicio(){
   const st12=ult12.map(m=>({m,...stats(m)})),conDatos=st12.filter(x=>x.ms.length);
   const delAnio=todos.filter(m=>m.startsWith(anio)).map(m=>stats(m));
   const I=delAnio.reduce((a,x)=>a+x.ingresos,0),G=delAnio.reduce((a,x)=>a+x.consumo,0),A=delAnio.reduce((a,x)=>a+x.ahorro,0),Inv=delAnio.reduce((a,x)=>a+(x.by.INVERSION||0),0);
-  const patr=S.cuentas.reduce((a,c)=>a+(c.v||0),0),nC=S.cuentas.filter(c=>c.v).length;
+  const patr=S.cuentas.reduce((a,c)=>a+(saldoCuenta(c)||0),0),nC=S.cuentas.filter(c=>saldoCuenta(c)).length;
   const st=stats(hoyM),pres=CATS.filter(c=>c.g!=='AHORRO').reduce((a,c)=>a+presupuestoCat(hoyM,c.id,st).p,0);
   const dia=+hoy().slice(8,10),diasMes=new Date(+anio,+hoyM.slice(5),0).getDate();
   const ritmo=dia>3&&st.consumo>0?st.consumo/dia*diasMes:null;

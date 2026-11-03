@@ -14,14 +14,35 @@ function panelMov(x){
   const cats=[...CATS.map(c=>({id:c.id,n:c.n})),...SPECIAL.filter(s=>s.id!=='AJUSTE').map(s=>({id:s.id,n:s.n}))];
   const d=document.createElement('div');d.id='movPanel';
   d.innerHTML=`<div class="msfondo"></div><div class="mscaja mpanel" role="dialog" aria-label="Movimiento"><div class="mph"><div><b>${esc(verConcepto(x))}</b><div class="small mut">${diaTxt(x.fecha)} · ${x.metodo==='efectivo'?'efectivo':esc(x.cuenta||'')}</div></div><b class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</b></div>
+    ${x.cat==='TRASPASO'?`<div class="small" style="margin-top:8px">Traspaso: <b>${esc(trasDesde(x)||'sin especificar')} → ${esc(trasHacia(x)||'sin especificar')}</b> <button type="button" class="link" data-pm="otra">${x.par?'ver el otro lado':'cambiar'}</button></div>`:''}
     <div class="small mut" style="margin:10px 0 6px">Categoría</div><div class="chips">${cats.map(c=>`<button type="button" class="chip${c.id===x.cat?' on':''}" data-c="${c.id}">${esc(c.n)}</button>`).join('')}</div>
     <div class="toolbar" style="margin:12px 0 0"><button type="button" class="btn" data-pm="editar">✎ Editar</button><span class="sp"></span><button type="button" class="btn" data-pm="cerrar">Cerrar</button></div></div>`;
   document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
   $$('.msfondo,[data-pm=cerrar]',d).forEach(b=>b.onclick=cerrarPanelMov);
   $$('[data-pm=editar]',d).forEach(b=>b.onclick=()=>{cerrarPanelMov();editar(x)});
+  $$('[data-pm=otra]',d).forEach(b=>b.onclick=()=>{cerrarPanelMov();x.par?irAlPar(x):preguntarOtra(x)});
   $$('[data-c]',d).forEach(b=>b.onclick=()=>{const c=b.dataset.c;cerrarPanelMov();if(c===x.cat)return;
-    conDeshacer('Categoría cambiada: '+catN(c),()=>{x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x)})});
+    ponerCategoria(x,c)});
 }
+// Cambiar la categoría de un movimiento (desde la lista o el panel). Si pasa a ser un traspaso, se busca el otro lado
+// y, si no está, se pregunta a qué cuenta va o de cuál viene.
+function ponerCategoria(x,c){
+  conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()});
+  if(c==='TRASPASO'&&!x.par&&x.otra===undefined)setTimeout(()=>preguntarOtra(x),60);
+}
+function preguntarOtra(x){
+  const sale=x.importe<0,propia=norm(cuentaDe(x));
+  const ops=[...S.cuentas.map(c=>c.n),'Efectivo'].filter(n=>norm(n)!==propia);
+  dialog(sale?'¿A qué cuenta va?':'¿De qué cuenta viene?',`<p class="small mut" style="margin-top:0">${esc(verConcepto(x))} · <b>${eur(Math.abs(x.importe))}</b> ${sale?'sale de':'entra en'} ${esc(cuentaDe(x)||'—')}. Un traspaso no es un gasto: el dinero sigue siendo tuyo. Si la cuenta no tiene extracto (una hucha, el broker…), su saldo en Patrimonio se actualiza solo.</p>
+    <div class="chips">${ops.map(n=>`<button type="button" class="chip${norm(n)===norm(x.otra||'')?' on':''}" data-otra="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="chip" data-otra="">Sin especificar</button><button type="button" class="chip add" data-nueva="1">＋ Otra cuenta</button></div>`,[{t:'Cerrar'}]);
+  $$('#dlgB [data-otra]').forEach(b=>b.onclick=()=>{x.otra=b.dataset.otra;save();$('#dlg').close();render();toast(x.otra?(sale?'Traspaso a ':'Traspaso desde ')+x.otra:'Traspaso sin especificar')});
+  const nv=$('#dlgB [data-nueva]');if(nv)nv.onclick=()=>{nv.outerHTML=`<span class="nuevacta"><input type="text" id="otraN" placeholder="Nombre (p. ej. Hucha, Broker, Oro)" maxlength="40"><button type="button" class="btn sm pri" id="otraOk">Añadir</button></span>`;
+    const ok=()=>{const nn=$('#otraN').value.trim();if(!nn){toast('Escribe un nombre',true);return}
+      if(!S.cuentas.some(c=>norm(c.n)===norm(nn)))S.cuentas.push({n:nn,v:null,f:null});x.otra=S.cuentas.find(c=>norm(c.n)===norm(nn)).n;save();$('#dlg').close();render();toast((sale?'Traspaso a ':'Traspaso desde ')+x.otra+'. Su saldo está en Patrimonio')};
+    $('#otraOk').onclick=ok;$('#otraN').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ok()}};$('#otraN').focus()};
+}
+function irAlPar(x){const b=S.mov.find(y=>y.id===x.par);if(!b)return;MES=b.mes;F.q='';F.cat='';F.sinCat=false;F.tag='';F.todos=false;go('movs');
+  setTimeout(()=>{const r=$(`#movTable tr[data-id="${b.id}"]`);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.classList.add('resalta');setTimeout(()=>r.classList.remove('resalta'),1600)}},80)}
 function cerrarPanelMov(){const d=$('#movPanel');if(d)d.remove()}
 function rMovs(){
   $('#fCat').innerHTML=catOptions(F.cat,{blankText:'Todas las categorías'});
@@ -46,6 +67,9 @@ function rMovs(){
     if(x.origen==='manual')tags.push('<span class="tag">a mano</span>');
     if(x.nomina&&x.cat==='INGRESO')tags.push('<span class="tag good">nómina</span>');
     if(x.divDe||x.dividido)tags.push('<span class="tag" title="Parte de un gasto dividido">dividido</span>');
+    if(x.cat==='TRASPASO'){const de=trasDesde(x),a=trasHacia(x);
+      tags.push(x.otra===undefined&&!x.par?'<span class="tag warn tras" data-tras="1" title="Indica a qué cuenta va o de cuál viene">¿qué cuenta?</span>'
+        :`<span class="tag acc tras" data-tras="1" title="${x.par?'Toca para ver el otro lado del traspaso':'Toca para cambiar la cuenta'}">${esc(de||'sin especificar')} → ${esc(a||'sin especificar')}${x.par?' ↔':''}</span>`)}
     for(const t of tagsDe(x))tags.push(`<span class="tag tg" data-tag="${esc(t)}" title="Ver todo lo de «${esc(t)}»">#${esc(t)}</span>`);
     return sep+`<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''} aria-label="Marcar"></td>
       <td class="num">${fFecha(x.fecha)}</td>
@@ -62,7 +86,8 @@ function rMovs(){
   $('#s-movs').classList.toggle('buscando',buscaTodo);
   $$('#movTable tbody tr[data-id]').forEach(tr=>{
     const id=tr.dataset.id,x=S.mov.find(m=>m.id===id);
-    $('.cat',tr).onchange=e=>{const c=e.target.value;conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x)})};
+    $('.cat',tr).onchange=e=>ponerCategoria(x,e.target.value);
+    const tt=$('.tag.tras',tr);if(tt)tt.onclick=e=>{e.stopPropagation();if(x.par){irAlPar(x)}else preguntarOtra(x)};
     $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.cat='';F.sinCat=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);
     // en el móvil, tocar la fila abre un panel para cambiar la categoría o editar
@@ -78,7 +103,7 @@ function selUI(){
   ['#bulkCat','#bulkApply','#bulkTag','#bulkDel'].forEach(s=>$(s).classList.toggle('hide',!n));
   if(n&&!$('#bulkCat').options.length)$('#bulkCat').innerHTML=catOptions('',{blankText:'Categoría…'});
 }
-$('#bulkApply').onclick=()=>{const c=$('#bulkCat').value,n=SEL.size;conDeshacer(n+' movimientos cambiados a '+(c?catN(c):'sin categoría'),()=>{for(const x of S.mov)if(SEL.has(x.id)){x.cat=c;if(x.origen!=='excel')marcarNomina(x)}SEL.clear()})};
+$('#bulkApply').onclick=()=>{const c=$('#bulkCat').value,n=SEL.size;conDeshacer(n+' movimientos cambiados a '+(c?catN(c):'sin categoría'),()=>{for(const x of S.mov)if(SEL.has(x.id)){if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen!=='excel')marcarNomina(x)}SEL.clear();if(c==='TRASPASO')emparejarTraspasos()})};
 $('#bulkDel').onclick=()=>{const n=SEL.size;conDeshacer(n+' movimiento'+(n>1?'s':'')+' borrado'+(n>1?'s':''),()=>{S.mov=S.mov.filter(x=>!SEL.has(x.id));SEL.clear()})};
 $('#bulkTag').onclick=()=>{pintarTagList();dialog('Etiquetar '+SEL.size+' movimientos',`<p class="small mut" style="margin-top:0">Por ejemplo «Boda Ana» o «Viaje a Roma». Luego verás cuánto ha costado en total en Histórico → Etiquetas.</p><input type="text" id="btT" list="tagList" maxlength="40" style="width:100%" placeholder="Nombre de la etiqueta">${todasEtiquetas().length?'<div class="chips" style="margin-top:8px">'+todasEtiquetas().slice(0,12).map(t=>`<button type="button" class="chip" data-t="${esc(t)}">#${esc(t)}</button>`).join('')+'</div>':''}`,
   [{t:'Cancelar'},{t:'Etiquetar',cls:'pri',fn:()=>{const t=parseTags($('#btT').value)[0];if(!t){toast('Escribe una etiqueta',true);return false}const n=SEL.size;
@@ -116,6 +141,7 @@ function editar(x){
     <label>Importe</label><input type="text" id="eI" value="${fmt(x.importe)}" inputmode="decimal">
     <label>Categoría</label><select id="eK">${catOptions(x.cat)}</select>
     <label>Pagado con</label><select id="eP">${pagoOptions(x.metodo==='efectivo'?'__efectivo':x.cuenta)}</select>
+    <label class="eOtraL">Traspaso: la otra cuenta</label><select id="eOtra" class="eOtraL" ${x.par?'disabled title="Unido con el movimiento de la otra cuenta"':''}><option value="">Sin especificar</option>${[...S.cuentas.map(c=>c.n),'Efectivo'].map(n=>`<option${norm(n)===norm(x.otra||'')?' selected':''}>${esc(n)}</option>`).join('')}</select>
     <label>Nota</label><input type="text" id="eN" value="${esc(x.nota||'')}">
     <label>Persona (préstamos)</label><input type="text" id="ePer" value="${esc(x.persona||'')}" placeholder="${esc(x.cat==='PRESTAMO'?personaDe(x):'')}">
     <label>Etiquetas</label><input type="text" id="eT" list="tagList" value="${esc(tagsDe(x).join(', '))}" placeholder="p. ej. Viaje a Roma (separa varias con comas)">
@@ -125,21 +151,24 @@ function editar(x){
     {t:'Cancelar'},
     {t:'Guardar',cls:'pri',fn:()=>{
       const v=parseNum($('#eI').value);if(!isFinite(v)){toast('Importe no válido',true);return false}
-      const vals={nf:$('#eF').value,nom:$('#eNom').checked,m:$('#eM').value,c:$('#eC').value.trim(),k:$('#eK').value,per:$('#ePer').value.trim(),p:$('#eP').value,n:$('#eN').value.trim(),t:parseTags($('#eT').value)};
+      const vals={otra:$('#eOtra').value,nf:$('#eF').value,nom:$('#eNom').checked,m:$('#eM').value,c:$('#eC').value.trim(),k:$('#eK').value,per:$('#ePer').value.trim(),p:$('#eP').value,n:$('#eN').value.trim(),t:parseTags($('#eT').value)};
       conDeshacer('Guardado «'+vals.c+'»',()=>{
       const nf=vals.nf,eraMes=x.mes,nom=vals.nom&&vals.k==='INGRESO',cambioNom=nom!==!!x.nomina;
       if(cambioNom&&pref('aprender'))aprenderPagador({concepto:vals.c},nom);
+      if(x.cat==='TRASPASO'&&vals.k!=='TRASPASO'){desemparejar(x);delete x.otra}
+      if(vals.k==='TRASPASO'&&!x.par)x.otra=vals.otra;
       x.nomina=nom;x.cat=vals.k;
       x.mes=((nf!==x.fecha||cambioNom)&&vals.m===eraMes)?mesPara({...x,fecha:nf}):vals.m;x.fecha=nf;
       x.concepto=vals.c;x.importe=r2(v);
       if(vals.per)x.persona=vals.per;else delete x.persona;
       if(vals.t.length)x.tags=vals.t;else delete x.tags;
-      const p=vals.p;x.metodo=p==='__efectivo'?'efectivo':'banco';x.cuenta=p==='__efectivo'?'':p;x.nota=vals.n})}}]);
+      const p=vals.p;x.metodo=p==='__efectivo'?'efectivo':'banco';x.cuenta=p==='__efectivo'?'':p;x.nota=vals.n;if(x.cat==='TRASPASO')emparejarTraspasos()})}}]);
+  const vOtra=()=>$$('.eOtraL').forEach(e=>e.classList.toggle('hide',$('#eK').value!=='TRASPASO'));$('#eK').addEventListener('change',vOtra);vOtra();
   pintarTagList();
 }
 
 /* ============ Añadir (gasto o ingreso a mano) ============ */
-let aTipo='gasto',cCat='',cCatManual=false,aPago='__efectivo';
+let aTipo='gasto',cCat='',cCatManual=false,aPago='__efectivo',aHacia='';
 const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO'&&c.id!=='AHORRO').map(c=>c.id),'TRASPASO'];
 function rapidos(gasto){
   const g={};
@@ -168,6 +197,11 @@ function rEfectivo(){
   $('#aOtra').onclick=()=>dialog('Otra cuenta',`<p class="small mut" style="margin-top:0">Por ejemplo, una cuenta de otro banco de la que no subes extractos. Aparecerá también en Patrimonio.</p><input type="text" id="aOtraN" placeholder="Nombre de la cuenta" style="width:100%">`,
     [{t:'Cancelar'},{t:'Añadir cuenta',cls:'pri',fn:()=>{const n=$('#aOtraN').value.trim();if(!n){toast('Escribe un nombre',true);return false}
       if(!S.cuentas.some(c=>norm(c.n)===norm(n)))S.cuentas.push({n,v:null,f:null});aPago=S.cuentas.find(c=>norm(c.n)===norm(n)).n;save();rEfectivo()}}]);
+  // traspaso: de qué cuenta sale («Pagado con» pasa a «Desde») y a cuál va
+  const tras=cCat==='TRASPASO';$('#aHaciaW').classList.toggle('hide',!tras);if(tras&&g)$('#aPagoL').textContent='Desde';
+  if(tras){const desde=aPago==='__efectivo'?'Efectivo':aPago;
+    $('#aHacia').innerHTML=[...S.cuentas.map(c=>c.n),'Efectivo'].filter(n=>norm(n)!==norm(desde)).map(n=>`<button type="button" class="chip${norm(n)===norm(aHacia)?' on':''}" data-h="${esc(n)}">${esc(n)}</button>`).join('')+`<button type="button" class="chip${aHacia?'':' on'}" data-h="">Sin especificar</button>`;
+    $$('#aHacia [data-h]').forEach(b=>b.onclick=()=>{aHacia=b.dataset.h;rEfectivo()})}
   $('#aGo').textContent=g?'Añadir gasto':'Añadir ingreso';
   // Atajos: lo que más apuntas a mano (concepto y categoría; el importe si siempre es el mismo)
   const rs=rapidos(g);$('#aRapidos').classList.toggle('hide',!rs.length);
@@ -191,6 +225,7 @@ $('#cashForm').onsubmit=e=>{
   if(!cCat){toast('Elige una categoría',true);return}
   const fecha=$('#cFecha').value,ef=aPago==='__efectivo',g=aTipo==='gasto';
   const x={id:uid(),fecha,mes:mesDe(fecha),concepto:$('#cCon').value.trim(),importe:r2(Math.abs(v)*(g?-1:1)),cat:cCat,metodo:ef?'efectivo':'banco',cuenta:ef?'':aPago,origen:'manual'};
+  if(cCat==='TRASPASO'){x.otra=aHacia;aHacia=''}
   const tg=parseTags($('#aTag').value);if(tg.length)x.tags=tg;
   if(cCat==='PRESTAMO'&&$('#aPer').value.trim())x.persona=$('#aPer').value.trim();
   marcarNomina(x);S.mov.push(x);save();

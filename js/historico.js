@@ -142,8 +142,8 @@ function rPatri(){
   rObjetivos();rPrestamos();
   $('#patTable').innerHTML=`<thead><tr><th>Cuenta</th><th class="r">Saldo</th><th>Actualizado</th><th></th></tr></thead><tbody>`+
     (S.cuentas.length?'':'<tr><td colspan="4" class="small mut" style="padding:14px">Aún no tienes cuentas. Se crean solas al importar un extracto, o añádelas aquí (por ejemplo, una cuenta de ahorro o el oro).</td></tr>')+
-    S.cuentas.map((c,i)=>`<tr data-i="${i}"><td><input type="text" class="pn" value="${esc(c.n)}" style="width:150px">${c.banco||c.cartera?' <span class="tag">con extracto</span>':''}</td>
-      <td class="r"><input type="text" class="pv num right" value="${c.v!=null?fmt(c.v):''}" placeholder="—" style="width:120px" inputmode="decimal"></td>
+    S.cuentas.map((c,i)=>`<tr data-i="${i}"><td><input type="text" class="pn" value="${esc(c.n)}" style="width:150px">${c.banco||c.cartera?' <span class="tag">con extracto</span>':S.mov.some(x=>x.cat==='TRASPASO'&&x.otra&&norm(x.otra)===norm(c.n))?' <span class="tag acc" title="Su saldo se actualiza con los traspasos">con traspasos</span>':''}</td>
+      <td class="r"><input type="text" class="pv num right" value="${saldoCuenta(c)!=null?fmt(saldoCuenta(c)):''}" placeholder="—" style="width:120px" inputmode="decimal"></td>
       <td class="small mut">${c.f?fFecha(c.f):''}</td><td><button class="btn sm icon pd" title="Quitar">✕</button></td></tr>`+
       (c.cartera&&c.cartera.pos.length?`<tr class="cartrow"><td colspan="4"><details class="cartera"><summary>${c.cartera.pos.length} valores en cartera · ${fFecha(c.cartera.f)}</summary>${carteraHtml(c.cartera.pos.slice().sort((a,b)=>b.v-a.v),c.cartera.pos.reduce((a,x)=>a+x.v,0)||1)}</details></td></tr>`:'')).join('')+
     `</tbody><tfoot><tr><td colspan="4"><button class="btn sm" id="pAdd">+ Añadir cuenta</button></td></tr></tfoot>`;
@@ -153,11 +153,11 @@ function rPatri(){
     $('.pd',tr).onclick=()=>confirmar('Quitar cuenta','¿Quitar «'+c.n+'» de la lista? Los movimientos no se borran.','Quitar',()=>{S.cuentas.splice(+tr.dataset.i,1);save();rPatri()});
   });
   $('#pAdd').onclick=()=>{S.cuentas.push({n:'Nueva cuenta',v:null,f:null});save();rPatri()};
-  const tot=S.cuentas.reduce((a,c)=>a+(c.v||0),0);
+  const tot=S.cuentas.reduce((a,c)=>a+(saldoCuenta(c)||0),0);
   const pp=prestamosPendientes();
   $('#patTotal').innerHTML=`<div class="mut small">Total</div><div style="font-size:30px;font-weight:650;letter-spacing:-.02em" class="num">${eur(tot)}</div>
     ${Math.abs(pp)>0.009?`<p class="small" style="margin:8px 0 0">${pp>0?'Más':'Menos'} ${eur(Math.abs(pp))} de préstamos pendientes de devolver.</p>`:''}
-    <div style="margin-top:14px">${S.cuentas.filter(c=>c.v).map(c=>{const w=tot>0?Math.max(0,c.v/tot*100):0;return `<div class="patb" data-tiph="${esc(tipHtml(esc(c.n),[['var(--acc)','Saldo',eur(c.v)],['','Del total',fmt(w,1)+' %'],...(c.f?[['','Actualizado',fFecha(c.f)]]:[])]))}"><div class="small" style="display:flex;justify-content:space-between;margin-top:8px"><span>${esc(c.n)}</span><span class="num">${Math.round(w)}%</span></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}</div>
+    <div style="margin-top:14px">${S.cuentas.filter(c=>saldoCuenta(c)).map(c=>{const cv=saldoCuenta(c),w=tot>0?Math.max(0,cv/tot*100):0;return `<div class="patb" data-tiph="${esc(tipHtml(esc(c.n),[['var(--acc)','Saldo',eur(cv)],['','Del total',fmt(w,1)+' %'],...(c.f?[['','Actualizado',fFecha(c.f)]]:[])]))}"><div class="small" style="display:flex;justify-content:space-between;margin-top:8px"><span>${esc(c.n)}</span><span class="num">${Math.round(w)}%</span></div><div class="bar"><i style="width:${w}%"></i></div></div>`}).join('')}</div>
     <p class="small mut" style="margin-top:14px">Para las cuentas sin extracto (inversión, oro…), pon el valor a mano cuando lo mires; se guarda con la fecha de hoy.</p>`;
 }
 

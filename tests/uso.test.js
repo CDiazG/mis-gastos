@@ -458,6 +458,51 @@ module.exports = {
     })();
   },
 
+  'traspasos: se unen los dos lados, se pregunta la otra cuenta y el saldo de la hucha se actualiza'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const m = await p.evaluate(() => { const m = mesDe(hoy());
+        S.cuentas.push({ n: 'Santander', v: 3000, f: m + '-01', banco: 1 }, { n: 'EVO', v: 800, f: m + '-01', banco: 1 }, { n: 'Hucha', v: 1000, f: m + '-01' });
+        S.mov.push({ id: 's1', fecha: m + '-05', mes: m, concepto: 'TRANSFERENCIA A EVO', importe: -500, cat: 'TRASPASO', metodo: 'banco', cuenta: 'Santander', origen: 'extracto' },
+                   { id: 'e1', fecha: m + '-06', mes: m, concepto: 'TRANSFERENCIA DE SANTANDER', importe: 500, cat: '', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' },
+                   { id: 's2', fecha: m + '-10', mes: m, concepto: 'TRANSFERENCIA AHORRO', importe: -200, cat: '', metodo: 'banco', cuenta: 'Santander', origen: 'extracto' },
+                   { id: 'g', fecha: m + '-11', mes: m, concepto: 'CENA', importe: -40, cat: 'OCIO', metodo: 'banco', cuenta: 'Santander', origen: 'extracto' });
+        emparejarTraspasos(); MES = m; save(); go('movs'); return m; });
+      const r = await p.evaluate(() => { const a = S.mov.find(x => x.id === 's1'), b = S.mov.find(x => x.id === 'e1'); return [a.par, b.par, b.cat, a.otra, b.otra].join(); });
+      assert.equal(r, 'e1,s1,TRASPASO,EVO,Santander', 'la salida y la entrada quedan unidas');
+      assert.match(await p.textContent('#movTable tr[data-id="s1"]'), /Santander → EVO/);
+      assert.equal(await p.evaluate(m => stats(m).consumo, m), 240, 'los 500 € no cuentan; los 200 € sin categoría, de momento sí');
+      // un solo lado: se marca como traspaso y se elige la cuenta
+      await p.selectOption('#movTable tr[data-id="s2"] select.cat', 'TRASPASO');
+      await p.waitForSelector('#dlgB [data-otra="Hucha"]');
+      assert.match(await p.textContent('#dlgT'), /¿A qué cuenta va\?/);
+      // la cuenta nueva se escribe en la misma ventana
+      await p.click('#dlgB [data-nueva]'); await p.fill('#otraN', 'Broker'); await p.click('#otraOk'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => [S.mov.find(x => x.id === 's2').otra, S.cuentas.some(c => c.n === 'Broker')].join()), 'Broker,true');
+      await p.click('#movTable tr[data-id="s2"] .tag.tras'); await p.waitForSelector('#dlgB [data-otra="Hucha"]');
+      await p.click('#dlgB [data-otra="Hucha"]'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 's2').otra), 'Hucha');
+      assert.equal(await p.evaluate(m => stats(m).consumo, m), 40, 'un traspaso no es gasto ni resta del ahorro');
+      assert.equal(await p.evaluate(() => saldoCuenta(S.cuentas.find(c => c.n === 'Hucha'))), 1200, 'la hucha sube 200 €');
+      await p.evaluate(() => go('patri'));
+      assert.match(await p.textContent('#patTotal'), /5\.000,00/, '3000 + 800 + 1200');
+      // Añadir: de efectivo a la hucha
+      await p.evaluate(() => go('efectivo'));
+      await p.fill('#cImp', '50'); await p.fill('#cCon', 'meto en la hucha');
+      await p.click('#cChips .chip[data-c="TRASPASO"]');
+      assert.match(await p.textContent('#aPagoL'), /Desde/);
+      await p.click('#aHacia [data-h="Hucha"]'); await p.click('#aGo'); await L.esperar(200);
+      assert.equal(await p.evaluate(() => saldoCuenta(S.cuentas.find(c => c.n === 'Hucha'))), 1250);
+      // si deja de ser traspaso, se separan
+      await p.evaluate(() => go('movs'));
+      await p.selectOption('#movTable tr[data-id="e1"] select.cat', 'INGRESO'); await L.esperar(100);
+      assert.equal(await p.evaluate(() => [S.mov.find(x => x.id === 's1').par || '', S.mov.find(x => x.id === 'e1').par || ''].join()), ',');
+      // poner a mano el saldo de la hucha lo deja tal cual desde hoy
+      await p.evaluate(m => { const c = S.cuentas.find(c => c.n === 'Hucha'); c.v = 2000; c.f = addMes(m, 1) + '-01'; }, m);
+      assert.equal(await p.evaluate(() => saldoCuenta(S.cuentas.find(c => c.n === 'Hucha'))), 2000, 'lo de antes de esa fecha ya está incluido');
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

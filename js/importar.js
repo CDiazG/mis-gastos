@@ -239,7 +239,9 @@ function guardarImport(){
     const c=S.cuentas.find(c=>c.n===r.cuenta);const ff=r.movs.map(m=>m.fecha).sort().pop();
     if(c&&(!c.f||ff>=c.f)){c.v=r.saldoFin;c.f=ff;c.banco=1}
   }
+  const np=emparejarTraspasos();
   save();
+  if(np)setTimeout(()=>toast(np===1?'He unido un traspaso entre tus cuentas':'He unido '+np+' traspasos entre tus cuentas'),2700);
   const meses=[...new Set(sel.map(x=>x.mes))].sort();
   const pend=sel.filter(x=>!x.cat).length;
   IMP=null;rImport();

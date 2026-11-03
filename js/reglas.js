@@ -67,6 +67,38 @@ function prestamosPendientes(){return r2(-S.mov.filter(x=>x.cat==='PRESTAMO').re
 
 // Presupuesto de una categoría en un mes. Si la categoría «acumula», lo que no se gastó en los meses
 // anteriores (desde que se activó) se suma; si un mes te pasas, se resta de lo acumulado (nunca baja de 0).
+/* ---- Traspasos entre mis cuentas ----
+   x.otra = la otra cuenta del traspaso (a la que va el dinero si sale, o de la que viene si entra); '' = sin especificar.
+   x.par = el movimiento de la otra cuenta cuando están los dos extractos. Un traspaso no es gasto ni resta del ahorro. */
+const cuentaDe=x=>x.metodo==='efectivo'?'Efectivo':(x.cuenta||'');
+const trasDesde=x=>x.importe<0?cuentaDe(x):(x.otra||''),trasHacia=x=>x.importe<0?(x.otra||''):cuentaDe(x);
+const diasEntre=(a,b)=>Math.abs(new Date(a+'T12:00')-new Date(b+'T12:00'))/864e5;
+// Une la salida de una cuenta con la entrada en otra (mismo importe, pocos días de diferencia)
+function emparejarTraspasos(){
+  let n=0;const ids=new Set(S.mov.map(x=>x.id));
+  for(const x of S.mov)if(x.par&&!ids.has(x.par)){delete x.par}
+  const cand=S.mov.filter(x=>!x.par&&(x.cat==='TRASPASO'||!x.cat));
+  for(const a of cand){
+    if(a.par||a.cat!=='TRASPASO')continue;
+    const b=cand.find(b=>!b.par&&b!==a&&Math.abs(b.importe+a.importe)<0.005&&norm(cuentaDe(b))!==norm(cuentaDe(a))&&diasEntre(a.fecha,b.fecha)<=4
+      &&(!a.otra||norm(a.otra)===norm(cuentaDe(b)))&&(!b.otra||norm(b.otra)===norm(cuentaDe(a))));
+    if(!b)continue;
+    a.par=b.id;b.par=a.id;b.cat='TRASPASO';a.otra=cuentaDe(b);b.otra=cuentaDe(a);n++;
+  }
+  return n;
+}
+function desemparejar(x){const b=x.par&&S.mov.find(y=>y.id===x.par);if(b){delete b.par}delete x.par}
+// Cuentas sin extracto (una hucha, el broker, el oro…): su saldo es el último que pusiste más lo que ha entrado
+// o salido después con traspasos o pagos desde ella. Las que tienen extracto usan el saldo del banco.
+const esCuentaManual=c=>!!c&&!c.banco&&!c.cartera;
+function saldoCuenta(c){
+  if(!c)return null;if(!esCuentaManual(c))return c.v;
+  let v=c.v||0,mov=false;const desde=c.v!=null&&c.f?c.f:'';
+  for(const x of S.mov){if(desde&&x.fecha<=desde)continue;
+    if(x.cat==='TRASPASO'&&x.otra&&norm(x.otra)===norm(c.n)){v-=x.importe;mov=true}
+    else if(x.metodo!=='efectivo'&&x.cuenta&&norm(x.cuenta)===norm(c.n)){v+=x.importe;mov=true}}
+  return c.v==null&&!mov?null:r2(v);
+}
 // Cada categoría va en % (de la base del mes) o en € fijos; el Ahorro es lo que queda sin repartir.
 const enEur=id=>!!(S.aj.eur&&S.aj.eur[id]!=null&&id!=='AHORRO'&&id!=='DIEZMO');
 const hayEur=()=>CATS.some(c=>enEur(c.id));

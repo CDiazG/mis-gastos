@@ -189,8 +189,8 @@ function hojaPatrimonio(st){
   H.set('A1','Patrimonio a '+fFecha(hoy()),T);H.alto(1,30);let r=3;
   const cab=(arr)=>{arr.forEach((t,i)=>H.set(colL(i)+r,t,hd));r++};
   if(cs.length){H.set('A'+r,'Cuentas',S2);r++;cab(['CUENTA','SALDO','% DEL TOTAL','ACTUALIZADO','TIPO']);
-    const tot=cs.reduce((a,c)=>a+(c.v||0),0),ini=r;
-    cs.forEach(c=>{H.set('A'+r,c.n,tx);H.set('B'+r,c.v!=null?r2(c.v):'',eu);H.set('C'+r,tot&&c.v?r2(c.v/tot*1000)/1000:'',pc);H.set('D'+r,c.f?dSerial(c.f):'',c.f?dt:tx);
+    const tot=cs.reduce((a,c)=>a+(saldoCuenta(c)||0),0),ini=r;
+    cs.forEach(c=>{const cv=saldoCuenta(c);H.set('A'+r,c.n,tx);H.set('B'+r,cv!=null?r2(cv):'',eu);H.set('C'+r,tot&&cv?r2(cv/tot*1000)/1000:'',pc);H.set('D'+r,c.f?dSerial(c.f):'',c.f?dt:tx);
       H.set('E'+r,c.cartera?'Inversiones':c.inversion?'Inversión':c.banco?'Con extracto':'A mano',tx);r++});
     H.set('A'+r,'TOTAL',totL);H.set('B'+r,r2(tot),totS,`SUM(B${ini}:B${r-1})`);['C','D','E'].forEach(x=>H.set(x+r,'',totL));r+=2}
   for(const c of cart){const pos=c.cartera.pos.slice().sort((a,b)=>b.v-a.v),t=pos.reduce((a,x)=>a+x.v,0);

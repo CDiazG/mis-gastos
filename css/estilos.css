@@ -752,3 +752,9 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 #tuto .tcard{max-height:calc(100vh - 110px);overflow:auto}
 @media (max-width:640px){#tuto .tcard:has(.cuest)>.mascota{display:none}#tuto .tcard:has(.cuest){padding:14px}.cuest .chips .chip{padding:5px 10px}}
 #tuto.lado{bottom:auto;transform:none}
+
+/* Traspasos */
+.tag.tras{cursor:pointer}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+#movTable tr.resalta td{background:var(--acc-soft)!important;transition:background .3s}
+.nuevacta{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.nuevacta input{min-width:180px}
