@@ -26,7 +26,7 @@ async function recogerCompartidos(){
 async function leerArchivos(files){
   files=files.filter(f=>/\.(pdf|csv|txt|xlsx|xls|n43|q43|aeb|c43)$/i.test(f.name)||/pdf|csv|sheet|excel|text/.test(f.type));
   if(!files.length){toast('Elige un extracto en PDF, Norma 43, CSV o Excel',true);return}
-  $('#impOut').innerHTML='<div class="card pad" style="margin-top:14px">Leyendo '+files.length+' archivo'+(files.length>1?'s':'')+'…</div>';
+  $('#impOut').innerHTML='<div class="card pad leyendo" style="margin-top:14px">'+mascota(56,'lee')+'<span>Leyendo '+files.length+' archivo'+(files.length>1?'s':'')+'…</span></div>';
   const res=[];
   for(const f of files){
     try{const rs=await leerExtracto(f);if(!rs.length)res.push({archivo:f.name,error:'cancelado',movs:[]});
@@ -164,6 +164,8 @@ function rImport(){
       <div class="it"><div class="l">Comprobación</div><div class="v">${r.cuadra===true?'<span class="ok">✓ Cuadra con el saldo del banco</span>':r.cuadra===false?`<span class="ko">✗ No cuadra (calculado ${eur(r.finCalc)})</span>`:'<span class="mut">Sin saldo para comprobar</span>'}</div></div>
     </div>${r.inversion?`<p class="small mut" style="margin:8px 0 0">Cuenta de inversión: las compras de fondos cuentan como <b>Inversión</b> el día que se hacen, las ventas la reducen y el dinero que llega desde tus otras cuentas es un <b>traspaso</b>. El saldo es el dinero sin invertir, no el valor de los fondos.</p>`:''}${r.malos?`<p class="small ko" style="margin:8px 0 0">${r.malos} líneas no encajan con el saldo; revisa sus importes.</p>`:''}</div>`;
   }
+  const conMovs=IMP.res.filter(r=>!r.error&&r.movs&&r.movs.length);
+  if(conMovs.length&&conMovs.every(r=>r.cuadra===true))h=`<div class="impok">${mascota(48,'celebra')}<span><b>¡Cuadra al céntimo!</b> Los movimientos suman justo lo que dice el saldo del banco.</span></div>`+h;
   const demo=IMP.res.some(r=>r.demo);
   if(demo)h+=`<div class="alert" style="margin-top:14px"><span class="grow"><b>Esto es un ejemplo con movimientos inventados</b>: así verías tu extracto. Mira las categorías que pone solo (las etiquetas «auto») y cuáles deja para ti. No se guarda nada.</span><button class="btn sm" type="button" id="impDemoFin">Cerrar el ejemplo</button></div>`;
   const sinCuenta=IMP.res.filter(r=>!r.error&&r.movs.length&&!r.cuenta);
@@ -244,7 +246,7 @@ function guardarImport(){
   if(np)setTimeout(()=>toast(np===1?'He unido un traspaso entre tus cuentas':'He unido '+np+' traspasos entre tus cuentas'),2700);
   const meses=[...new Set(sel.map(x=>x.mes))].sort();
   const pend=sel.filter(x=>!x.cat).length;
-  IMP=null;rImport();
+  IMP=null;rImport();gestoRufo('guina');
   toast(`Guardados ${sel.length} movimientos${quitar.size?` · sustituidos ${quitar.size} del Excel`:''}`);
   if(meses.length){const m=meses.filter(m=>sel.filter(x=>x.mes===m).length>2).pop()||meses[meses.length-1];MES=m}
   if(pend){F.sinCat=true;F.cat='';go('movs')}else go('resumen');

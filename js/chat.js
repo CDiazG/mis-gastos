@@ -59,6 +59,7 @@ function rChatBtn(){
   b.classList.toggle('hide',!(NUBE?USER:S)||!pref('rufo'));
   const n=USER&&USER.admin?chNoLeidosAdmin():chNoLeidosUsuario();
   $('#rufoN').textContent=n||'';$('#rufoN').classList.toggle('hide',!n);
+  b.classList.toggle('pendiente',!!n); // con mensajes sin leer, Rufo da saltitos
 }
 function burbuja(m){
   if(m.de==='rufo')return `<div class="cm rufo">${mascota(28,false)}<div class="cb">${m.t}${m.chips?`<div class="cchips">${m.chips.map(c=>`<button type="button" class="chip" data-q="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:''}</div></div>`;
@@ -86,7 +87,7 @@ function rChat(){
     const mios=CH_MSGS.filter(m=>m.uid===USER.uid);
     cuerpo=(mios.length?'':`<div class="cm rufo">${mascota(28,false)}<div class="cb">Escribe aquí tu pregunta y le llegará al administrador. Te avisaré cuando conteste.</div></div>`)+mios.map(burbuja).join('');
   }else{
-    cab=`${mascota(30,false)}<span><b>${MASCOTA}</b><br><span class="small mut">Te ayuda con la app</span></span>`;
+    cab=`${mascota(30,'piensa')}<span><b>${MASCOTA}</b><br><span class="small mut">Te ayuda con la app</span></span>`;
     cuerpo=CH_RUFO.map(burbuja).join('');
   }
   const nAdm=admin?chNoLeidosAdmin():chNoLeidosUsuario();

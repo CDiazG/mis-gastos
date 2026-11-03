@@ -2,21 +2,44 @@
 "use strict";
 /* ============ La mascota: un zorro ============ */
 const MASCOTA='Rufo';
-function mascota(px=72,saluda=true){
-  return `<svg class="mascota" width="${px}" height="${px}" viewBox="0 0 120 120" aria-hidden="true">
-  <ellipse cx="60" cy="113" rx="30" ry="4.5" fill="#000" opacity=".1"/>
-  <path d="M86 104c20-4 28-26 18-40-6 14-14 18-22 20z" fill="#e2733a"/><path d="M98 76c-2 10-8 16-14 18 8 0 14-4 17-12z" fill="#fff4e8"/>
+// Rufo, por piezas para poder moverlas. Poses: 'saluda', 'senala-i' / 'senala-d' (señala a un lado), 'piensa', 'lee',
+// 'celebra', 'preocupa' o '' (quieto, pero parpadea y mueve la cola). true = 'saluda' y false = '' (como antes).
+function mascota(px=72,pose='saluda'){
+  if(pose===true)pose='saluda';if(pose===false||pose==null)pose='';
+  const piensa=pose==='piensa',lee=pose==='lee',celebra=pose==='celebra',preocupa=pose==='preocupa';
+  const boca=preocupa?'<path d="M51 77q5-3 10 0" stroke="#2a1d18" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
+    :celebra?'<path d="M50 73q6 7 12 0z" fill="#2a1d18"/><path d="M53 75q3 2 6 0" fill="#f29b8c"/>'
+    :'<path d="M52 74q4 3 8 0" stroke="#2a1d18" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+  const brazoD=piensa?'<path d="M72 92C78 86 74 80 66 78" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="65" cy="78" r="4.6" fill="#5a3324"/>'
+    :celebra?'<path d="M72 90C81 84 85 76 84 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="84" cy="67" r="4.6" fill="#5a3324"/>'
+    :'<path d="M72 92c4 4 5 9 3 13" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/>';
+  const extra=piensa?'<g class="m-q"><circle cx="100" cy="26" r="11" fill="#fff" stroke="#e2733a" stroke-width="2"/><text x="100" y="31" text-anchor="middle" font-size="15" font-weight="700" fill="#e2733a" font-family="system-ui,sans-serif">?</text><circle cx="88" cy="38" r="2.6" fill="#fff" stroke="#e2733a" stroke-width="1.5"/></g>'
+    :lee?'<g class="m-lupa"><circle cx="22" cy="60" r="9" fill="#dff2ff" fill-opacity=".55" stroke="#5a3324" stroke-width="3"/><path d="M28 67l6 7" stroke="#5a3324" stroke-width="4" stroke-linecap="round"/></g>'
+    :celebra?'<g class="m-confeti"><rect x="14" y="20" width="5" height="5" rx="1" fill="#f2b84b"/><rect x="96" y="14" width="5" height="5" rx="1" fill="#4e9f7a"/><rect x="26" y="6" width="4" height="4" rx="1" fill="#e2733a"/><rect x="104" y="40" width="4" height="4" rx="1" fill="#7a8be8"/><circle cx="86" cy="8" r="2.5" fill="#e86a8c"/><circle cx="10" cy="44" r="2.5" fill="#4e9f7a"/></g>':'';
+  return `<svg class="mascota${pose?' pose-'+pose:''}" width="${px}" height="${px}" viewBox="0 0 120 120" aria-hidden="true">
+  <ellipse class="m-sombra" cx="60" cy="113" rx="30" ry="4.5" fill="#000" opacity=".1"/>
+  <g class="m-todo"><g class="m-giro">
+  <g class="m-cola"><path d="M86 104c20-4 28-26 18-40-6 14-14 18-22 20z" fill="#e2733a"/><path d="M98 76c-2 10-8 16-14 18 8 0 14-4 17-12z" fill="#fff4e8"/></g>
   <ellipse cx="56" cy="88" rx="24" ry="22" fill="#e2733a"/><ellipse cx="56" cy="94" rx="13" ry="14" fill="#fff4e8"/>
   <ellipse cx="44" cy="108" rx="7" ry="4" fill="#5a3324"/><ellipse cx="68" cy="108" rx="7" ry="4" fill="#5a3324"/>
-  <g class="${saluda?'brazo':''}"><path d="M40 90C31 84 27 76 28 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="28" cy="67" r="4.6" fill="#5a3324"/></g>
-  <path d="M72 92c4 4 5 9 3 13" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/>
-  <path d="M32 50l-4-28 22 16zM80 50l4-28-22 16z" fill="#e2733a"/><path d="M33 42l-2-13 10 8zM79 42l2-13-10 8z" fill="#5a3324"/>
+  <g class="m-brazo"><path d="M40 90C31 84 27 76 28 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="28" cy="67" r="4.6" fill="#5a3324"/></g>
+  <g class="m-cabeza">
+  <g class="m-orejai"><path d="M32 50l-4-28 22 16z" fill="#e2733a"/><path d="M33 42l-2-13 10 8z" fill="#5a3324"/></g>
+  <g class="m-orejad"><path d="M80 50l4-28-22 16z" fill="#e2733a"/><path d="M79 42l2-13-10 8z" fill="#5a3324"/></g>
   <path d="M56 34c-20 0-28 12-28 22 0 10 12 22 28 26 16-4 28-16 28-26 0-10-8-22-28-22z" fill="#e2733a"/>
   <path d="M56 82c-10-3-20-10-24-20 8 4 16 4 24 8 8-4 16-4 24-8-4 10-14 17-24 20z" fill="#fff4e8"/>
-  <circle cx="46" cy="56" r="4.2" fill="#1c1a19"/><circle cx="66" cy="56" r="4.2" fill="#1c1a19"/><circle cx="47.4" cy="54.5" r="1.3" fill="#fff"/><circle cx="67.4" cy="54.5" r="1.3" fill="#fff"/>
+  <g class="m-ojos"><g class="m-ojoi"><circle cx="46" cy="56" r="4.2" fill="#1c1a19"/><circle cx="47.4" cy="54.5" r="1.3" fill="#fff"/></g><g class="m-ojod"><circle cx="66" cy="56" r="4.2" fill="#1c1a19"/><circle cx="67.4" cy="54.5" r="1.3" fill="#fff"/></g></g>
+  ${preocupa?'<path d="M40 49l9-3M72 49l-9-3" stroke="#5a3324" stroke-width="2" stroke-linecap="round"/>':''}
   <circle cx="38" cy="64" r="3.6" fill="#f29b8c" opacity=".6"/><circle cx="74" cy="64" r="3.6" fill="#f29b8c" opacity=".6"/>
-  <ellipse cx="56" cy="70" rx="4" ry="3" fill="#2a1d18"/><path d="M52 74q4 3 8 0" stroke="#2a1d18" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <ellipse cx="56" cy="70" rx="4" ry="3" fill="#2a1d18"/>${boca}
+  </g>
+  ${brazoD}${extra}
+  </g></g>
 </svg>`}
+// Cambia la pose de un Rufo ya dibujado (p. ej. para que señale hacia el lado del recuadro de la guía)
+function poseRufo(svg,pose){if(!svg)return;svg.className.baseVal='mascota'+(pose?' pose-'+pose:'')}
+// Gesto suelto en el botón de la esquina: guiño o saltito
+function gestoRufo(g){const b=$('#rufoBtn');if(!b)return;b.classList.remove('guina','salta');void b.offsetWidth;b.classList.add(g);clearTimeout(b._g);b._g=setTimeout(()=>b.classList.remove(g),1600)}
 
 /* ============ Guía inicial con Rufo ============ */
 // Sube GUIA_V cuando la guía tenga cosas nuevas: a quien ya la vio le vuelve a salir una vez.
@@ -113,6 +136,9 @@ function colocarSpot(){
   const top=Math.max(tope,r.top-m),bottom=Math.min(fondo,r.bottom+m);
   if(bottom-top<24){sp.classList.add('hide');return}
   Object.assign(sp.style,{left:(r.left-m)+'px',top:top+'px',width:(r.width+2*m)+'px',height:(bottom-top)+'px'});
+  // Rufo mira y señala hacia el recuadro (si no está saludando o celebrando)
+  const mf=$('#tuto .tcard .mascota');if(mf&&/senala/.test(mf.className.baseVal)){const cr=$('#tuto').getBoundingClientRect(),cx=r.left+r.width/2,lado=cx<cr.left||cx>cr.right;
+    poseRufo(mf,!lado&&bottom<=cr.top?'senala-arriba':!lado&&top>=cr.bottom?'senala-abajo':cx>(cr.left+cr.width/2)?'senala-d':'senala-i')}
 }
 function pintarTuto(){
   const p=PASOS[tutoI];if(!p){cerrarTuto();return}
@@ -121,7 +147,7 @@ function pintarTuto(){
   if(el)revelar(el);
   if(el)subirAlTutorial(el);
   const ult=p.ult||tutoI===PASOS.length-1,uno=PASOS.length===1;
-  $('#tuto').innerHTML=`<div class="tcard">${mascota(76,tutoI===0||ult)}<div class="tbody"><div class="tt">${p.t}</div><div class="td">${p.d}</div>${p.html?p.html():''}
+  $('#tuto').innerHTML=`<div class="tcard">${mascota(76,tutoI===0?'saluda':ult&&!uno?'celebra':p.t==='Cuéntame un poco'?'piensa':p.sel?'senala-i':'')}<div class="tbody"><div class="tt">${p.t}</div><div class="td">${p.d}</div>${p.html?p.html():''}
     ${uno?'':`<div class="tdots">${PASOS.map((_,i)=>`<i class="${i===tutoI?'on':''}"></i>`).join('')}</div>`}
     <div class="tbtns">${uno?'':`<button class="btn sm" type="button" id="tutoSkip">${ult?'Cerrar':p.html?'Omitir':'Saltar'}</button>`}<span class="sp"></span>${tutoI?'<button class="btn sm" type="button" id="tutoAnt">Anterior</button>':''}<button class="btn sm pri" type="button" id="tutoSig">${uno?'Entendido':ult?'¡Empezar!':'Siguiente'}</button></div></div></div>`;
   $('#tuto').classList.remove('hide');if(p.init)p.init();
@@ -254,7 +280,7 @@ $('#foroF').onsubmit=async e=>{e.preventDefault();const texto=$('#foroTxt').valu
   $('#foroGo').disabled=true;if(await publicarForo({titulo:$('#foroTit').value.trim(),texto})){$('#foroTxt').value='';$('#foroTit').value=''}$('#foroGo').disabled=false};
 
 function rAyuda(){
-  $('#ayClara').innerHTML=mascota(88);$('#ayNombre').textContent=MASCOTA;
+  $('#ayClara').innerHTML=mascota(88,'saluda');$('#ayNombre').textContent=MASCOTA;
   rPrivCard();rFaq();escucharForo();rForo();rBuzon();cargarMias();
   $('#verTag').textContent='Versión '+VERSION;$('#verList').innerHTML=cambiosHtml(null).replace('<div class="chlog">','');
   const on=NUBE&&USER;$('#foroGo').disabled=!on;$('#foroTxt').disabled=!on;$('#foroTit').disabled=!on;

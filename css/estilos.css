@@ -758,3 +758,61 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 .tag.warn{background:var(--warn-soft);color:var(--warn)}
 #movTable tr.resalta td{background:var(--acc-soft)!important;transition:background .3s}
 .nuevacta{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.nuevacta input{min-width:180px}
+
+/* ===== Rufo con vida ===== */
+.mascota{overflow:visible}
+.mascota .m-ojos{transform-origin:56px 56px;animation:parpadeo 5s infinite}
+.mascota .m-cola{transform-origin:84px 102px;animation:cola 3.2s ease-in-out infinite}
+.mascota .m-todo{animation:respira 4s ease-in-out infinite}
+.mascota .m-orejad{transform-origin:72px 44px;animation:oreja 7s ease-in-out infinite}
+@keyframes parpadeo{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.1)}96%{transform:scaleY(1)}}
+@keyframes cola{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg)}}
+@keyframes respira{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}
+@keyframes oreja{0%,84%,100%{transform:rotate(0)}87%{transform:rotate(-14deg)}90%{transform:rotate(0)}}
+/* saluda */
+.mascota .m-brazo{transform-origin:40px 88px}
+.mascota.pose-saluda .m-brazo{animation:saludo 1.6s ease-in-out infinite}
+/* señala hacia el recuadro (a la derecha se da la vuelta entera) */
+.mascota.pose-senala-i .m-brazo,.mascota.pose-senala-d .m-brazo{transform:rotate(-58deg);animation:apunta 1.4s ease-in-out infinite}
+.mascota.pose-senala-i .m-cabeza,.mascota.pose-senala-d .m-cabeza{transform-origin:56px 70px;transform:rotate(-6deg)}
+.mascota.pose-senala-d .m-giro{transform-origin:60px 60px;transform:scaleX(-1)}
+@keyframes apunta{0%,100%{transform:rotate(-58deg) translateX(0)}50%{transform:rotate(-58deg) translateX(-3px)}}
+/* piensa */
+.mascota.pose-piensa .m-cabeza{transform-origin:56px 70px;transform:rotate(5deg)}
+.mascota.pose-piensa .m-q{transform-origin:100px 30px;animation:flota 2.4s ease-in-out infinite}
+@keyframes flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+/* lee con la lupa */
+.mascota.pose-lee .m-brazo{transform:rotate(-12deg)}
+.mascota.pose-lee .m-ojos{transform:translate(-2px,2px)}
+.mascota.pose-lee .m-lupa{transform-origin:28px 66px;animation:lupa 1.8s ease-in-out infinite}
+@keyframes lupa{0%,100%{transform:translate(0,0)}50%{transform:translate(4px,-2px)}}
+/* celebra: saltito y confeti */
+.mascota.pose-celebra .m-brazo{transform:rotate(18deg)}
+.mascota.pose-celebra .m-todo{animation:salto 1.2s ease-in-out infinite}
+.mascota.pose-celebra .m-confeti{animation:confeti 1.2s ease-in-out infinite}
+@keyframes salto{0%,100%{transform:translateY(0)}35%{transform:translateY(-8px)}55%{transform:translateY(0)}}
+@keyframes confeti{0%,100%{transform:translateY(0);opacity:1}50%{transform:translateY(4px);opacity:.6}}
+/* se preocupa: orejas caídas */
+.mascota.pose-preocupa .m-orejai{transform-origin:40px 46px;transform:rotate(-16deg)}
+.mascota.pose-preocupa .m-orejad{transform-origin:72px 46px;transform:rotate(16deg);animation:none}
+.mascota.pose-preocupa .m-cola{animation:none;transform:rotate(10deg)}
+/* botón de la esquina: guiño y saltitos con mensajes sin leer */
+#rufoBtn.guina .m-ojod{transform-origin:66px 56px;animation:guino 1.2s ease both}
+@keyframes guino{0%,100%{transform:scaleY(1)}20%,70%{transform:scaleY(.12)}}
+#rufoBtn.pendiente .mascota .m-todo{animation:salto 1.6s ease-in-out infinite}
+#rufoBtn.salta .mascota .m-todo{animation:salto .8s ease-in-out 2}
+/* sitios con Rufo */
+.leyendo{display:flex;align-items:center;gap:12px}
+.impok{display:flex;align-items:center;gap:10px;margin-top:14px;background:var(--good-soft);color:var(--ink);border-radius:12px;padding:8px 12px}
+.kpirufo{position:relative}.kmasc{position:absolute;right:8px;top:6px}
+.crow .mascota{vertical-align:-8px}
+/* sin animaciones (interruptor de Mi perfil o el móvil lo pide): Rufo quieto */
+.sinanim .mascota *,.sinanim #rufoBtn *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.mascota *,#rufoBtn *{animation:none!important}}
+
+.mascota.pose-senala-arriba .m-brazo{transform:rotate(14deg);animation:apuntaArr 1.4s ease-in-out infinite}
+.mascota.pose-senala-arriba .m-ojos{transform:translateY(-2.5px);animation:none}
+.mascota.pose-senala-arriba .m-cabeza{transform-origin:56px 70px;transform:rotate(-4deg) translateY(-1px)}
+@keyframes apuntaArr{0%,100%{transform:rotate(14deg) translateY(0)}50%{transform:rotate(14deg) translateY(-3px)}}
+.mascota.pose-senala-abajo .m-brazo{transform:rotate(-100deg)}
+.mascota.pose-senala-abajo .m-ojos{transform:translateY(2px);animation:none}
