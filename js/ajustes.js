@@ -219,7 +219,7 @@ function cargarHist(H){
 /* ---- Preferencias (interruptores) ---- */
 // Interruptores. g: dónde salen (apar = Mi perfil → Apariencia, avisos = Mi perfil → Avisos, clas = Ajustes → Clasificación)
 const PREFS=[
-  {k:'bizumReglas',g:'clas',t:'Aprender la categoría de los Bizum',d:'Desactivado: cada Bizum se clasifica a mano, porque la misma persona te puede pagar por motivos distintos.'},
+  {k:'bizumReglas',g:'clas',t:'Aprender la categoría de los Bizum',d:'Desactivado: cada Bizum se clasifica a mano, porque la misma persona te puede pagar por motivos distintos; al lado de cada uno sale una sugerencia para ponerla de un toque.'},
   {k:'aprender',g:'clas',t:'Aprender reglas al cambiar una categoría',d:'Al poner categoría a un movimiento del banco, los siguientes con el mismo comercio se clasifican solos.'},
   {k:'aviso80',g:'avisos',t:'Avisar al llegar al 80 % de una categoría',d:'Aviso en el Resumen cuando te acercas al presupuesto.'},
   {k:'comparar',g:'avisos',t:'Comparar con el mes anterior',d:'Muestra ▲ / ▼ junto a cada categoría.'},

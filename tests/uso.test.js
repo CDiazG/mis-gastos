@@ -525,6 +525,46 @@ module.exports = {
     })();
   },
 
+  'Bizum: sugerencia de categoría con un botón al lado'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      const r = await p.evaluate(() => {
+        const s = c => { const g = sugerirBizum({ concepto: c, importe: -12, cat: '' }); return g && g.c; };
+        return { cena: s('Bizum A Favor De Laura Concepto: Cena viernes'), regalo: s('PAGO BIZUM A ANA REGALO CUMPLE'), gas: s('PAGO BIZUM A PEPE GASOLINA'),
+          nada: s('PAGO BIZUM A PERSONA INVENTADA'), noBizum: s('COMERCIO DESCONOCIDO'), conCat: sugerirBizum({ concepto: 'PAGO BIZUM DE ANA CENA', importe: 5, cat: 'REGALOS' }) };
+      });
+      assert.deepEqual(r, { cena: 'OCIO', regalo: 'REGALOS', gas: 'TRANSPORTE', nada: 'OCIO', noBizum: null, conCat: null }, 'por palabras y, si no, Restaurantes');
+      // si sueles poner otra cosa a los Bizum, sugiere esa
+      const m = await p.evaluate(() => { const m = mesDe(hoy());
+        for (const k of [1, 2, 3]) S.mov.push({ id: 'v' + k, fecha: m + '-0' + k, mes: m, concepto: 'PAGO BIZUM A VECINO ' + k, importe: -20, cat: 'VIVIENDA', cuenta: 'EVO', origen: 'extracto' });
+        S.mov.push({ id: 'b1', fecha: m + '-05', mes: m, concepto: 'PAGO BIZUM A PERSONA INVENTADA', importe: -15, cat: '', cuenta: 'EVO', origen: 'extracto' },
+                   { id: 'b2', fecha: m + '-06', mes: m, concepto: 'Bizum De Amiga Concepto: cena sushi', importe: 18, cat: '', cuenta: 'EVO', origen: 'extracto' });
+        MES = m; save(); go('movs'); return m; });
+      assert.match(await p.textContent('#movTable tr[data-id="b1"] td:nth-child(4) .sugbiz'), /Vivienda/);
+      assert.match(await p.textContent('#movTable tr[data-id="b2"] td:nth-child(4) .sugbiz'), /Restaurantes/);
+      assert.equal(await p.$('#movTable tr[data-id="v1"] .sugbiz'), null, 'solo a los que no tienen categoría');
+      await p.click('#movTable tr[data-id="b2"] td:nth-child(4) .sugbiz'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 'b2').cat), 'OCIO');
+      assert.ok(!(await p.evaluate(() => S.reglas.some(r => r.u && /AMIGA/.test(r.t)))), 'no aprende una regla del Bizum');
+      // en el móvil: botón en la fila y la sugerida primero en el panel
+      await p.setViewportSize({ width: 390, height: 844 }); await p.evaluate(() => rMovs()); await L.esperar(100);
+      assert.ok(await p.isVisible('#movTable tr[data-id="b1"] .sugbiz.movil'));
+      await p.evaluate(() => panelMov(S.mov.find(x => x.id === 'b1'))); await p.waitForSelector('#movPanel');
+      assert.equal(await p.getAttribute('#movPanel .chips .chip:first-child', 'data-c'), 'VIVIENDA');
+      assert.match(await p.textContent('#movPanel'), /Sugerida: es lo que más sueles poner/);
+      await p.evaluate(() => cerrarPanelMov());
+      // al importar: botón en la fila y uno para ponerlas todas
+      await p.setViewportSize({ width: 1280, height: 900 });
+      const n = await p.evaluate(() => { IMP = { res: [{ archivo: 'x.pdf', cuenta: 'EVO', movs: [1], saldoIni: 0, saldoFin: 0, cuadra: true }], rows: [], sust: {}, soloPend: false };
+        const src = IMP.res[0]; const fila = (c, i) => ({ fecha: hoy(), mes: mesDe(hoy()), concepto: c, importe: i, cat: '', sel: true, src, cuenta: 'EVO', key: 'EVO|' + c });
+        IMP.rows.push(fila('PAGO BIZUM A ANA CENA', -12), fila('PAGO BIZUM A ANA REGALO', -30), fila('COMERCIO DESCONOCIDO', -5)); src.movs = IMP.rows.slice();
+        go('importar'); rImport(); return document.querySelectorAll('#impOut .sugbiz, .sugbiz[data-sug]').length; });
+      assert.ok(n >= 2, 'un botón por Bizum');
+      await p.click('#impSugTodas'); await L.esperar(100);
+      assert.deepEqual(await p.evaluate(() => IMP.rows.map(x => x.cat)), ['OCIO', 'REGALOS', '']);
+    })();
+  },
+
   'conceptos del banco legibles y sin números de tarjeta'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);

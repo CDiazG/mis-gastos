@@ -720,6 +720,11 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 /* Movimientos: separadores por día y versión compacta en el móvil */
 #movTable tr.sepdia td{background:var(--soft)!important;color:var(--muted);font-size:12.5px;font-weight:600;padding:6px 12px;letter-spacing:.01em}
 #movTable .catchip{display:none}
+/* Sugerencia de categoría para los Bizum: un botón al lado para ponerla de un toque */
+.sugbiz{margin:4px 0 0 6px;padding:2px 9px;font-size:12.5px;background:var(--acc-soft);border-color:transparent;white-space:nowrap}
+.sugbiz:hover{border-color:var(--acc)}
+#movTable .sugbiz.movil{display:none}
+#movPanel .chip.sug{border-color:var(--acc);background:var(--acc-soft);font-weight:600}
 #s-movs.buscando .mesTit{opacity:.45}
 #movPanel{position:fixed;inset:0;z-index:70}
 #movPanel .msfondo{position:absolute;inset:0;background:rgba(0,0,0,.35);opacity:0;transition:opacity .2s}
@@ -735,6 +740,7 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
   #movTable tr[data-id] td:nth-child(5){align-self:start}
   #movTable .catchip{display:inline-block;margin-top:4px;font-size:12.5px;color:var(--muted);background:var(--soft);border-radius:999px;padding:2px 9px}
   #movTable .catchip.sin{color:var(--warn);background:var(--warn-soft)}
+  #movTable .sugbiz.movil{display:inline-block}
   #movTable .det{display:none}
 }
 

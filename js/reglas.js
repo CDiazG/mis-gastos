@@ -22,6 +22,41 @@ function autoCatR(desc,detalle,imp){
   return {c:r.c,r};
 }
 function autoCat(desc,detalle,imp){return autoCatR(desc,detalle,imp).c}
+// Sugerencia para un Bizum sin categoría (no se pone sola: es un botón para ponerla de un toque).
+// 1) palabras del concepto («cena», «regalo», «gasolina»…); 2) lo que más sueles poner a los Bizum; 3) Restaurantes (lo normal: ajustar una cena).
+const BIZUM_PAL=[
+ [/ (CENA|CENITA|CENAS|COMIDA|COMIDAS|COMER|CENAR|ALMUERZO|ALMORZAR|DESAYUNO|MERIENDA|BRUNCH|APERITIVO|VERMUT|VERMU|TAPAS|TAPEO|CANAS|CANA|CERVEZA|CERVEZAS|BIRRAS|COPAS|COPA|CAFE|CAFES|PIZZA|PIZZAS|SUSHI|BURGER|HAMBURGUESA|PAELLA|KEBAB|RESTAURANTE|RESTAURANT|BAR|TERRACEO|CINE|ENTRADA|ENTRADAS|CONCIERTO|FIESTA|DISCOTECA) /,'OCIO'],
+ [/ (REGALO|REGALOS|REGALITO|CUMPLE|CUMPLEANOS|BODA|BAUTIZO|COMUNION|AMIGO INVISIBLE|FLORES) /,'REGALOS'],
+ [/ (GASOLINA|GASOIL|DIESEL|TAXI|UBER|CABIFY|PEAJE|PARKING|COCHE) /,'TRANSPORTE'],
+ [/ (VIAJE|HOTEL|AIRBNB|APARTAMENTO|VUELO|VUELOS|BILLETE|BILLETES|TREN|ESCAPADA|CASA RURAL) /,'VIAJES'],
+ [/ (SUPER|COMPRA|MERCADONA|LIDL|CARREFOUR) /,'SUPERMERCADO'],
+ [/ (ALQUILER|COMUNIDAD) /,'VIVIENDA'],
+ [/ (LUZ|AGUA|GAS|INTERNET|WIFI|FIBRA|MOVIL) /,'FACTURAS'],
+ [/ (NETFLIX|SPOTIFY|HBO|DISNEY|DAZN|PRIME) /,'SUSCRIPCIONES'],
+ [/ (GYM|GIMNASIO|PADEL|PISTA|PARTIDO|FUTBOL|YOGA|PILATES) /,'ACTIVIDADES'],
+ [/ (FARMACIA|MEDICO|DENTISTA|FISIO) /,'SALUD'],
+ [/ (ROPA|ZAPATILLAS|ZARA) /,'PERSONAL'],
+];
+function catDisponible(id){
+  if(CATS.some(c=>c.id===id))return id;
+  if(id==='OCIO'){const r=CATS.find(c=>/RESTAURANT|OCIO|COMIDA|SALIDAS/.test(norm(c.n)));return r?r.id:''}
+  if(id==='FACTURAS'&&CATS.some(c=>c.id==='VIVIENDA'))return 'VIVIENDA';
+  return '';
+}
+// Lo que dice el Bizum (el «Concepto: …» del banco o lo que va tras el nombre)
+function textoBizum(desc){const s=String(desc||'');const m=s.match(/concepto:?\s*(.+)$/i);return norm(m?m[1]:s)}
+function sugerirBizum(x){
+  if(!x||x.cat||!isBizum(x.concepto))return null;
+  const t=textoBizum(x.concepto);
+  for(const [re,c] of BIZUM_PAL){const m=t.match(re);const id=m&&catDisponible(c);if(id)return {c:id,por:'el concepto dice «'+m[1].toLowerCase()+'»'}}
+  // lo que más sueles poner a los Bizum (del mismo sentido: los que mandas o los que recibes)
+  const cuenta={};for(const y of (S.mov||[]))if(y.cat&&y!==x&&isBizum(y.concepto)&&(y.importe<0)===(x.importe<0)&&CATS.some(c=>c.id===y.cat))cuenta[y.cat]=(cuenta[y.cat]||0)+1;
+  const top=Object.entries(cuenta).sort((a,b)=>b[1]-a[1])[0];
+  if(top&&top[1]>=2)return {c:top[0],por:'es lo que más sueles poner a los Bizum'};
+  const o=catDisponible('OCIO');return o?{c:o,por:'los Bizum suelen ser para ajustar una cena o una comida'}:null;
+}
+// Botón de la sugerencia (en Movimientos, en el panel del móvil y en Importar)
+const botonSug=s=>s?`<button type="button" class="btn sm sugbiz" data-sug="${s.c}" title="Sugerencia: ${esc(s.por)}">✓ ${esc(catN(s.c))}</button>`:'';
 const STOP=new Set(['RECIB','TRANS','TRANSF','TRANSFERENCIA','COMPRA','TARJ','TARJETA','PAGO','CON','EN','DE','DEL','LA','EL','LOS','LAS','WWW','COM','ES','SL','SA','SP','Y','A']);
 function learnKey(desc){
   if(isBizum(desc)){const n=norm(desc).trim().replace(/^PAGO /,'');return n.split(' ').slice(0,5).join(' ')}

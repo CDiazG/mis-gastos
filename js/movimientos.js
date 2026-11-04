@@ -11,11 +11,12 @@ function diaTxt(f){const h=hoy(),ay=new Date(h+'T12:00');ay.setDate(ay.getDate()
 // Panel del móvil al tocar un movimiento: categorías de un toque, editar o etiquetar
 function panelMov(x){
   cerrarPanelMov();
-  const cats=[...CATS.map(c=>({id:c.id,n:c.n})),...SPECIAL.filter(s=>s.id!=='AJUSTE').map(s=>({id:s.id,n:s.n}))];
+  let cats=[...CATS.map(c=>({id:c.id,n:c.n})),...SPECIAL.filter(s=>s.id!=='AJUSTE').map(s=>({id:s.id,n:s.n}))];
+  const sug=sugerirBizum(x);if(sug)cats=[...cats.filter(c=>c.id===sug.c),...cats.filter(c=>c.id!==sug.c)];
   const d=document.createElement('div');d.id='movPanel';
   d.innerHTML=`<div class="msfondo"></div><div class="mscaja mpanel" role="dialog" aria-label="Movimiento"><div class="mph"><div><b>${esc(verConcepto(x))}</b><div class="small mut">${diaTxt(x.fecha)} · ${x.metodo==='efectivo'?'efectivo':esc(x.cuenta||'')}</div></div><b class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</b></div>
     ${x.cat==='TRASPASO'?`<div class="small" style="margin-top:8px">Traspaso: <b>${esc(trasDesde(x)||'sin especificar')} → ${esc(trasHacia(x)||'sin especificar')}</b> <button type="button" class="link" data-pm="otra">${x.par?'ver el otro lado':'cambiar'}</button></div>`:''}
-    <div class="small mut" style="margin:10px 0 6px">Categoría</div><div class="chips">${cats.map(c=>`<button type="button" class="chip${c.id===x.cat?' on':''}" data-c="${c.id}">${esc(c.n)}</button>`).join('')}</div>
+    <div class="small mut" style="margin:10px 0 6px">Categoría</div>${sug?`<div class="small mut" style="margin:-2px 0 6px">Sugerida: ${esc(sug.por)}.</div>`:''}<div class="chips">${cats.map(c=>`<button type="button" class="chip${c.id===x.cat?' on':''}${sug&&c.id===sug.c?' sug':''}" data-c="${c.id}">${sug&&c.id===sug.c?'✓ ':''}${esc(c.n)}</button>`).join('')}</div>
     <div class="toolbar" style="margin:12px 0 0"><button type="button" class="btn" data-pm="editar">✎ Editar</button><span class="sp"></span><button type="button" class="btn" data-pm="cerrar">Cerrar</button></div></div>`;
   document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
   $$('.msfondo,[data-pm=cerrar]',d).forEach(b=>b.onclick=cerrarPanelMov);
@@ -71,10 +72,11 @@ function rMovs(){
       tags.push(x.otra===undefined&&!x.par?'<span class="tag warn tras" data-tras="1" title="Indica a qué cuenta va o de cuál viene">¿qué cuenta?</span>'
         :`<span class="tag acc tras" data-tras="1" title="${x.par?'Toca para ver el otro lado del traspaso':'Toca para cambiar la cuenta'}">${esc(de||'sin especificar')} → ${esc(a||'sin especificar')}${x.par?' ↔':''}</span>`)}
     for(const t of tagsDe(x))tags.push(`<span class="tag tg" data-tag="${esc(t)}" title="Ver todo lo de «${esc(t)}»">#${esc(t)}</span>`);
+    const sug=sugerirBizum(x),bs=botonSug(sug);
     return sep+`<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''} aria-label="Marcar"></td>
       <td class="num">${fFecha(x.fecha)}</td>
-      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${x.cat?'':' sin'}">${x.cat?esc(catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
-      <td><select class="cat">${catOptions(x.cat)}</select></td>
+      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${x.cat?'':' sin'}">${x.cat?esc(catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${bs.replace('sugbiz','sugbiz movil')}${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
+      <td><select class="cat">${catOptions(x.cat)}</select>${bs}</td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
     :`<tr><td colspan="6" class="empty">${buscaTodo?`No encuentro «${esc(F.q)}» en ningún mes.`:`No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.`}</td></tr>`;
@@ -87,6 +89,7 @@ function rMovs(){
   $$('#movTable tbody tr[data-id]').forEach(tr=>{
     const id=tr.dataset.id,x=S.mov.find(m=>m.id===id);
     $('.cat',tr).onchange=e=>ponerCategoria(x,e.target.value);
+    $$('.sugbiz',tr).forEach(b=>b.onclick=e=>{e.stopPropagation();ponerCategoria(x,b.dataset.sug)});
     const tt=$('.tag.tras',tr);if(tt)tt.onclick=e=>{e.stopPropagation();if(x.par){irAlPar(x)}else preguntarOtra(x)};
     $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.cat='';F.sinCat=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);

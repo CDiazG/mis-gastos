@@ -183,6 +183,7 @@ function rImport(){
     const pend=R.filter(x=>x.sel&&!x.cat).length,nsel=R.filter(x=>x.sel).length;
     const vis=IMP.soloPend?R.filter(x=>!x.cat):R;
     h+=`<div class="toolbar"><label class="pill small"><input type="checkbox" id="impPend" ${IMP.soloPend?'checked':''}> Ver solo los que no tienen categoría (${R.filter(x=>!x.cat).length})</label><span class="sp"></span>
+      ${(()=>{const n=R.filter(x=>!x.src.demo&&sugerirBizum(x)).length;return n>1?`<button class="btn sm" type="button" id="impSugTodas" title="Pone a cada Bizum sin categoría la que se le sugiere">✓ Sugerencias a los ${n} Bizum</button>`:''})()}
       ${R.some(x=>!x.cat&&isBizum(x.concepto)&&x.importe>0)?`<label class="pill small">Bizum recibidos sin categoría → <select id="impBiz">${catOptions('',{blankText:'elige…'})}</select></label>`:''}
       <span class="small ${pend?'ko':'mut'}">${pend?pend+' marcados sin categoría':''}</span>
       <button class="btn" id="impCancel">Cancelar</button><button class="btn pri ${demo?'hide':''}" id="impGo" ${nsel&&!sinCuenta.length&&!demo?'':'disabled'} ${sinCuenta.length?'title="Primero elige la cuenta"':''}>Guardar ${nsel} movimientos</button></div>
@@ -192,7 +193,7 @@ function rImport(){
       return `<tr data-k="${k}" class="${x.sel?'':'off'} ${x.cat||!x.sel?'':'nocat'}"><td><input type="checkbox" class="isel" ${x.sel?'checked':''} ${x.estado==='ya'?'disabled':''}></td>
       <td class="num">${fFecha(x.fecha)}</td>
       <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${x.nomina&&x.cat==='INGRESO'?`<span class="tag good">nómina</span> <select class="imes" style="font-size:12.5px;padding:2px 4px;margin-left:4px" title="Mes al que cuenta esta nómina">${[mesDe(x.fecha),addMes(mesDe(x.fecha),1)].map(m=>`<option value="${m}"${m===x.mes?' selected':''}>cuenta en ${nombreMes(m)}</option>`).join('')}</select>`:(x.mes!==mesDe(x.fecha)?`<span class="tag acc">cuenta en ${nombreMesC(x.mes)}</span>`:'')}</div>${x.detalle?`<div class="det">${esc(x.detalle)}</div>`:''}</td>
-      <td><select class="icat">${catOptions(x.cat)}</select></td>
+      <td><select class="icat">${catOptions(x.cat)}</select>${x.src&&x.src.demo?'':botonSug(sugerirBizum(x))}</td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td><td>${est}</td></tr>`}).join('')+`</tbody></table></div>
     <p class="small mut">Las etiquetas «auto» indican qué palabra del concepto ha decidido la categoría; revísalas antes de guardar. Al cambiar una categoría, el programa aprende la regla (con las palabras del nombre del comercio) y la aplica a los movimientos con ese mismo nombre. Los Bizum que te mandan suelen ser devoluciones: ponles la categoría del gasto que pagaste (por ejemplo, Restaurantes y ocio) y se restan de ese gasto.</p>`;
   }
@@ -207,10 +208,12 @@ function rImport(){
   function cambiarCuentaImp(r,valor){r.cuenta=valor;IMP.rows.filter(x=>x.src===r).forEach(x=>{x.cuenta=valor;x.key=[x.cuenta,...x.key.split('|').slice(1)].join('|')});marcarDuplicados();rImport()}
   $$('[data-sust]',o).forEach(c=>c.onchange=()=>{IMP.sust[c.dataset.sust].on=c.checked;marcarDuplicados();rImport()});
   const ib=$('#impBiz');if(ib)ib.onchange=()=>{const c=ib.value;if(!c)return;let n=0;IMP.rows.forEach(x=>{if(!x.cat&&isBizum(x.concepto)&&x.importe>0){x.cat=c;x.auto=false;n++}});toast(n+' Bizum actualizados');marcarDuplicados();rImport()};
+  const ist=$('#impSugTodas');if(ist)ist.onclick=()=>{let n=0;IMP.rows.forEach(x=>{const g=!x.src.demo&&sugerirBizum(x);if(g){x.cat=g.c;x.auto=false;n++}});toast(n+' Bizum con su categoría sugerida');marcarDuplicados();rImport()};
   const idb=$('#impDobles');if(idb)idb.onchange=()=>{IMP.dobles.on=idb.checked};
   const ip=$('#impPend');if(ip)ip.onchange=()=>{IMP.soloPend=ip.checked;rImport()};
   const ia=$('#impAll');if(ia)ia.onchange=()=>{IMP.rows.forEach(x=>{if(x.estado!=='ya'){x.sel=ia.checked;x._userSel=true}});rImport()};
   $$('tr[data-k]',o).forEach(tr=>{const x=IMP.rows[+tr.dataset.k];
+    const sb=$('.sugbiz',tr);if(sb)sb.onclick=()=>{x.cat=sb.dataset.sug;x.auto=false;marcarNomina(x);marcarDuplicados();rImport()};
     $('.isel',tr).onchange=e=>{x.sel=e.target.checked;x._userSel=true;rImport()};
     const im=$('.imes',tr);if(im)im.onchange=e=>{x.mes=e.target.value;marcarDuplicados();rImport()};
     $('.icat',tr).onchange=e=>{
