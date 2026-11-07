@@ -3,6 +3,14 @@
 App web de gastos personales (multiusuario) hecha a partir del Excel de Loreto, la hermana de Carlos.
 Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnicismos.
 
+## Modo ahorro (Carlos quiere gastar pocos tokens)
+
+- Respuestas cortas: qué ha cambiado y poco más, sin repetir lo que ya se ve.
+- **Capturas solo si Carlos las pide.**
+- Pruebas: solo las del archivo que se toca. La batería completa no se pasa en local: la pasa GitHub al publicar.
+- No leer archivos enteros si basta con buscar la parte que se va a cambiar.
+- Preguntas que no son de la app (mensajes, dudas sueltas): contestar sin clonar ni tocar el repositorio.
+
 - Web publicada: https://cdiazg.github.io/mis-gastos/ (GitHub Pages, se despliega con GitHub Actions al subir a `main`).
 - Firebase: proyecto `mis-gastos-66394` (Authentication + Firestore). Correo del administrador: carlosdiazgui@gmail.com.
 
@@ -25,9 +33,9 @@ Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnic
 ## Pruebas
 
 - `fuser -k 8765/tcp; NODE_PATH=$(npm root -g) node tests/run.js [filtro]` (Playwright, 4 en paralelo, Firebase simulado en `tests/simulador`).
-- Mientras se trabaja, pasar solo las del archivo afectado (`node tests/run.js uso`); la batería completa una vez antes del commit.
+- Pasar solo las del archivo afectado (`node tests/run.js uso`). La batería completa la pasa GitHub Actions al publicar; si falla allí, se arregla en `siguiente-version`.
 - Hay una prueba que recorre toda la guía de Rufo en móvil y ordenador y falla si el recuadro se tapa o se corta: si cambia la navegación, mirarla.
-- Capturas solo cuando cambia algo visual importante (gastan mucho). Scripts de captura: Playwright con `tests/lib.js` (`nuevoContexto`, `crearAdminYEntrar`).
+- Capturas solo si Carlos las pide (gastan mucho). Scripts de captura: Playwright con `tests/lib.js` (`nuevoContexto`, `crearAdminYEntrar`).
 
 ## Reglas que no se rompen
 
