@@ -24,6 +24,11 @@ Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnic
 - Si cambia `firestore.rules`, darle a Carlos **las reglas completas** con `CORREO_DEL_ADMINISTRADOR` sustituido por su correo
   (en el repo se queda el marcador).
 
+## Vista previa (sin publicar)
+
+- Cada subida a `siguiente-version` actualiza solo https://cdiazg.github.io/mis-gastos/pruebas/ (franja naranja «VERSIÓN DE PRUEBAS»). Comparte base de datos con la web real. Tarda 1–2 minutos.
+- Esa web la despliega `pruebas.yml` ejecutándose sobre `main` (lo lanza `previa.yml`); por eso cambios en esos dos archivos no se ven hasta llevarlos a `main`.
+
 ## Versiones
 
 - `python3 herramientas/nueva-version.py X.Y.Z "novedad 1|novedad 2"` sube la versión (VERSION, CAMBIOS, version.json y los `?v=` de index.html).

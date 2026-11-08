@@ -1,0 +1,20 @@
+name: Vista previa
+
+# Al subir cambios a siguiente-version se refresca https://cdiazg.github.io/mis-gastos/pruebas/
+# (se lanza el flujo principal sobre main, que es quien tiene permiso para desplegar la web).
+on:
+  push:
+    branches: [siguiente-version]
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  disparar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Actualizar la vista previa
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run pruebas.yml --ref main -R ${{ github.repository }}
