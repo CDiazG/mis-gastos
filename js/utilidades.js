@@ -22,7 +22,7 @@ function toast(msg,err){const t=$('#toast');t.textContent=msg;t.className='on'+(
 
 function catOptions(sel,{blank=true,blankText='— Sin categoría —'}={}){
   let h=blank?`<option value="">${blankText}</option>`:'';
-  for(const g of GROUPS){h+=`<optgroup label="${g.n}">`+CATS.filter(c=>c.g===g.id&&(c.id!=='AHORRO'||sel==='AHORRO')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${c.n}</option>`).join('')+'</optgroup>'}
+  for(const g of GROUPS){h+=`<optgroup label="${g.n}">`+CATS.filter(c=>c.g===g.id&&(c.id!=='AHORRO'||sel==='AHORRO')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${catEs(c.id)}${c.n}</option>`).join('')+'</optgroup>'}
   const oculta=sel&&!ALLC.some(c=>c.id===sel)&&(S.cats||[]).find(c=>c.id===sel);
   if(oculta)h+=`<option value="${oculta.id}" selected>${esc(oculta.n)}</option>`;
   h+='<optgroup label="Otros movimientos (no son gasto)">'+SPECIAL.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${c.n}</option>`).join('')+'</optgroup>';

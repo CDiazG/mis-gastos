@@ -10,11 +10,15 @@ function rAjustes(){
   $('#caGrupo').innerHTML=gOpts('VARIABLES');
   $('#pctTable').innerHTML='<tbody>'+GROUPS.map(g=>{const cs=S.cats.filter(c=>c.g===g.id&&(c.id!=='DIEZMO'||diezmoOn()));
     return `<tr><td colspan="4" class="small mut" style="padding-top:12px"><b>${g.n}</b></td></tr>`+cs.map((c,k)=>`<tr data-cid="${c.id}">
-      <td><div class="cnw"><button type="button" class="asa" title="Arrastra para cambiar el orden (o usa las flechas del teclado)" aria-label="Mover ${esc(c.n)}">⠿</button><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:150px"></div>${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que queda sin repartir</div>':''}</td>
+      <td><div class="cnw"><button type="button" class="asa" title="Arrastra para cambiar el orden (o usa las flechas del teclado)" aria-label="Mover ${esc(c.n)}">⠿</button><button type="button" class="btn sm icon cemo" title="Elegir el emoji de esta categoría" aria-label="Emoji de ${esc(c.n)}">${catE(c.id)}</button><input type="text" class="cn" value="${esc(c.n)}" style="width:100%;min-width:150px"></div>${c.id==='AHORRO'?'<div class="small mut" style="margin-top:2px">Automático: lo que queda sin repartir</div>':''}</td>
       <td><select class="cg" style="max-width:118px;font-size:13px" ${FIJAS.has(c.id)?'disabled title="Esta categoría no se puede mover de grupo"':''}>${gOpts(c.g)}</select></td>
       <td class="r" style="white-space:nowrap">${valorCelda(c)}</td>
       <td style="white-space:nowrap">${c.g==='AHORRO'?'':`<button type="button" class="btn sm icon ac${S.aj.acumula&&S.aj.acumula[c.id]?' on':''}" title="${S.aj.acumula&&S.aj.acumula[c.id]?'Acumula: lo que sobra pasa al mes siguiente (pulsa para quitarlo)':'Pulsa para que lo que sobre pase al mes siguiente'}">↻</button>`}${FIJAS.has(c.id)?'':'<button type="button" class="btn sm icon dan cx" title="Borrar categoría">✕</button>'}</td></tr>`).join('')}).join('')+'</tbody>';
   $$('#pctTable tr[data-cid]').forEach(tr=>{const id=tr.dataset.cid;const c=S.cats.find(x=>x.id===id);
+    $('.cemo',tr).onclick=()=>{const hecho=()=>{save();rAjustes()};
+      dialog('Emoji de «'+c.n+'»',`<div class="emogrid">${EMO_LISTA.map(e=>`<button type="button" class="emo" data-e="${e}">${e}</button>`).join('')}</div><p class="small mut" style="margin:12px 0 4px">O escribe el que quieras:</p><input id="emoTxt" maxlength="8" style="width:80px;text-align:center;font-size:20px" placeholder="🙂">`,
+        [{t:'Cancelar'},{t:'El de serie',fn:()=>{delete c.e;hecho()}},{t:'Guardar',cls:'pri',fn:()=>{const v=$('#emoTxt').value.trim();if(!v)return false;c.e=v.slice(0,8);hecho()}}]);
+      $$('#dlgB .emo').forEach(b=>b.onclick=()=>{c.e=b.dataset.e;$('#dlg').close();hecho()})};
     $('.cn',tr).onchange=e=>{const n=e.target.value.trim();if(!n){e.target.value=c.n;return}
       if(S.cats.some(x=>x!==c&&norm(x.n)===norm(n))){toast('Ya hay una categoría con ese nombre',true);e.target.value=c.n;return}
       c.n=n;save();refreshCats();toast('Nombre cambiado')};

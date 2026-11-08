@@ -1,7 +1,7 @@
 // Cuentas Claras · Pestaña Resumen, gastos fijos previstos y objetivos de ahorro
 "use strict";
 // Grupos del presupuesto que la persona ha plegado (se recuerda en este dispositivo)
-const GR_PLEG=(()=>{try{return new Set(JSON.parse(localStorage.getItem('mg-grupos-plegados')||'[]'))}catch(e){return new Set()}})();
+const GR_PLEG=(()=>{try{const g=localStorage.getItem('mg-grupos-plegados');if(g===null&&matchMedia('(max-width:640px)').matches)return new Set(['FIJOS','VARIABLES','AHORRO']);return new Set(JSON.parse(g||'[]'))}catch(e){return new Set()}})();
 document.addEventListener('click',e=>{const b=e.target.closest('#groups .gtog');if(!b)return;const c=b.closest('.grupo'),g=c.dataset.g;
   if(GR_PLEG.has(g))GR_PLEG.delete(g);else GR_PLEG.add(g);c.classList.toggle('plegado',GR_PLEG.has(g));b.setAttribute('aria-expanded',!GR_PLEG.has(g));
   try{localStorage.setItem('mg-grupos-plegados',JSON.stringify([...GR_PLEG]))}catch(_){}});
@@ -65,7 +65,7 @@ function rResumen(){
     const gp=cs.reduce((a,c)=>a+presupuestoCat(MES,c.id,st).p,0);
     const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
     const pctG=Math.round(cs.reduce((a,c)=>a+pctCat(c.id,st.base),0)*10)/10;
-    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span></button>`+
+    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span><span class="bar gb ${g.id==='AHORRO'?'':gg>gp+0.5?'over':gp>0&&gg>=gp*0.8?'warn':'ok'}"><i style="width:${gp>0?Math.max(0,Math.min(100,gg/gp*100)):(gg>0?100:0)}%"></i></span></button>`+
       cs.map(c=>{
         const pc=presupuestoCat(MES,c.id,st),p=pc.p, v=st.by[c.id]||0, rest=p-v;
         if(c.id==='OTROS'&&!v)return '';
@@ -74,18 +74,18 @@ function rResumen(){
         const isSave=g.id==='AHORRO';
         const cerca=pref('aviso80')&&!isSave&&!over&&p>0&&v>=p*0.8;
         if(c.id==='AHORRO'){const wa=p>0?Math.max(0,Math.min(100,v/p*100)):0;
-          return `<div class="crow" data-cat="AHORRO"><div class="a"><span>${c.n} <span class="tag" title="Se calcula solo: ingresos − gastos − inversión − diezmo">automático</span></span><span class="num ${v<0?'neg':''}"><b>${eur(v)}</b></span></div>
+          return `<div class="crow" data-cat="AHORRO"><div class="a"><span><span class="ce">${catE(c.id)}</span>${c.n} <span class="tag" title="Se calcula solo: ingresos − gastos − inversión − diezmo">automático</span></span><span class="num ${v<0?'neg':''}"><b>${eur(v)}</b></span></div>
             <div class="bar ${rest>0.5?'':'ok'}"><i style="width:${wa}%"></i></div>
-            <div class="b"><span>Lo que no gastas ni inviertes · lo que sobra del presupuesto (${fmt(pctAhorro(st.base),1)}%) · objetivo ${eur(p,0)}</span><span class="num ${rest>0.5?'mut':'pos'}">${rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'}</span></div></div>`}
+            <div class="b"><span class="bd">Lo que no gastas ni inviertes · lo que sobra del presupuesto (${fmt(pctAhorro(st.base),1)}%) · objetivo ${eur(p,0)}</span><span class="num ${rest>0.5?'mut':'pos'}">${rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'}</span></div></div>`}
         if(c.id==='DIEZMO'&&dz){
           const w2=dz.debido>0?Math.min(100,dz.pagado/dz.debido*100):0;
-          return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n} ${dz.pendiente>0.5?'<span class="tag cash">pendiente</span>':dz.debido>0?'<span class="tag good">al día</span>':''}</span><span class="num"><b>${eur(dz.pagado)}</b> <span class="mut small">de ${eur(dz.debido,0)}</span></span></div>
+          return `<div class="crow" data-cat="${c.id}"><div class="a"><span><span class="ce">${catE(c.id)}</span>${c.n} ${dz.pendiente>0.5?'<span class="tag cash">pendiente</span>':dz.debido>0?'<span class="tag good">al día</span>':''}</span><span class="num"><b>${eur(dz.pagado)}</b> <span class="mut small">de ${eur(dz.debido,0)}</span></span></div>
             <div class="bar"><i style="width:${w2}%"></i></div>
             <div class="b"><span>${dz.pct}% de los ingresos del mes</span>${dz.pendiente>0.5?`<button class="btn sm dzpag" type="button">Marcar ${eur(dz.pendiente,0)} pagado</button>`:'<span class="pos">pagado</span>'}</div></div>`}
-        return `<div class="crow" data-cat="${c.id}"><div class="a"><span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
+        return `<div class="crow" data-cat="${c.id}"><div class="a"><span><span class="ce">${catE(c.id)}</span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
           <div class="bar ${isSave?'':over?'over':p>0&&v>=p*0.8?'warn':'ok'}"><i style="width:${w}%"></i></div>
-          <div class="b"><span>${enEur(c.id)?'fijo':fmt(+S.aj.pct[c.id]||0,1)+'%'} · presupuesto ${eur(p,0)}${pc.extra?` <span class="tag acc" title="Lo que no gastaste los meses anteriores">↻ ${eur(pc.extra,0)} acumulado</span>`:''}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(p<=0.5&&v<=0.5?'':rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
-      }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
+          <div class="b"><span class="bd">${enEur(c.id)?'fijo':fmt(+S.aj.pct[c.id]||0,1)+'%'} · presupuesto ${eur(p,0)}${pc.extra?` <span class="tag acc" title="Lo que no gastaste los meses anteriores">↻ ${eur(pc.extra,0)} acumulado</span>`:''}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(p<=0.5&&v<=0.5?'':rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
+      }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span><span class="ce">❓</span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
           <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
   }).join('');
   $$('#groups .crow').forEach(r=>r.onclick=e=>{if(e.target.closest('.dzpag')||r.dataset.cat==='AHORRO')return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});

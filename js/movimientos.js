@@ -16,7 +16,7 @@ function panelMov(x){
   const d=document.createElement('div');d.id='movPanel';
   d.innerHTML=`<div class="msfondo"></div><div class="mscaja mpanel" role="dialog" aria-label="Movimiento"><div class="mph"><div><b>${esc(verConcepto(x))}</b><div class="small mut">${diaTxt(x.fecha)} · ${x.metodo==='efectivo'?'efectivo':esc(x.cuenta||'')}</div></div><b class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</b></div>
     ${x.cat==='TRASPASO'?`<div class="small" style="margin-top:8px">Traspaso: <b>${esc(trasDesde(x)||'sin especificar')} → ${esc(trasHacia(x)||'sin especificar')}</b> <button type="button" class="link" data-pm="otra">${x.par?'ver el otro lado':'cambiar'}</button></div>`:''}
-    <div class="small mut" style="margin:10px 0 6px">Categoría</div>${sug?`<div class="small mut" style="margin:-2px 0 6px">Sugerida: ${esc(sug.por)}.</div>`:''}<div class="chips">${cats.map(c=>`<button type="button" class="chip${c.id===x.cat?' on':''}${sug&&c.id===sug.c?' sug':''}" data-c="${c.id}">${sug&&c.id===sug.c?'✓ ':''}${esc(c.n)}</button>`).join('')}</div>
+    <div class="small mut" style="margin:10px 0 6px">Categoría</div>${sug?`<div class="small mut" style="margin:-2px 0 6px">Sugerida: ${esc(sug.por)}.</div>`:''}<div class="chips">${cats.map(c=>`<button type="button" class="chip${c.id===x.cat?' on':''}${sug&&c.id===sug.c?' sug':''}" data-c="${c.id}">${sug&&c.id===sug.c?'✓ ':''}${esc(catEs(c.id)+c.n)}</button>`).join('')}</div>
     <div class="toolbar" style="margin:12px 0 0"><button type="button" class="btn" data-pm="editar">✎ Editar</button><span class="sp"></span><button type="button" class="btn" data-pm="cerrar">Cerrar</button></div></div>`;
   document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
   $$('.msfondo,[data-pm=cerrar]',d).forEach(b=>b.onclick=cerrarPanelMov);
@@ -75,7 +75,7 @@ function rMovs(){
     const sug=sugerirBizum(x),bs=botonSug(sug);
     return sep+`<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''} aria-label="Marcar"></td>
       <td class="num">${fFecha(x.fecha)}</td>
-      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${x.cat?'':' sin'}">${x.cat?esc(catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${bs.replace('sugbiz','sugbiz movil')}${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
+      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${x.cat?'':' sin'}">${x.cat?esc(catEs(x.cat)+catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${bs.replace('sugbiz','sugbiz movil')}${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
       <td><select class="cat">${catOptions(x.cat)}</select>${bs}</td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')

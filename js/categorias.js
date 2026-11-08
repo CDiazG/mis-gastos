@@ -44,6 +44,11 @@ const RE_INVERSION=/ (TRADE|TRADE REPUBLIC|ORO|ETF|ETFS|ACCIONES|FONDO|FONDOS|IN
 // Palabras que identifican deporte y actividades (gimnasio, baile…) dentro de lo que antes era «Salud y bienestar»
 const RE_ACTIVIDAD=/ (GIMNASIO|GIMANSIO|GYM|SYNERGYM|ALTAFIT|BASIC FIT|BELLALBA|BALLET|BAILE|YOGA|PILATES|PADEL|PISCINA|CROSSFIT|DEPORTE|DEPORTES|ACTIVIDADES|ESCALADA|TENIS|NATACION|CLUB)/
 const FIJAS=new Set(['AHORRO','DIEZMO','OTROS']); // no se pueden borrar
+// Emoji de cada categoría: el de serie por identificador, o el que haya elegido el usuario (c.e). No toca datos guardados.
+const EMO_DEF={VIVIENDA:'🏠',FACTURAS:'💡',SUPERMERCADO:'🛒',TRANSPORTE:'🚗',SALUD:'🩺',OCIO:'🍽️',PERSONAL:'👕',VIAJES:'✈️',SUSCRIPCIONES:'🔁',ACTIVIDADES:'🏃',REGALOS:'🎁',OTROS:'📦',AHORRO:'🐷',INVERSION:'📈',DONATIVOS:'🤲',DIEZMO:'🙏'};
+const EMO_LISTA='🏠 🏡 💡 🔌 📱 🌐 🛒 🥦 🍎 🍞 🚗 ⛽ 🚌 🚆 🚲 🩺 💊 🦷 👓 🍽️ 🍕 ☕ 🍺 🎬 🎮 🎵 📚 👕 👟 💄 💇 ✈️ 🏖️ 🧳 🔁 📺 🏃 🏋️ ⚽ 🎾 🎁 🎂 💐 📦 🧾 🐷 💰 📈 🏦 🤲 ❤️ 🙏 🐶 🐱 👶 🎓 🔧 🧹 💼 🎉'.split(' ');
+function catE(id){const c=(S.cats||[]).find(x=>x.id===id);return c?(c.e||EMO_DEF[id]||'🏷️'):(EMO_DEF[id]||'')}
+const catEs=id=>{const e=catE(id);return e?e+' ':''};
 let CATS=[],ALLC=[],CONSUMO=[];
 const diezmoOn=()=>!(typeof S!=='undefined'&&S&&S.aj&&S.aj.diezmo===false);
 function refreshCats(){
