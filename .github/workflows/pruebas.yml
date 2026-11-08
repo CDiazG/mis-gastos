@@ -17,6 +17,8 @@ concurrency:
 
 jobs:
   pruebas:
+    # Al actualizar solo la vista previa (workflow_dispatch) no se repiten las pruebas.
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -46,18 +48,27 @@ jobs:
 
   publicar:
     # Solo se publica si las pruebas pasan (requiere Settings → Pages → Source: GitHub Actions).
+    # También se ejecuta al disparar a mano o desde «Vista previa» (siempre sobre main), para refrescar /pruebas/.
     needs: pruebas
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ !cancelled() && needs.pruebas.result != 'failure' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with:
+          ref: siguiente-version
+          path: previa
       - name: Preparar la web
         run: |
           mkdir _site
           cp -r index.html css js lib icons manifest.webmanifest sw.js favicon.ico version.json .nojekyll _site/
+          # Vista previa de la versión en la que se trabaja (rama siguiente-version), en /pruebas/
+          mkdir _site/pruebas
+          (cd previa && cp -r index.html css js lib icons manifest.webmanifest sw.js favicon.ico version.json .nojekyll ../_site/pruebas/)
+          sed -i 's#<body\([^>]*\)>#<body\1><div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:\#e2733a;color:\#fff;text-align:center;font:600 11px sans-serif;padding:1px 0;pointer-events:none">VERSIÓN DE PRUEBAS · aún sin publicar</div>#' _site/pruebas/index.html
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
