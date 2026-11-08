@@ -112,8 +112,16 @@ function rGrafico(st){
   if(!items.length||!pref('verGrafico')){el.classList.add('hide');el.innerHTML='';return}
   el.classList.remove('hide');
   const tot=items.reduce((a,x)=>a+x.v,0);
-  el.innerHTML=`<div class="toolbar" style="margin:0 0 8px"><h3>En qué se ha ido el dinero</h3><span class="sp"></span><span class="small mut num">${eur(tot,0)} en ${nombreMes(MES)}</span></div>`+barrasHtml(items);
-  $$('#grafCard .gbar').forEach(r=>r.onclick=()=>{if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
+  // rosco: lo gastado por categoría (las 6 mayores y «Resto»), lo invertido, los donativos y lo ahorrado
+  const sl=items.slice(0,6).map(x=>({n:x.n,id:x.id,v:x.v,e:x.id==='SINCAT'?'❓':catE(x.id)})),rest=items.slice(6).reduce((a,x)=>a+x.v,0);
+  if(rest>0.5)sl.push({n:'Resto',id:'',v:rest});
+  const inv=st.by.INVERSION||0,don=(st.by.DONATIVOS||0)+(st.by.DIEZMO||0);
+  if(inv>0.5)sl.push({n:'Inversión',id:'INVERSION',v:inv,e:catE('INVERSION'),col:'var(--c7)',tip:'Invertido'});
+  if(don>0.5)sl.push({n:'Donativos y diezmo',id:'DONATIVOS',v:don,e:catE('DONATIVOS'),col:'var(--acc)',tip:'Donado'});
+  if(st.ahorro>0.5)sl.push({n:'Ahorrado',id:'',v:st.ahorro,e:catE('AHORRO'),col:'var(--good)',tip:'Ahorrado'});
+  const centro=st.ingresos>0&&st.ahorro>0.5?{t:Math.round(st.ahorro/st.ingresos*100)+' %',s:'ahorrado'}:null;
+  el.innerHTML=`<div class="toolbar" style="margin:0 0 8px"><h3>En qué se ha ido el dinero</h3><span class="sp"></span><span class="small mut num">${eur(tot,0)} gastado en ${nombreMes(MES)}</span></div>`+rosco(sl,{centro});
+  $$('#grafCard .gbar,#grafCard .rseg').forEach(r=>r.onclick=()=>{if(!r.dataset.cat)return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
 }
 
 /* ============ Gastos fijos previstos ============ */
