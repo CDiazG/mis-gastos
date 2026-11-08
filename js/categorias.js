@@ -47,7 +47,8 @@ const FIJAS=new Set(['AHORRO','DIEZMO','OTROS']); // no se pueden borrar
 // Emoji de cada categoría: el de serie por identificador, o el que haya elegido el usuario (c.e). No toca datos guardados.
 const EMO_DEF={VIVIENDA:'🏠',FACTURAS:'💡',SUPERMERCADO:'🛒',TRANSPORTE:'🚗',SALUD:'🩺',OCIO:'🍽️',PERSONAL:'👕',VIAJES:'✈️',SUSCRIPCIONES:'🔁',ACTIVIDADES:'🏃',REGALOS:'🎁',OTROS:'📦',AHORRO:'🐷',INVERSION:'📈',DONATIVOS:'🤲',DIEZMO:'🙏'};
 const EMO_LISTA='🏠 🏡 💡 🔌 📱 🌐 🛒 🥦 🍎 🍞 🚗 ⛽ 🚌 🚆 🚲 🩺 💊 🦷 👓 🍽️ 🍕 ☕ 🍺 🎬 🎮 🎵 📚 👕 👟 💄 💇 ✈️ 🏖️ 🧳 🔁 📺 🏃 🏋️ ⚽ 🎾 🎁 🎂 💐 📦 🧾 🐷 💰 📈 🏦 🤲 ❤️ 🙏 🐶 🐱 👶 🎓 🔧 🧹 💼 🎉'.split(' ');
-function catE(id){const c=(S.cats||[]).find(x=>x.id===id);return c?(c.e||EMO_DEF[id]||'🏷️'):(EMO_DEF[id]||'')}
+const EMO_NOMBRE=[[/coche|auto|gasolin|combustible|parking|aparcamiento|taller|moto/i,'🚗'],[/profesional|trabajo|negocio|aut[oó]nomo|empresa|oficina|colegi|congreso|formaci[oó]n|m[aá]ster|curso/i,'💼'],[/mascota|perro|gato|veterin/i,'🐾'],[/hijo|ni[ñn]o|beb[eé]|colegio|guarder/i,'🧒'],[/gimnas|deporte/i,'🏃'],[/seguro/i,'🛡️'],[/impuesto|hacienda|tasa/i,'🏛️'],[/hogar|casa|mueble|reforma|obra/i,'🛠️'],[/belleza|peluquer|est[eé]tica/i,'💇'],[/caf[eé]|bar\b/i,'☕'],[/libro|estudio/i,'📚'],[/tecnolog|electr[oó]nic|inform[aá]tic/i,'💻']];
+function catE(id){const c=(S.cats||[]).find(x=>x.id===id);if(!c)return EMO_DEF[id]||'';if(c.e||EMO_DEF[id])return c.e||EMO_DEF[id];const m=EMO_NOMBRE.find(r=>r[0].test(c.n||''));return m?m[1]:'🏷️'}
 const catEs=id=>{const e=catE(id);return e?e+' ':''};
 let CATS=[],ALLC=[],CONSUMO=[];
 const diezmoOn=()=>!(typeof S!=='undefined'&&S&&S.aj&&S.aj.diezmo===false);
