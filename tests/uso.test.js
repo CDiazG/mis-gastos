@@ -214,6 +214,9 @@ module.exports = {
       assert.ok(opc.includes('Ajustes') && opc.includes('Ayuda') && opc.includes('Mi perfil'), opc.join());
       await p.tap('#cuentaMenu [data-cm="ajustes"]'); await L.esperar(150);
       assert.equal(await p.evaluate(() => TAB), 'ajustes');
+      assert.ok(!(await p.isVisible('#tabs')), 'en Ajustes no hay barra de abajo que tape lo último');
+      await p.tap('.pghead button'); await L.esperar(250);
+      assert.equal(await p.evaluate(() => TAB), 'resumen', 'la ✕ vuelve');
       await p.tap('#tabs .tab[data-t="hist"]'); await L.esperar(150);
       assert.equal(await p.evaluate(() => TAB), 'hist');
       assert.ok(await p.evaluate(() => $('#tabs .tab[data-t="hist"]').classList.contains('on')), 'Evolución queda marcada');

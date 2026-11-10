@@ -1422,3 +1422,8 @@ button.who,button.who:hover,button.who:focus{padding:0!important;background:none
 @media (hover:hover){.cmit:hover{padding-left:16px}.cmit:hover .cmi{color:var(--ink);transform:scale(1.12)}}
 .cmit:active{background:var(--soft)}
 .sinanim .who .avatar,.sinanim .cmit,.sinanim .cmit .cmi{transition:none!important}
+/* 2.38.3 en móvil, Ajustes, Perfil, Ayuda y Usuarios son páginas con su ✕: sin barra de abajo que tape lo último */
+@media (max-width:900px){
+  body[data-tab="ajustes"] .tabs,body[data-tab="ayuda"] .tabs,body[data-tab="perfil"] .tabs,body[data-tab="usuarios"] .tabs{display:none}
+  body[data-tab="ajustes"] main,body[data-tab="ayuda"] main,body[data-tab="perfil"] main,body[data-tab="usuarios"] main{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+}
