@@ -1,7 +1,7 @@
 {
   "name": "cuentas-claras",
   "private": true,
-  "description": "Cuentas Claras: control de gastos personales",
+  "description": "Fluvi: control de gastos personales",
   "scripts": {
     "test": "node tests/run.js"
   },

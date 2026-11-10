@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sube el número de versión de Cuentas Claras en todos los sitios a la vez.
+"""Sube el número de versión de Fluvi en todos los sitios a la vez.
 
 Uso:
   python3 herramientas/nueva-version.py 2.7.0 "Primer cambio" "Segundo cambio"

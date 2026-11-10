@@ -1,6 +1,6 @@
-# Cuentas Claras
+# Fluvi
 
-Cuentas Claras es un programa web para llevar los gastos personales: importa extractos en PDF (EVO y Revolut), clasifica los movimientos por categorías, apunta gastos en efectivo, compara con el presupuesto y exporta a Excel.
+Fluvi es un programa web para llevar los gastos personales: importa extractos en PDF (EVO y Revolut), clasifica los movimientos por categorías, apunta gastos en efectivo, compara con el presupuesto y exporta a Excel.
 
 Cada persona entra con su correo y su contraseña y solo ve sus datos (Firebase Authentication + Firestore). Los PDF del banco se leen en el navegador y no se suben a ningún sitio; solo se guardan los movimientos.
 
