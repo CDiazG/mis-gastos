@@ -867,7 +867,7 @@ h2{font-size:20px;font-weight:600}
 .crow .bd,.mut,small,.tag{font-size:12.5px}
 header{border-bottom:0;box-shadow:0 1px 0 color-mix(in srgb,var(--line) 70%,transparent)}
 main{padding-top:24px}
-.card+.card,.kpis,#kpis{margin-top:16px}
+.kpis,#kpis{margin-top:16px}
 @media (max-width:640px){
   .card{border-radius:14px}
   .ghead{padding:14px 16px 6px}
@@ -1078,3 +1078,12 @@ header{background:var(--bg);box-shadow:none}
   #s-resumen .mesTit{display:none}
   #kpis .kpi:nth-child(1),#kpis .kpi:nth-child(2){padding:14px 16px}
 }
+
+/* Alineación: las tarjetas de una rejilla empiezan a la misma altura y con el mismo hueco */
+.grid{gap:16px;align-items:start}
+.grid>.card,.grid>.card+.card{margin-top:0}
+#kpis{align-items:stretch}
+/* Ajustes y Ayuda: el menú de apartados no se pasa de alto; se desplaza por dentro si hace falta */
+.apizq{max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}
+/* Botones rápidos del Resumen: solo en el móvil (en el ordenador ya está la columna lateral) */
+@media (min-width:901px){.acc4{display:none}#kpis .kpi:nth-child(3){padding-bottom:30px}}

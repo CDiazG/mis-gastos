@@ -6,6 +6,8 @@ const MASCOTA='Ayuda';
 // 'celebra', 'preocupa' o '' (quieto, pero parpadea y mueve la cola). true = 'saluda' y false = '' (como antes).
 // Sin mascota: «mascota()» ya no dibuja nada (se deja para no romper llamadas antiguas)
 function mascota(){return ''}
+// Símbolo de ayuda (interrogación) para la cabecera de Ayuda
+function icoAyuda(px=24){return `<svg width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4"/><path d="M12 16.8h.01" stroke-width="2.6"/></svg>`}
 // Símbolo de chat (burbuja) para el botón de ayuda
 function icoChat(px=24){return `<svg class="icochat" width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.2 3.6a.5.5 0 0 1-.8-.4V16h-0A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 8.5h7M8.5 11.5h4.5"/></svg>`}
 // Cambia la pose de un Rufo ya dibujado (p. ej. para que señale hacia el lado del recuadro de la guía)
@@ -252,7 +254,7 @@ $('#foroF').onsubmit=async e=>{e.preventDefault();const texto=$('#foroTxt').valu
   $('#foroGo').disabled=true;if(await publicarForo({titulo:$('#foroTit').value.trim(),texto})){$('#foroTxt').value='';$('#foroTit').value=''}$('#foroGo').disabled=false};
 
 function rAyuda(){
-  $('#ayClara').innerHTML=icoChat(40);$('#ayNombre').textContent=MASCOTA;
+  $('#ayClara').innerHTML=icoAyuda(40);
   rPrivCard();rFaq();escucharForo();rForo();rBuzon();cargarMias();
   $('#verTag').textContent='Versión '+VERSION;$('#verList').innerHTML=cambiosHtml(null).replace('<div class="chlog">','');
   const on=NUBE&&USER;$('#foroGo').disabled=!on;$('#foroTxt').disabled=!on;$('#foroTit').disabled=!on;
