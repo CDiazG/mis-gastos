@@ -1,7 +1,7 @@
 // Cuentas Claras · Pestañas y mes seleccionado
 "use strict";
 /* ============ Navegación ============ */
-let MES=mesDe(hoy()),TAB='resumen';
+let MES=mesDe(hoy()),TAB='resumen',TAB_ANT='resumen';
 function setMes(m){MES=m;F.todos=false;render()}
 $('#mPrev').onclick=()=>setMes(addMes(MES,-1));
 $('#mNext').onclick=()=>setMes(addMes(MES,1));
@@ -40,6 +40,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b
 /* Ordenador: la columna lateral empieza justo debajo de la cabecera */
 const _hh=()=>document.documentElement.style.setProperty('--hh',($('header').offsetHeight)+'px');_hh();addEventListener('resize',_hh);if(window.ResizeObserver)new ResizeObserver(_hh).observe($('header'));
 /* Móvil: barra inferior con Inicio, Resumen, Añadir, Movimientos y «Más» */
+const PAG_COMPLETA=['ajustes','ayuda','perfil','usuarios'];
+const PAG_TIT={ajustes:'Ajustes',ayuda:'Ayuda',perfil:'Mi perfil',usuarios:'Usuarios'};
+PAG_COMPLETA.forEach(t=>{const s=$('#s-'+t);if(!s)return;const h=document.createElement('div');h.className='pghead';h.innerHTML=`<button type="button" class="pgx" aria-label="Cerrar" title="Cerrar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button><h1>${PAG_TIT[t]}</h1>`;s.prepend(h);$('.pgx',h).onclick=()=>go(TAB_ANT||'resumen')});
 const EN_MAS=['hist','ajustes','ayuda','usuarios','perfil'];
 const TAB_DE={patri:'hist',importar:'movs'}; // pestañas que viven dentro de otra de la barra
 function abrirMas(){
@@ -171,7 +174,7 @@ function avisoPct(){const s=sumaOtrosPct();
 function go(t,{sub,hist=false}={}){
   if(TAB==='ajustes'&&t!=='ajustes'&&presupuestoImposible()){avisoPct();return false}
   if(APARTADOS[t])SUB[t]=sub!==undefined?sub:'';
-  _hh();TAB=t;document.body.dataset.tab=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===(TAB_DE[t]||t)));$$('.evseg button').forEach(b=>b.classList.toggle('on',b.dataset.go===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(TAB_DE[t]||t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
+  _hh();if(TAB!==t&&!PAG_COMPLETA.includes(TAB))TAB_ANT=TAB;TAB=t;document.body.dataset.tab=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===(TAB_DE[t]||t)));$$('.evseg button').forEach(b=>b.classList.toggle('on',b.dataset.go===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(TAB_DE[t]||t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
   const tp=$('#tip');if(tp)tp.classList.remove('on');
   const sec=$('#s-'+t);if(sec){sec.classList.add('anim');clearTimeout(sec._a);sec._a=setTimeout(()=>sec.classList.remove('anim'),900)}
   if(APARTADOS[t])pintarApartado(t);

@@ -1274,3 +1274,23 @@ details[open]>.ib{animation:despl .38s var(--ease)}
 .anillo.warn .arco{stroke:var(--warn)}.anillo.over .arco{stroke:var(--bad)}
 .sd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;background:var(--good);flex:none}
 .sd.warn{background:#f0a400}.sd.over{background:var(--bad)}.sd.nada{background:var(--line)}
+/* Iconos de categoría: sólidos, en círculo gris */
+.ci{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--soft);color:var(--ink);margin-right:10px;flex:none;vertical-align:middle}
+.ci svg{width:15px;height:15px}
+.ci.emo{font-size:14px;line-height:1}
+.chip .ci{width:22px;height:22px;margin-right:6px}.chip .ci svg{width:12px;height:12px}
+.catchip .ci{width:20px;height:20px;margin-right:6px}.catchip .ci svg{width:11px;height:11px}
+.rfila .ci{width:24px;height:24px;margin-right:8px}
+.crow .a>span:first-child{display:flex;align-items:center;flex-wrap:wrap}
+/* Ajustes, Ayuda, Mi perfil y Usuarios: página completa con ✕ y título grande */
+.pghead{display:flex;align-items:center;gap:14px;margin:4px 0 18px}
+.pghead h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.02em}
+.pgx{width:42px;height:42px;border-radius:50%;border:0;background:var(--soft);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:background-color .25s var(--ease),transform .2s var(--ease)}
+.pgx:hover{background:var(--line)}.pgx:active{transform:scale(.92)}
+#s-ajustes .aphead h2,#s-usuarios>h2{display:none}
+@media (min-width:901px){
+  body[data-tab="ajustes"],body[data-tab="ayuda"],body[data-tab="perfil"],body[data-tab="usuarios"]{padding-left:0}
+  body[data-tab="ajustes"] header,body[data-tab="ayuda"] header,body[data-tab="perfil"] header,body[data-tab="usuarios"] header{margin-left:0;padding-left:0}
+  body[data-tab="ajustes"] .tabs,body[data-tab="ayuda"] .tabs,body[data-tab="perfil"] .tabs,body[data-tab="usuarios"] .tabs,
+  body[data-tab="ajustes"] .brand,body[data-tab="ayuda"] .brand,body[data-tab="perfil"] .brand,body[data-tab="usuarios"] .brand{display:none}
+}
