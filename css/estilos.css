@@ -1401,3 +1401,8 @@ html:root[data-fondo="fluvi"]{--wa:#0891b2;--wb:#06b6d4;--wc:#a5ecf7;--wd:#0b3a4
 .acor .acorh h3{margin:0}
 .acor.cerrada>:not(.acorh){display:none!important}
 .acor:not(.cerrada)>.acorh{margin-bottom:8px}
+.acor .acorh{align-items:center}
+.acor .acort{flex:1;min-width:0}
+.acor .acord{margin:3px 0 0}
+.acor:not(.cerrada) .acord{display:none}
+.acor>.acorh{display:flex!important}

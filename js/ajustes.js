@@ -116,15 +116,19 @@ function sugerencia(){
 }
 // Las dos tarjetas del presupuesto van plegadas: solo se ve el título y un botón; al abrir una se pliega la otra.
 let ACOR_ABRIR='';
+const ACOR_DESC={sugCard:'Compara tu presupuesto con lo que de verdad gastas y te propone ajustes.',catCard:'Nombre, grupo y presupuesto de cada categoría, en % o en €. Lo que no repartas va al ahorro.'};
 function acorPres(){
   const ids=['sugCard','catCard'],els=ids.map(i=>$('#'+i));
   els.forEach(el=>{
     if(!el)return;
     if(el.dataset.acor!=='1'){el.dataset.acor='1';el.classList.add('acor','cerrada')}
-    if(!el.querySelector('.acorh')){
+    if(!el.querySelector(':scope>.acorh')){
       const h=el.querySelector('h3');if(!h)return;
-      const w=document.createElement('div');w.className='acorh';h.replaceWith(w);w.appendChild(h);
-      const b=document.createElement('button');b.type='button';b.className='btn sm acorb';w.appendChild(b);
+      const w=document.createElement('div');w.className='acorh';
+      const t=document.createElement('div');t.className='acort';t.appendChild(h);
+      const d=document.createElement('p');d.className='small mut acord';d.textContent=ACOR_DESC[el.id]||'';t.appendChild(d);
+      const b=document.createElement('button');b.type='button';b.className='btn sm acorb';
+      w.append(t,b);el.prepend(w);
       b.onclick=()=>{const abrir=el.classList.contains('cerrada');els.forEach(o=>o&&o.classList.add('cerrada'));if(abrir)el.classList.remove('cerrada');acorTxt(els)};
     }
   });

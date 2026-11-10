@@ -17,7 +17,11 @@ module.exports = {
   'presupuesto: las dos tarjetas van plegadas y al abrir una se pliega la otra'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
+      const filas = [];
+      for (const m of ['2026-06', '2026-07', '2026-08', '2026-09']) filas.push([m + '-01', 'NOMINA', 2000, 'INGRESO'], [m + '-02', 'ALQUILER', -700, 'VIVIENDA'], [m + '-03', 'CENA', -300, 'OCIO']);
+      await meter(p, filas);
       await p.evaluate(() => irApartado('ajustes', 'presupuesto'));
+      assert.ok(await p.isVisible('#sugCard .acord') && await p.isVisible('#catCard .acord'), 'cada una con su descripción');
       assert.ok(await p.isVisible('#sugCard .acorb') && await p.isVisible('#catCard .acorb'), 'los dos botones');
       assert.ok(!(await p.isVisible('#pctTable')), 'categorías plegadas');
       await p.click('#catCard .acorb');
