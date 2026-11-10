@@ -209,7 +209,7 @@ function rEfectivo(){
   // Atajos: lo que más apuntas a mano (concepto y categoría; el importe si siempre es el mismo)
   const rs=rapidos(g);$('#aRapidos').classList.toggle('hide',!rs.length);
   $('#aRapidos').innerHTML=rs.length?`<span class="l">Lo de siempre</span><div class="chips">${rs.map((r,i)=>`<button type="button" class="chip rap" data-r="${i}" title="${esc(catN(r.cat))}${r.imp?' · '+eur(r.imp):''}">${esc(r.c)}${r.imp?` <span class="mut">${eur(r.imp,r.imp%1?2:0)}</span>`:''}</button>`).join('')}</div>`:'';
-  $$('#aRapidos [data-r]').forEach(b=>b.onclick=()=>{const r=rs[+b.dataset.r];$('#cCon').value=r.c;cCat=r.cat;cCatManual=true;if(r.pago)aPago=r.pago;if(r.imp)$('#cImp').value=fmt(r.imp,r.imp%1?2:0);rEfectivo();
+  $$('#aRapidos [data-r]').forEach(b=>b.onclick=()=>{const r=rs[+b.dataset.r];$('#cCon').value=r.c;cCat=r.cat;cCatManual=true;if(r.pago)aPago=r.pago;if(r.imp)$('#cImp').value=fmt(r.imp,r.imp%1?2:0);pintarPaso();rEfectivo();
     const i=$('#cImp');if(!r.imp){i.focus()}else{$('#aGo').focus()}});
   const ms=S.mov.filter(x=>x.mes===MES&&x.origen==='manual').sort((a,b)=>b.fecha.localeCompare(a.fecha));
   const gas=-ms.filter(x=>x.importe<0).reduce((a,x)=>a+x.importe,0),ent=ms.filter(x=>x.importe>0).reduce((a,x)=>a+x.importe,0);
@@ -224,15 +224,23 @@ $('#cCon').addEventListener('input',()=>{if(cCatManual)return;const c=autoCat($(
   if(nc!==cCat){cCat=nc;$$('#cChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.c===cCat))}});
 $('#cashForm').onsubmit=e=>{
   e.preventDefault();
-  const v=parseNum($('#cImp').value);if(!isFinite(v)||v===0){toast('Escribe el importe',true);$('#cImp').focus();return}
-  if(!cCat){toast('Elige una categoría',true);return}
+  const v=parseNum($('#cImp').value);
+  $$('#cashForm .falta').forEach(d=>d.classList.remove('falta'));$$('#cashForm .errtxt').forEach(d=>d.remove());
+  const faltan=[];
+  if(!isFinite(v)||v===0)faltan.push(['#cImp','Escribe el importe']);
+  if(!$('#cCon').value.trim())faltan.push(['#cCon','Cuéntanos en qué fue']);
+  if(!cCat)faltan.push(['#cChips','Elige una categoría']);
+  if(!$('#cFecha').value)faltan.push(['#cFecha','Pon la fecha']);
+  if(faltan.length){
+    faltan.forEach(([s,t])=>{const w=$(s).closest('[data-paso],div');const d=w.closest('#cashForm>div')||w;d.classList.add('falta');const e=document.createElement('small');e.className='errtxt';e.textContent=t;d.appendChild(e)});
+    const d=$(faltan[0][0]).closest('#cashForm>div');d.scrollIntoView({block:'center',behavior:'smooth'});const f=$(faltan[0][0]);if(f.focus)f.focus({preventScroll:true});return}
   const fecha=$('#cFecha').value,ef=aPago==='__efectivo',g=aTipo==='gasto';
   const x={id:uid(),fecha,mes:mesDe(fecha),concepto:$('#cCon').value.trim(),importe:r2(Math.abs(v)*(g?-1:1)),cat:cCat,metodo:ef?'efectivo':'banco',cuenta:ef?'':aPago,origen:'manual'};
   if(cCat==='TRASPASO'){x.otra=aHacia;aHacia=''}
   const tg=parseTags($('#aTag').value);if(tg.length)x.tags=tg;
   if(cCat==='PRESTAMO'&&$('#aPer').value.trim())x.persona=$('#aPer').value.trim();
   marcarNomina(x);S.mov.push(x);save();
-  $('#cImp').value='';$('#cCon').value='';$('#aPer').value='';cCat='';cCatManual=false;pintarTagList();
+  $('#cImp').value='';$('#cCon').value='';$('#aPer').value='';cCat='';cCatManual=false;pintarTagList();$('#cashForm').dataset.paso='1';
   if(x.mes!==MES)MES=x.mes;
   render();$('#cImp').focus();toast('Apuntado: '+x.concepto+' '+(x.importe>0?'+':'')+eur(x.importe)+(ef?' (efectivo)':' ('+x.cuenta+')'));
 };
@@ -261,3 +269,12 @@ function dividir(x){
   $('#dvMas').onclick=()=>{$('#dvRows').insertAdjacentHTML('beforeend',fila(0,'',x.concepto));enlazar();$$('#dvRows .dvi').slice(1).forEach(i=>i.addEventListener('change',auto))};
   enlazar();$$('#dvRows .dvi').slice(1).forEach(i=>i.addEventListener('change',auto));
 }
+
+/* Formulario por pasos: primero tipo e importe; al escribir el importe sale «¿En qué?» y la categoría; luego el resto */
+function pintarPaso(){const f=$('#cashForm');if(!f)return;let p=+f.dataset.paso||1;
+  if(p<2&&parseNum($('#cImp').value)>0)p=2;
+  if(p<3&&p>=2&&($('#cCon').value.trim()||cCat))p=3;
+  if(String(p)!==f.dataset.paso)f.dataset.paso=String(p)}
+$('#cashForm').addEventListener('input',e=>{pintarPaso();const d=e.target.closest('#cashForm>div');if(d&&d.classList.contains('falta')){d.classList.remove('falta');const t=$('.errtxt',d);if(t)t.remove()}});
+$('#cashForm').addEventListener('click',()=>setTimeout(pintarPaso,0));
+$('#cashForm').dataset.paso='1';

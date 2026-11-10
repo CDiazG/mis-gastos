@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.31.0';
+const VERSION='2.32.0';
 const CAMBIOS=[
+ {v:'2.32.0',f:'2026-11-10',c:['Fondo animado con olas, más vivo y legible; la cifra y los botones se leen bien','Los avisos pendientes pasan al menú del círculo, que muestra un puntito naranja cuando hay alguno','Añadir un movimiento va por pasos: primero el importe, luego en qué y categoría, y después el resto; lo que falta se marca en rojo','La barra del mes es más pequeña y «Hoy» solo sale cuando cambias de mes']},
  {v:'2.31.0',f:'2026-11-10',c:['En el móvil, el fondo animado ocupa toda la pantalla y se va difuminando al bajar; la cifra principal flota sobre él','Botones redondos y translúcidos arriba y en el medio, y barra de abajo clara y flotante','En el ordenador, columna lateral estrecha con el nombre bajo cada icono; el Resumen lleva una casita','Cada paleta tiene su propio fondo animado y colores más vivos (Pizarra ahora es azul); la pantalla de entrada también lo estrena','Los enlaces subrayados son ahora botoncitos y las animaciones son más suaves']},
  {v:'2.30.0',f:'2026-11-10',c:['Nuevo menú en el círculo de arriba a la derecha: Mi perfil, Ajustes, Ayuda, Usuarios y Cerrar sesión','Se acabó la pestaña Inicio: tu dinero y los gráficos de 12 meses están en Evolución, y los avisos pendientes arriba del Resumen','La barra de abajo queda con Resumen, Añadir, Movimientos y Evolución']},
  {v:'2.29.0',f:'2026-11-10',c:['Nuevo estilo sobrio: tarjetas lisas, botones en pastilla y barra de abajo flotante en el móvil.','Nueva paleta «Pizarra» (gris carbón y blanco), de serie en las cuentas nuevas. Los gráficos usan menos colores.','Resumen: el ahorro del mes va centrado, en grande, sobre un fondo con movimiento, con accesos rápidos debajo.','Las fichas se despliegan con una animación suave.','Rufo se retira: el botón de ayuda es ahora un símbolo de chat.']},

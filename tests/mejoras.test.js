@@ -143,7 +143,7 @@ module.exports = {
       await p.evaluate(m => { for (let k = 0; k < 4; k++) { const mm = addMes(m, -k); S.mov.push({ id: uid(), fecha: mm + '-01', mes: mm, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }, { id: uid(), fecha: mm + '-02', mes: mm, concepto: 'ALQUILER', importe: -700, cat: 'VIVIENDA', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }); } save(); go('resumen'); }, h);
       await p.evaluate(() => go('hist'));
       for (const c of ['dinero', 'gasto', 'ahorro', 'cats']) assert.ok(await p.$(`#evoCards details[data-ic="${c}"][open]`), 'tarjeta ' + c);
-      assert.ok(await p.$('#resPend details[data-ic="pend"]'), 'pendiente en el Resumen');
+      assert.ok(await p.$('#uWho.avisoP'), 'los avisos se marcan con un puntito en el círculo');
       await p.click('#evoCards details[data-ic="gasto"] > summary');
       assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null); await L.esperar(100);
       await p.evaluate(() => go('resumen')); await p.evaluate(() => go('hist'));

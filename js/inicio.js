@@ -22,11 +22,34 @@ function rosco(items,opt){
   return `<div class="rosco"><svg viewBox="0 0 100 100" role="img" aria-label="Reparto del gasto"><circle r="${R}" cx="50" cy="50" fill="none" stroke="var(--soft)" stroke-width="15"/>${segs}
       <text x="50" y="${opt&&opt.centro?51:48}" text-anchor="middle" font-size="${opt&&opt.centro?15:11}" font-weight="700" fill="var(--ink)">${opt&&opt.centro?opt.centro.t:eur(tot,0)}</text><text x="50" y="${opt&&opt.centro?62:60}" text-anchor="middle" font-size="6.5" fill="var(--muted)">${opt&&opt.centro?opt.centro.s:'gastado'}</text></svg>
     <div class="rleyenda">${items.map((x,k)=>`<div class="gbar rfila" data-cat="${x.id}" ${x.id?'title="Ver movimientos"':''}><span class="gn"><i style="background:${x.col||(x.id?`var(--c${k+1})`:'var(--muted)')}"></i>${x.e?`<span class="ce">${x.e}</span>`:''}${esc(x.n)}</span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}</div></div>`}
-const qi=s=>$$(['#resPend','#evoCards'].map(p=>s.split(',').map(x=>p+' '+x.trim()).join(',')).join(','));
+// Avisos pendientes: van en el menú del círculo (con un puntito naranja si hay alguno)
+let AV_MES_SINCAT='';
+function avisosLista(){
+  const hoyM=mesDe(hoy()),pend=[];
+  let sc=0;AV_MES_SINCAT='';for(let k=0;k<12;k++){const m=addMes(hoyM,-k),n=stats(m).sinCat;if(n){sc+=n;if(!AV_MES_SINCAT)AV_MES_SINCAT=m}}
+  if(sc)pend.push([`<b>${sc}</b> movimiento${sc>1?'s':''} sin categoría en el último año`,'sincat']);
+  const finAnt=addMes(hoyM,-1)+'-28';const tarde=S.cuentas.filter(c=>c.banco&&c.f&&c.f<finAnt);if(tarde.length)pend.push([`Extracto pendiente de ${tarde.map(c=>esc(c.n)).join(', ')} (último del ${fFecha(tarde[0].f)})`,'importar']);
+  for(let k=0;k<=3;k++){const m=addMes(hoyM,-k),d=diezmoMes(m);if(d&&d.pendiente>0.5)pend.push([`Diezmo de ${nombreMes(m)}: faltan ${eur(d.pendiente,0)}`,'dz:'+m])}
+  const pp=prestamosPendientes();if(pp>0.5)pend.push([`Te deben <b>${eur(pp,0)}</b> en préstamos`,'patri']);
+  if(typeof fijosDelMes==='function')for(const f of fijosDelMes(hoyM).filter(x=>x.estado==='falta'||x.estado==='cambia'))pend.push([`Gasto fijo «${esc(f.f.nombre)}» ${f.estado==='falta'?'no ha llegado':'ha cambiado de importe'}`,'resumen']);
+  if(USER&&USER.admin&&typeof chNoLeidosAdmin==='function'&&chNoLeidosAdmin())pend.push([`<b>${chNoLeidosAdmin()}</b> mensaje${chNoLeidosAdmin()>1?'s':''} sin leer en el chat`,'chat']);
+  if(USER&&USER.admin&&typeof ERR_TODOS!=='undefined'&&ERR_TODOS.length)pend.push([`<b>${ERR_TODOS.length}</b> error${ERR_TODOS.length>1?'es':''} registrado${ERR_TODOS.length>1?'s':''} (extractos que no se leen o fallos)`,'usuarios']);
+  if(pref('avisoCopia')&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))pend.push(['Hace más de un mes que no guardas una copia de seguridad','copia']);
+  return pend}
+function accionAviso(a){
+  if(a==='sincat'){F.sinCat=true;F.cat='';if(AV_MES_SINCAT)MES=AV_MES_SINCAT;go('movs')}
+  else if(a.startsWith('dz:')){MES=a.slice(3);go('resumen')}else if(a==='copia')exportar();else if(a==='chat'){CH_MODO='admin';abrirChat(true)}else go(a)}
+function rAvisos(){
+  const b=$('#cmAvisos'),u=$('#uWho');if(!b||!u||typeof S==='undefined'||!S||!S.mov)return;
+  let p=[];try{p=avisosLista()}catch(e){}
+  b.innerHTML=p.length?`<div class="cmavt">Avisos <span class="tag bad">${p.length}</span></div>`+p.map(([t,a])=>`<button type="button" class="iitem" data-acc="${a}"><span>${t}</span><span class="mut">→</span></button>`).join(''):'';
+  u.classList.toggle('avisoP',p.length>0);
+  $$('.iitem',b).forEach(x=>x.onclick=()=>{cerrarCuenta();accionAviso(x.dataset.acc)})}
+const qi=s=>$$(['#evoCards'].map(p=>s.split(',').map(x=>p+' '+x.trim()).join(',')).join(','));
 function rInicio(){
   const hoyM=mesDe(hoy()),anio=hoyM.slice(0,4),nombre=NUBE&&USER?USER.nombre.split(' ')[0]:'';
   const h=new Date().getHours();  const todos=mesesConDatos();
-  if(!S.mov.length){$('#resPend').innerHTML='';$('#evoCards').innerHTML='';return}
+  if(!S.mov.length){$('#evoCards').innerHTML='';return}
   // 12 meses hasta el actual
   const ult12=[];for(let k=11;k>=0;k--)ult12.push(addMes(hoyM,-k));
   const st12=ult12.map(m=>({m,...stats(m)})),conDatos=st12.filter(x=>x.ms.length);
@@ -37,7 +60,7 @@ function rInicio(){
   const dia=+hoy().slice(8,10),diasMes=new Date(+anio,+hoyM.slice(5),0).getDate();
   const ritmo=dia>3&&st.consumo>0?st.consumo/dia*diasMes:null;
   const obj=presAhorro(st.base)+presFijo('INVERSION',st.base),pObj=obj>0?1:0,okObj=obj>0&&st.ahorro>=obj-0.5;
-  let html='',htmlP='';
+  let html='';
   // 1. Tu dinero
   html+=tarjeta('dinero','Tu dinero',`<div class="istats dos">
     <div><small>Patrimonio</small><b class="num">${eur(patr,0)}</b><span>${nC?`en ${nC} cuenta${nC>1?'s':''}`:'Pon los saldos en Patrimonio'}</span></div>
@@ -45,17 +68,6 @@ function rInicio(){
     <div><small>Invertido en ${anio}</small><b class="num">${eur(Inv,0)}</b><span>dentro del ahorro</span></div>
     <div><small>Gasto medio al mes</small><b class="num">${eur(delAnio.length?G/delAnio.length:0,0)}</b><span>${delAnio.length} mes${delAnio.length>1?'es':''} de ${anio}</span></div></div>
     <div class="toolbar" style="margin:10px 0 0"><button class="link small" type="button" data-go="patri">Ver patrimonio →</button></div>`);
-  // 3. Pendiente
-  const pend=[];
-  const sc=st12.reduce((a,x)=>a+x.sinCat,0);if(sc)pend.push([`<b>${sc}</b> movimiento${sc>1?'s':''} sin categoría en el último año`,'sincat']);
-  const finAnt=addMes(hoyM,-1)+'-28';const tarde=S.cuentas.filter(c=>c.banco&&c.f&&c.f<finAnt);if(tarde.length)pend.push([`Extracto pendiente de ${tarde.map(c=>esc(c.n)).join(', ')} (último del ${fFecha(tarde[0].f)})`,'importar']);
-  for(let k=0;k<=3;k++){const m=addMes(hoyM,-k),d=diezmoMes(m);if(d&&d.pendiente>0.5)pend.push([`Diezmo de ${nombreMes(m)}: faltan ${eur(d.pendiente,0)}`,'dz:'+m])}
-  const pp=prestamosPendientes();if(pp>0.5)pend.push([`Te deben <b>${eur(pp,0)}</b> en préstamos`,'patri']);
-  if(typeof fijosDelMes==='function')for(const f of fijosDelMes(hoyM).filter(x=>x.estado==='falta'||x.estado==='cambia'))pend.push([`Gasto fijo «${esc(f.f.nombre)}» ${f.estado==='falta'?'no ha llegado':'ha cambiado de importe'}`,'resumen']);
-  if(USER&&USER.admin&&typeof chNoLeidosAdmin==='function'&&chNoLeidosAdmin())pend.push([`<b>${chNoLeidosAdmin()}</b> mensaje${chNoLeidosAdmin()>1?'s':''} sin leer en el chat`,'chat']);
-  if(USER&&USER.admin&&typeof ERR_TODOS!=='undefined'&&ERR_TODOS.length)pend.push([`<b>${ERR_TODOS.length}</b> error${ERR_TODOS.length>1?'es':''} registrado${ERR_TODOS.length>1?'s':''} (extractos que no se leen o fallos)`,'usuarios']);
-  if(pref('avisoCopia')&&(!S.ultimaCopia||Date.now()-S.ultimaCopia>30*864e5))pend.push(['Hace más de un mes que no guardas una copia de seguridad','copia']);
-  htmlP=tarjeta('pend','Pendiente',pend.length?`<div class="ilist">${pend.map(([t,a])=>`<button type="button" class="iitem" data-acc="${a}"><span>${t}</span><span class="mut">→</span></button>`).join('')}</div>`:'<p class="pos" style="margin:0">✓ Todo al día. ¡Bien hecho!</p>',pend.length?`<span class="tag cash">${pend.length}</span>`:'');
   // 4. Gasto mes a mes
   const media=conDatos.length?conDatos.reduce((a,x)=>a+x.consumo,0)/conDatos.length:0;
   html+=tarjeta('gasto','Gasto de los últimos 12 meses',columnas(st12.map(x=>({m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.consumo),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${eur(x.consumo)} gastado`,
@@ -72,15 +84,12 @@ function rInicio(){
   // 7. Objetivos
   const os=S.objetivos||[];
   if(os.length)html+=tarjeta('obj','Objetivos de ahorro',os.map(o=>objHtml(o,true)).join('')+`<div class="toolbar" style="margin:8px 0 0"><button class="link small" type="button" data-go="patri">Gestionar objetivos →</button></div>`,`${os.filter(o=>infoObj(o).falta<=0).length}/${os.length} ✓`);
-  $('#resPend').innerHTML=htmlP;$('#evoCards').innerHTML=html;
+  $('#evoCards').innerHTML=html;
   qi('details.icard').forEach(d=>d.addEventListener('toggle',()=>{d.open?INI_PLEGADAS.delete(d.dataset.ic):INI_PLEGADAS.add(d.dataset.ic);guardarPlegadas()}));
   qi('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   qi('[data-mes]').forEach(b=>b.onclick=()=>{MES=b.dataset.mes;go('resumen')});
   // el reparto es del año: al tocar una categoría se ven todos sus movimientos (no solo los de este mes)
   qi('.gbar[data-cat],.rseg[data-cat]').forEach(r=>r.onclick=()=>{const c=r.dataset.cat;if(!c)return;F.q='';F.tag='';if(c==='SINCAT'){F.cat='';F.sinCat=true;F.todos=false;MES=hoyM}else{F.cat=c;F.sinCat=false;F.todos=true}go('movs');scrollTo(0,0)});
-  qi('.iitem').forEach(b=>b.onclick=()=>{const a=b.dataset.acc;
-    if(a==='sincat'){F.sinCat=true;F.cat='';const m=[...st12].reverse().find(x=>x.sinCat);if(m)MES=m.m;go('movs')}
-    else if(a.startsWith('dz:')){MES=a.slice(3);go('resumen')}else if(a==='copia')exportar();else if(a==='chat'){CH_MODO='admin';abrirChat(true)}else go(a)});
 }
 
 /* ---- Bocadillo con la cifra al pasar el ratón o tocar una columna ---- */

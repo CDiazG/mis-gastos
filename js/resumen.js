@@ -89,7 +89,7 @@ function rResumen(){
           <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
   }).join('');
   $$('#groups .crow').forEach(r=>r.onclick=e=>{if(e.target.closest('.dzpag')||r.dataset.cat==='AHORRO')return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
-  $$('#groups .dzpag').forEach(b=>b.onclick=()=>{aTipo='gasto';cCat='DIEZMO';cCatManual=true;aPago='__efectivo';go('efectivo');$('#cImp').value=fmt(dz.pendiente);$('#cCon').value='Diezmo '+nombreMes(MES);
+  $$('#groups .dzpag').forEach(b=>b.onclick=()=>{aTipo='gasto';cCat='DIEZMO';cCatManual=true;aPago='__efectivo';go('efectivo');$('#cImp').value=fmt(dz.pendiente);pintarPaso();$('#cCon').value='Diezmo '+nombreMes(MES);
     const ult=addMes(MES,1)+'-01';const d=new Date(ult);d.setDate(0);const fin=d.toISOString().slice(0,10);$('#cFecha').value=hoy()<fin?hoy():fin;$('#cImp').focus();toast('Revisa el importe y la forma de pago, y pulsa «Añadir gasto»')});
   rGrafico(st);rFijosCard();rObjCard();
   $('#fijosCard').classList.toggle('hide',!pref('verFijos'));$('#objCard').classList.toggle('hide',!pref('verObjetivos'));

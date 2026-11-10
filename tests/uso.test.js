@@ -26,7 +26,7 @@ module.exports = {
       await anadir(p, { tipo: 'ingreso', imp: '2000', con: 'Nómina', cat: 'INGRESO', fecha: mes + '-05' });
       await anadir(p, { imp: '3,50', con: 'café', fecha: mes + '-06' });
       assert.equal(await p.evaluate(() => S.mov.find(x => x.concepto === 'café').cat), 'OCIO', 'categoría automática por el texto');
-      await p.click('#aOtra'); await p.fill('#aOtraN', 'Banco Extra'); await p.click('#dlgF >> text=Añadir cuenta');
+      await p.fill('#cImp', '5'); await p.fill('#cCon', 'x'); await p.click('#aOtra'); await p.fill('#aOtraN', 'Banco Extra'); await p.click('#dlgF >> text=Añadir cuenta');
       await anadir(p, { imp: '100', con: 'ropa', cat: 'PERSONAL', pago: 'Banco Extra', fecha: mes + '-07' });
       await anadir(p, { tipo: 'ingreso', imp: '20', con: 'me devuelven la cena', cat: 'OCIO', fecha: mes + '-08' });
       const st = await p.evaluate(m => stats(m), mes);

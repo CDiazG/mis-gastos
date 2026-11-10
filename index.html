@@ -11,7 +11,7 @@
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p}catch(e){}</script>
-<link rel="stylesheet" href="css/estilos.css?v=2.31.0">
+<link rel="stylesheet" href="css/estilos.css?v=2.32.0">
 </head>
 <body>
 <header>
@@ -27,6 +27,7 @@
     <div class="userbox hide" id="userbox"><button type="button" class="who" id="uWho" title="Cuenta" aria-haspopup="true"><span class="avatar" id="uAv"></span></button>
       <div class="cmenu hide" id="cuentaMenu" role="menu">
         <div class="cmhead"><span class="avatar" id="uAv2"></span><div><b id="uName"></b><small id="uCorreo"></small></div></div>
+        <div id="cmAvisos"></div>
         <button type="button" class="cmit" data-cm="perfil" id="cmPerfil">Mi perfil</button>
         <button type="button" class="cmit" data-cm="ajustes">Ajustes</button>
         <button type="button" class="cmit" data-cm="ayuda">Ayuda</button>
@@ -54,7 +55,6 @@
 
   <section id="s-resumen" class="on">
     <div class="mesTit"></div>
-    <div id="resPend" class="inicio"></div>
     <div class="hola"><span id="hola" class="hola-t"></span><span style="flex:1"></span><button class="btn sm" data-exportar type="button">⤓ Exportar</button></div>
     <div class="grid kpis" id="kpis"></div>
     <div class="alerts" id="alerts"></div>
@@ -73,18 +73,18 @@
       <div class="card pad">
         <h2>Añadir un movimiento</h2>
         <p class="sub" style="margin-bottom:14px">Para lo que no sale en los extractos: lo pagado o cobrado en efectivo, o en cuentas que no subes.</p>
-        <form class="cashform" id="cashForm" autocomplete="off">
+        <form class="cashform" id="cashForm" autocomplete="off" novalidate>
           <div class="seg segbig" id="aTipo"><button type="button" data-v="gasto">Gasto</button><button type="button" data-v="ingreso">Ingreso</button></div>
           <div id="aRapidos" class="rapidos hide"></div>
           <div><label class="l" for="cImp">Importe</label><div class="bigamt"><input type="text" id="cImp" inputmode="decimal" placeholder="0,00" required><span>€</span></div></div>
-          <div><label class="l" for="cCon" id="aConL">¿En qué?</label><input type="text" id="cCon" style="width:100%" required></div>
-          <div><label class="l">Categoría</label><div class="chips" id="cChips"></div></div>
-          <div id="aPerW" class="hide"><label class="l" for="aPer" id="aPerL">¿A quién?</label><input type="text" id="aPer" list="aPerList" placeholder="Nombre" style="width:100%"><datalist id="aPerList"></datalist></div>
-          <div><label class="l" id="aPagoL">Pagado con</label><div class="chips" id="aPago"></div></div>
-          <div id="aHaciaW" class="hide"><label class="l">Hacia</label><div class="chips" id="aHacia"></div></div>
-          <div><label class="l" for="cFecha">Fecha</label><input type="date" id="cFecha" required></div>
-          <div><label class="l" for="aTag">Etiqueta <span class="mut" style="font-weight:400">(opcional, p. ej. «Viaje a Roma»)</span></label><input type="text" id="aTag" list="tagList" style="width:100%" maxlength="40"></div>
-          <button class="btn pri" type="submit" id="aGo">Añadir gasto</button>
+          <div data-paso="2"><label class="l" for="cCon" id="aConL">¿En qué?</label><input type="text" id="cCon" style="width:100%" required></div>
+          <div data-paso="2"><label class="l">Categoría</label><div class="chips" id="cChips"></div></div>
+          <div id="aPerW" class="hide" data-paso="2"><label class="l" for="aPer" id="aPerL">¿A quién?</label><input type="text" id="aPer" list="aPerList" placeholder="Nombre" style="width:100%"><datalist id="aPerList"></datalist></div>
+          <div data-paso="3"><label class="l" id="aPagoL">Pagado con</label><div class="chips" id="aPago"></div></div>
+          <div id="aHaciaW" class="hide" data-paso="3"><label class="l">Hacia</label><div class="chips" id="aHacia"></div></div>
+          <div data-paso="3"><label class="l" for="cFecha">Fecha</label><input type="date" id="cFecha" required></div>
+          <div data-paso="3"><label class="l" for="aTag">Etiqueta <span class="mut" style="font-weight:400">(opcional, p. ej. «Viaje a Roma»)</span></label><input type="text" id="aTag" list="tagList" style="width:100%" maxlength="40"></div>
+          <button class="btn pri" type="submit" id="aGo" data-paso="3">Añadir gasto</button>
         </form>
       </div>
       <div>
@@ -387,31 +387,31 @@
 <div id="undo" role="status"><span id="undoTxt"></span><button class="btn sm" type="button" id="undoBtn">Deshacer</button></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.31.0"></script>
-<script src="js/categorias.js?v=2.31.0"></script>
-<script src="js/version.js?v=2.31.0"></script>
-<script src="js/utilidades.js?v=2.31.0"></script>
-<script src="js/estado.js?v=2.31.0"></script>
-<script src="js/reglas.js?v=2.31.0"></script>
-<script src="js/navegacion.js?v=2.31.0"></script>
-<script src="js/resumen.js?v=2.31.0"></script>
-<script src="js/movimientos.js?v=2.31.0"></script>
-<script src="js/excel.js?v=2.31.0"></script>
-<script src="js/dialogos.js?v=2.31.0"></script>
-<script src="js/pdf.js?v=2.31.0"></script>
-<script src="js/formatos.js?v=2.31.0"></script>
-<script src="js/importar.js?v=2.31.0"></script>
-<script src="js/historico.js?v=2.31.0"></script>
-<script src="js/ajustes.js?v=2.31.0"></script>
-<script src="js/usuarios.js?v=2.31.0"></script>
-<script src="js/errores.js?v=2.31.0"></script>
-<script src="js/buzon.js?v=2.31.0"></script>
-<script src="js/perfil.js?v=2.31.0"></script>
-<script src="js/inicio.js?v=2.31.0"></script>
-<script src="js/privacidad.js?v=2.31.0"></script>
-<script src="js/ayuda.js?v=2.31.0"></script>
-<script src="js/chat.js?v=2.31.0"></script>
-<script src="js/acceso.js?v=2.31.0"></script>
-<script src="js/arranque.js?v=2.31.0"></script>
+<script src="js/config.js?v=2.32.0"></script>
+<script src="js/categorias.js?v=2.32.0"></script>
+<script src="js/version.js?v=2.32.0"></script>
+<script src="js/utilidades.js?v=2.32.0"></script>
+<script src="js/estado.js?v=2.32.0"></script>
+<script src="js/reglas.js?v=2.32.0"></script>
+<script src="js/navegacion.js?v=2.32.0"></script>
+<script src="js/resumen.js?v=2.32.0"></script>
+<script src="js/movimientos.js?v=2.32.0"></script>
+<script src="js/excel.js?v=2.32.0"></script>
+<script src="js/dialogos.js?v=2.32.0"></script>
+<script src="js/pdf.js?v=2.32.0"></script>
+<script src="js/formatos.js?v=2.32.0"></script>
+<script src="js/importar.js?v=2.32.0"></script>
+<script src="js/historico.js?v=2.32.0"></script>
+<script src="js/ajustes.js?v=2.32.0"></script>
+<script src="js/usuarios.js?v=2.32.0"></script>
+<script src="js/errores.js?v=2.32.0"></script>
+<script src="js/buzon.js?v=2.32.0"></script>
+<script src="js/perfil.js?v=2.32.0"></script>
+<script src="js/inicio.js?v=2.32.0"></script>
+<script src="js/privacidad.js?v=2.32.0"></script>
+<script src="js/ayuda.js?v=2.32.0"></script>
+<script src="js/chat.js?v=2.32.0"></script>
+<script src="js/acceso.js?v=2.32.0"></script>
+<script src="js/arranque.js?v=2.32.0"></script>
 </body>
 </html>

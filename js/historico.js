@@ -135,7 +135,7 @@ function rPrestamos(){
     :'<div class="pad small mut">Cuando prestes dinero, apúntalo con la categoría «Préstamo» y el nombre de la persona. Aquí verás quién te debe y cuánto.</div>');
   $$('#prestamos .crow').forEach(r=>{const p=ps[+r.dataset.i];
     r.onclick=e=>{if(e.target.closest('.pdev'))return;$('.pdet',r).classList.toggle('hide')};
-    const b=$('.pdev',r);if(b)b.onclick=()=>{aTipo='ingreso';cCat='PRESTAMO';cCatManual=true;go('efectivo');$('#cImp').value=fmt(p.pendiente);$('#cCon').value='Devolución préstamo '+p.persona;$('#aPer').value=p.persona;$('#aPerW').classList.remove('hide');$('#cImp').focus();toast('Elige cómo te lo devolvió y pulsa «Añadir ingreso»')};
+    const b=$('.pdev',r);if(b)b.onclick=()=>{aTipo='ingreso';cCat='PRESTAMO';cCatManual=true;go('efectivo');$('#cImp').value=fmt(p.pendiente);pintarPaso();$('#cCon').value='Devolución préstamo '+p.persona;$('#aPer').value=p.persona;$('#aPerW').classList.remove('hide');$('#cImp').focus();toast('Elige cómo te lo devolvió y pulsa «Añadir ingreso»')};
   });
 }
 function rPatri(){
