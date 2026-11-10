@@ -1391,3 +1391,8 @@ html:root[data-fondo="fluvi"]{--wa:#0891b2;--wb:#06b6d4;--wc:#a5ecf7;--wd:#0b3a4
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #login h1.lmarca .lc{display:none}:root:not([data-theme="light"]) #login h1.lmarca .ld{display:block}}
 :root[data-theme="dark"] #login h1.lmarca .lc{display:none}
 :root[data-theme="dark"] #login h1.lmarca .ld{display:block}
+/* 2.37.1 pestaña activa legible y título del histórico sobre cristal */
+@media (max-width:900px){
+  .tabs .tab[data-t="efectivo"].on{color:var(--ink)}
+  body:not([data-tab="resumen"]) #s-hist>.toolbar>h2{display:inline-block;padding:6px 14px;border-radius:16px;background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink)}
+}
