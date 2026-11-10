@@ -149,7 +149,7 @@ module.exports = {
       await p.evaluate(() => go('resumen')); await p.evaluate(() => go('hist'));
       assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null, 'recuerda las plegadas');
       await p.$eval('#evoCards details[data-ic="ahorro"]', e => e.scrollIntoView({ block: 'center' })); await L.esperar(300);
-      await p.hover('#evoCards details[data-ic="ahorro"] .col:last-child');
+      await p.hover('#evoCards details[data-ic="ahorro"] .col:last-child'); await L.esperar(700); await p.hover('#evoCards details[data-ic="ahorro"] .col:last-child', { position: { x: 10, y: 60 } });
       await p.waitForSelector('#tip.on', { timeout: 3000 });
       assert.match(await p.textContent('#tip'), /Ahorrado/);
       await p.click('#evoCards details[data-ic="gasto"] > summary');

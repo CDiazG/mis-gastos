@@ -171,7 +171,7 @@ function avisoPct(){const s=sumaOtrosPct();
 function go(t,{sub,hist=false}={}){
   if(TAB==='ajustes'&&t!=='ajustes'&&presupuestoImposible()){avisoPct();return false}
   if(APARTADOS[t])SUB[t]=sub!==undefined?sub:'';
-  _hh();TAB=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===(TAB_DE[t]||t)));$$('.evseg button').forEach(b=>b.classList.toggle('on',b.dataset.go===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(TAB_DE[t]||t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
+  _hh();TAB=t;document.body.dataset.tab=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===(TAB_DE[t]||t)));$$('.evseg button').forEach(b=>b.classList.toggle('on',b.dataset.go===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(TAB_DE[t]||t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
   const tp=$('#tip');if(tp)tp.classList.remove('on');
   const sec=$('#s-'+t);if(sec){sec.classList.add('anim');clearTimeout(sec._a);sec._a=setTimeout(()=>sec.classList.remove('anim'),900)}
   if(APARTADOS[t])pintarApartado(t);

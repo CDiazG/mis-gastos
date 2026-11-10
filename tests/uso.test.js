@@ -227,8 +227,7 @@ module.exports = {
     return (async () => {
       const { p } = await dentro(browser, estado, { viewport: { width: 1280, height: 800 } }); await L.esperar(200);
       const g = await p.evaluate(() => { const t = $('#tabs').getBoundingClientRect(), m = $('main').getBoundingClientRect(), h = $('header').getBoundingClientRect(); return { tl: Math.round(t.left), tw: Math.round(t.width), tt: Math.round(t.top), hb: Math.round(h.bottom), ml: Math.round(m.left), w: document.documentElement.scrollWidth, vis: [...$$('#tabs .tab')].filter(b => b.offsetParent).map(b => b.textContent.trim()) }; });
-      assert.ok(g.tl <= 0 && g.tw >= 200, 'el menú es una columna a la izquierda');
-      assert.ok(g.tt >= g.hb - 2, 'el menú empieza debajo de la cabecera');
+      assert.ok(g.tl <= 0 && g.tw >= 80 && g.tw <= 100, 'el menú es una columna estrecha a la izquierda');
       assert.ok(g.ml >= g.tw, 'el contenido no queda tapado por el menú');
       assert.ok(g.w <= 1281, 'no hay desplazamiento horizontal');
       assert.ok(g.vis.includes('Evolución') && !g.vis.includes('Patrimonio') && !g.vis.includes('Importar'), g.vis.join());

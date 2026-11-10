@@ -1109,3 +1109,100 @@ header{background:var(--bg);box-shadow:none}
 .tabs .tab[data-t="importar"],.tabs .tab[data-t="patri"],.tabs .tab[data-t="ajustes"],.tabs .tab[data-t="ayuda"],.tabs .tab[data-t="usuarios"],.tabs .tabMas{display:none!important}
 .who{position:relative}
 .who.aviso::after{content:'';position:absolute;right:-1px;top:-1px;width:10px;height:10px;border-radius:50%;background:var(--bad,#d33);border:2px solid var(--bg)}
+
+/* ===== Estilo Revolut (2.31): fondo animado, píldoras translúcidas, columna estrecha ===== */
+:root{--ease:cubic-bezier(.22,.8,.3,1);--wa:#0b7a55;--wb:#27c28b;--wc:#9be8c4;--wd:#04281f;--hue:0deg;--br:1;
+  --wpimg:radial-gradient(62% 46% at 18% 20%,var(--wb) 0,transparent 70%),radial-gradient(56% 42% at 86% 32%,var(--wc) 0,transparent 72%),radial-gradient(80% 55% at 50% 0%,var(--wa) 0,transparent 78%),linear-gradient(180deg,var(--wd),var(--wa) 60%,transparent)}
+:root[data-pal="pizarra"]{--wa:#0a4fc4;--wb:#2f8cff;--wc:#8fd0ff;--wd:#061a52;--acc:#2f66f2;--acc-ink:#fff;--acc-soft:#e3ebfe;--acc-2:#8fb0ff}
+@media (prefers-color-scheme:dark){:root[data-pal="pizarra"]:not([data-theme="light"]){--acc:#6c9bff;--acc-ink:#0b1530;--acc-soft:#1f2c4d;--acc-2:#9db9ff}}
+:root[data-pal="pizarra"][data-theme="dark"]{--acc:#6c9bff;--acc-ink:#0b1530;--acc-soft:#1f2c4d;--acc-2:#9db9ff}
+:root[data-pal="oceano"]{--wa:#0a6a8f;--wb:#22b3d9;--wc:#a5ecf7;--wd:#04293a}
+:root[data-pal="lavanda"]{--wa:#5a3fb0;--wb:#9b7df0;--wc:#d6c8ff;--wd:#1d1050}
+:root[data-pal="terracota"]{--wa:#c4491f;--wb:#ff8a5c;--wc:#ffd0a8;--wd:#4a1707}
+:root[data-pal="frambuesa"]{--wa:#b0246a;--wb:#ff5c9c;--wc:#ffc2dc;--wd:#4a0a2c}
+:root[data-pal="ciruela"]{--wa:#6a2f8f;--wb:#c05ce0;--wc:#f0c4ff;--wd:#26073f}
+:root[data-pal="uva"]{--wa:#4b2bc4;--wb:#7a5cff;--wc:#b7a8ff;--wd:#150a58}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--br:.72}}
+:root[data-theme="dark"]{--br:.72}
+@keyframes fondoflota{from{background-position:0% 0%,100% 20%,50% 0%,0 0}to{background-position:70% 45%,25% 70%,15% 35%,0 0}}
+/* Suavidad general */
+.btn,.card,.tab,.link,.kpi,.catchip,.evseg button,.monthnav .m,summary{transition:background-color .28s var(--ease),color .2s var(--ease),box-shadow .3s var(--ease),transform .3s var(--ease),border-color .2s var(--ease),opacity .25s}
+details[open]>.ib{animation:despl .38s var(--ease)}
+.card:hover{box-shadow:0 6px 24px rgba(0,0,0,.06)}
+.btn.pri{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 72%,#fff));border-color:transparent}
+.btn{border-radius:999px}
+/* Enlaces subrayados → botoncitos */
+.link,#login button.link{background:var(--soft);color:var(--ink);text-decoration:none;padding:6px 13px;border-radius:999px;font-weight:600;font-size:.92em;border:0;display:inline-flex;align-items:center;gap:4px}
+.link:hover,#login button.link:hover{background:var(--line)}
+.link:active{transform:scale(.96)}
+.migas .link,.paglist .link{background:none;padding:0;color:var(--acc);border-radius:6px}
+.migas .link:hover,.paglist .link:hover{background:none;text-decoration:underline}
+/* Mes: pastilla blanca con flechas */
+.monthnav{background:var(--card);border-radius:999px;padding:4px;box-shadow:0 1px 2px rgba(0,0,0,.05);gap:2px}
+.monthnav .m{background:none!important;width:150px;font-size:15px;padding:2px 6px;border-radius:999px}
+.monthnav .btn.icon{border:0;background:none;border-radius:50%;width:34px;height:34px;padding:0}
+.monthnav .btn.icon:hover{background:var(--soft)}
+.monthnav .btn.sm{border:0;background:var(--soft);padding:5px 12px}
+.monthnav.pasado .m{background:var(--warn-soft)!important}
+.who .avatar{width:38px;height:38px;border-radius:50%;background:var(--soft);color:var(--ink);border:0;font-weight:600}
+.cmenu{border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.22)}
+.cmenu.hide{display:none}
+/* Ordenador: columna estrecha con el nombre bajo el icono */
+@media (min-width:901px){
+  body{padding-left:88px}
+  header{margin-left:-88px;padding-left:88px}
+  .brand{position:fixed;left:0;top:0;width:88px;height:74px;justify-content:center;z-index:30;background:var(--bg)}
+  .logoapp{width:38px;height:38px}
+  .tabs{top:0;width:88px;padding:84px 8px 16px;gap:6px;align-items:center;border-right:1px solid var(--line);background:var(--bg);z-index:25}
+  .tab{flex-direction:column;gap:4px;width:100%;padding:4px 2px 6px;border-radius:14px;font-size:11.5px;font-weight:500;color:var(--muted);background:none!important;white-space:normal;text-align:center;line-height:1.15}
+  .tab .ti{width:44px;height:36px;padding:8px 12px;border-radius:14px;opacity:1;transition:background-color .25s var(--ease)}
+  .tab:hover .ti{background:var(--soft)}
+  .tab.on{color:var(--ink);font-weight:600}
+  .tab.on .ti{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .monthnav{margin-left:0}
+  .top{max-width:1040px}
+}
+/* Móvil: fondo animado a pantalla completa y píldoras translúcidas */
+@media (max-width:900px){
+  body{position:relative;isolation:isolate}
+  body::before{content:'';position:absolute;z-index:-1;top:0;left:0;right:0;height:min(92vh,780px);pointer-events:none;background:var(--wpimg);background-size:150% 150%,150% 150%,150% 150%,100% 100%;filter:hue-rotate(var(--hue)) brightness(var(--br));animation:fondoflota 26s ease-in-out infinite alternate;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 30%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 30%,transparent 100%)}
+  body:not([data-tab="resumen"])::before{height:min(46vh,380px);opacity:.55}
+  body[data-tab="hist"]{--hue:95deg}
+  body[data-tab="movs"]{--hue:-60deg}
+  body[data-tab="efectivo"]{--hue:150deg}
+  header{background:transparent;box-shadow:none;position:sticky}
+  .top{flex-wrap:nowrap;gap:10px;padding:12px 12px 6px}
+  .brand{display:none}
+  .userbox{order:-1;margin-left:0}
+  .monthnav{order:0;flex:1;width:auto;justify-content:space-between;background:rgba(40,52,70,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;box-shadow:none}
+  .monthnav .btn.icon,.monthnav .m{color:#fff}
+  .monthnav .m{flex:1;width:auto;min-width:0}
+  .monthnav .btn.sm{background:rgba(255,255,255,.22);color:#fff}
+  .monthnav.pasado .m{color:#ffe3a3;background:none!important}
+  .who .avatar{width:44px;height:44px;background:rgba(40,52,70,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#fff;font-size:15px}
+  #instalarTop{display:none}
+  .card{background:color-mix(in srgb,var(--card) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  /* cifra principal flotando, sin tarjeta */
+  #kpis .kpi:nth-child(3){background:none!important;overflow:visible;box-shadow:none;backdrop-filter:none;padding:26px 8px 8px}
+  #kpis .kpi:nth-child(3)::before,#kpis .kpi:nth-child(3)::after{display:none}
+  .acc4 i{background:rgba(255,255,255,.55);color:#16304f;backdrop-filter:blur(8px)}
+  .acc4 button{color:#fff;text-shadow:0 1px 8px rgba(0,30,80,.35)}
+  /* barra de abajo clara y flotante */
+  .tabs{background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 30px rgba(0,0,0,.16)}
+  .tabs .tab{color:var(--muted)}
+  .tabs .tab.on{background:var(--soft);color:var(--ink)}
+  .tabs .tab.on .ti{color:var(--ink)}
+}
+/* Pantalla de entrada con el mismo fondo animado */
+#login{background:var(--bg);overflow:hidden;isolation:isolate}
+#login::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--wpimg);background-size:150% 150%,150% 150%,150% 150%,100% 100%;filter:brightness(var(--br));animation:fondoflota 26s ease-in-out infinite alternate}
+#login .box{background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:28px}
+.sinanim body::before,.sinanim #login::before,.sinanim.x{animation:none!important}
+@media (prefers-reduced-motion:reduce){body::before,#login::before{animation:none!important}}
+@media (max-width:900px){
+  #monthnav .m,#monthnav .m small,#monthnav .btn.icon{color:#fff!important}
+  #monthnav.pasado .m{color:#ffe3a3!important}
+  #s-resumen .hola{color:#fff}
+  #s-resumen .hola .hola-t,#s-resumen .hola b{color:#fff;text-shadow:0 1px 6px rgba(0,30,80,.35)}
+  #s-resumen .hola .btn{background:rgba(255,255,255,.55);color:#16304f}
+}
