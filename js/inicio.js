@@ -13,13 +13,21 @@ function columnas(items,{media=false,neg=false}={}){
   return `<div class="cplot"><div class="cbars" style="--z:${z}%">${media?`<div class="cmed" style="top:${(max-avg)/rango*100}%"><span>media ${eur(avg,0)}</span></div>`:''}
     ${items.map(i=>{const h=Math.abs(i.v)/rango*100;return `<div class="col${i.actual?' act':''}" ${i.m?`data-m="${i.m}" data-ir="resumen"`:''} ${i.h?`data-tiph="${esc(i.h)}"`:`data-tip="${esc(i.tip)}"`} tabindex="0" aria-label="${esc(i.tip)}"><i class="${i.v<0?'n':neg?'p':media&&i.v>avg*1.2?'alto':''}" style="height:${Math.max(i.v?1.5:0,h)}%;${i.v>=0?`bottom:${100-z}%`:`top:${z}%`}"></i></div>`}).join('')}</div>
     <div class="clabels">${items.map((i,k)=>`<span>${items.length>8&&k%2?'':i.l}</span>`).join('')}</div></div>`}
+// Barras apiladas con esquinas redondeadas; el mes en curso lleva un trozo discontinuo con lo previsto
+function apiladas(items,media){
+  if(!items.length)return '<p class="small mut">Sin datos todavía.</p>';
+  const max=Math.max(1,...items.map(i=>i.n+i.o+i.proy));
+  return `<div class="cplot"><div class="cbars apil">${media?`<div class="cmed" style="top:${(1-media/max)*100}%"><span>media ${eur(media,0)}</span></div>`:''}
+    ${items.map(i=>{const hn=i.n/max*100,ho=i.o/max*100,hp=i.proy/max*100;return `<div class="col${i.actual?' act':''}" data-m="${i.m}" data-ir="resumen" data-tiph="${esc(i.h)}" tabindex="0" aria-label="${esc(i.tip)}">
+      <i class="s s1" style="height:${hn}%;bottom:0"></i><i class="s s2" style="height:${ho}%;bottom:${hn}%"></i>${hp?`<i class="s sp" style="height:${hp}%;bottom:${hn+ho}%"></i>`:''}</div>`}).join('')}</div>
+    <div class="clabels">${items.map((i,k)=>`<span>${items.length>8&&k%2?'':i.l}</span>`).join('')}</div></div>`}
 // Contenido del bocadillo: título y filas [color, nombre, valor, clase]
 function tipHtml(tit,filas){return `<div class="tt">${tit}</div>`+filas.map(([c,n,v,cl])=>`<div class="tr">${c?`<i style="background:${c}"></i>`:'<i class="nada"></i>'}<span>${n}</span><b class="${cl||''}">${v}</b></div>`).join('')}
 // Rosco de categorías con el total en el centro y la leyenda al lado (cada fila lleva a sus movimientos)
 function rosco(items,opt){
-  const tot=items.reduce((a,x)=>a+x.v,0)||1,R=40,L=2*Math.PI*R,hueco=items.length>1?1.2:0;let ac=0;
-  const segs=items.map((x,k)=>{const f=x.v/tot*L,s=`<circle class="rseg" r="${R}" cx="50" cy="50" fill="none" stroke="${x.col||(x.id?`var(--c${k+1})`:'var(--muted)')}" stroke-width="15" stroke-dasharray="${Math.max(0.01,f-hueco).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-ac).toFixed(2)}" transform="rotate(-90 50 50)" data-cat="${x.id||''}" data-tiph="${esc(tipHtml(esc(x.n),[[x.col||(x.id?`var(--c${k+1})`:'var(--muted)'),x.tip||'Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %'],...(x.id?[['','',IR_TXT('sus movimientos')]]:[])]))}"></circle>`;ac+=f;return s}).join('');
-  return `<div class="rosco"><svg viewBox="0 0 100 100" role="img" aria-label="Reparto del gasto"><circle r="${R}" cx="50" cy="50" fill="none" stroke="var(--soft)" stroke-width="15"/>${segs}
+  const tot=items.reduce((a,x)=>a+x.v,0)||1,R=40,L=2*Math.PI*R,A=L*.75,hueco=items.length>1?4:0;let ac=4;
+  const segs=items.map((x,k)=>{const f=x.v/tot*(A-8-hueco*(items.length-1)),s=`<circle class="rseg" r="${R}" cx="50" cy="50" fill="none" stroke="${x.col||(x.id?`var(--c${k+1})`:'var(--muted)')}" stroke-width="15" stroke-dasharray="${Math.max(0.01,f).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="${(-ac).toFixed(2)}" transform="rotate(135 50 50)" data-cat="${x.id||''}" data-tiph="${esc(tipHtml(esc(x.n),[[x.col||(x.id?`var(--c${k+1})`:'var(--muted)'),x.tip||'Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %'],...(x.id?[['','',IR_TXT('sus movimientos')]]:[])]))}"></circle>`;ac+=f+hueco;return s}).join('');
+  return `<div class="rosco"><svg viewBox="0 0 100 100" role="img" aria-label="Reparto del gasto"><circle r="${R}" cx="50" cy="50" fill="none" stroke="var(--soft)" stroke-width="15" stroke-dasharray="${(A-8).toFixed(2)} ${L.toFixed(2)}" stroke-dashoffset="-4" transform="rotate(135 50 50)"/>${segs}
       <text x="50" y="${opt&&opt.centro?51:48}" text-anchor="middle" font-size="${opt&&opt.centro?15:11}" font-weight="700" fill="var(--ink)">${opt&&opt.centro?opt.centro.t:eur(tot,0)}</text><text x="50" y="${opt&&opt.centro?62:60}" text-anchor="middle" font-size="6.5" fill="var(--muted)">${opt&&opt.centro?opt.centro.s:'gastado'}</text></svg>
     <div class="rleyenda">${items.map((x,k)=>`<div class="gbar rfila" data-cat="${x.id}" ${x.id?'title="Ver movimientos"':''}><span class="gn"><i style="background:${x.col||(x.id?`var(--c${k+1})`:'var(--muted)')}"></i>${x.e?`<span class="ce">${x.e}</span>`:''}${esc(x.n)}</span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}</div></div>`}
 // Avisos pendientes: van en el menú del círculo (con un puntito naranja si hay alguno)
@@ -68,11 +76,14 @@ function rInicio(){
     <div><small>Invertido en ${anio}</small><b class="num">${eur(Inv,0)}</b><span>dentro del ahorro</span></div>
     <div><small>Gasto medio al mes</small><b class="num">${eur(delAnio.length?G/delAnio.length:0,0)}</b><span>${delAnio.length} mes${delAnio.length>1?'es':''} de ${anio}</span></div></div>
     <div class="toolbar" style="margin:10px 0 0"><button class="link small" type="button" data-go="patri">Ver patrimonio →</button></div>`);
-  // 4. Gasto mes a mes
+  // 4. Gasto mes a mes: barras apiladas (necesidades + ocio) y, en el mes en curso, lo que falta según tu ritmo
+  const grupoDe=id=>(CATS.find(c=>c.id===id)||{}).g;
+  const partesDe=x=>{let n=0,o=0;for(const [k,v] of Object.entries(x.by||{})){if(k==='SINCAT'){o+=v;continue}const g=grupoDe(k);if(g==='FIJOS')n+=v;else if(g==='VARIABLES')o+=v}return [n,o]};
   const media=conDatos.length?conDatos.reduce((a,x)=>a+x.consumo,0)/conDatos.length:0;
-  html+=tarjeta('gasto','Gasto de los últimos 12 meses',columnas(st12.map(x=>({m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.consumo),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${eur(x.consumo)} gastado`,
-      h:tipHtml(nombreMesCap(x.m)+(x.m===hoyM?' <span class="mut">(en curso)</span>':''),[['var(--acc)','Gastado',eur(x.consumo,0)],...(media?[['',x.consumo>=media?'▲ Más que la media':'▼ Menos que la media',eur(Math.abs(x.consumo-media),0),x.consumo>media*1.2?'neg':x.consumo<=media?'pos':'']]:[]),['','',IR_TXT('el resumen del mes')]])})),{media:true})+
-    `<p class="small mut" style="margin:8px 0 0">La línea discontinua es tu gasto medio (${eur(media,0)} al mes). La columna más clara es el mes en curso, que aún no ha terminado.</p>`);
+  html+=tarjeta('gasto','Gasto de los últimos 12 meses',apiladas(st12.map(x=>{const [n,o]=partesDe(x),act=x.m===hoyM,pr=act&&ritmo&&ritmo>x.consumo?r2(ritmo-x.consumo):0;
+      return {m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),n:r2(n),o:r2(o),proy:pr,actual:act,tip:`${nombreMes(x.m)}: ${eur(x.consumo)} gastado`,
+      h:tipHtml(nombreMesCap(x.m)+(act?' <span class="mut">(en curso)</span>':''),[['var(--c1)','Necesidades',eur(n,0)],['var(--c3)','Ocio y otros',eur(o,0)],...(pr?[['','Previsto a fin de mes',eur(x.consumo+pr,0)]]:[]),['','',IR_TXT('el resumen del mes')]])}}),media)+
+    `<div class="leyg"><span><i style="background:var(--c1)"></i>Necesidades</span><span><i style="background:var(--c3)"></i>Ocio y otros</span><span><i class="pr"></i>Previsto</span></div>`);
   // 5. Ahorro mes a mes
   html+=tarjeta('ahorro','Ahorro de los últimos 12 meses',columnas(st12.map(x=>({m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.ahorro),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${x.ahorro<0?'gastaste '+eur(-x.ahorro)+' más de lo que entró':'ahorraste '+eur(x.ahorro)}${x.ingresos?' ('+Math.round(x.ahorro/x.ingresos*100)+'%)':''}`,
       h:tipHtml(nombreMesCap(x.m)+(x.m===hoyM?' <span class="mut">(en curso)</span>':''),[['var(--good)','Ingresos',eur(x.ingresos,0)],['var(--acc)','Gastado',eur(x.consumo,0)],[x.ahorro<0?'var(--bad)':'var(--good)',x.ahorro<0?'Gastaste de más':'Ahorrado',eur(x.ahorro,0)+(x.ingresos?` · ${Math.round(x.ahorro/x.ingresos*100)} %`:''),x.ahorro<0?'neg':'pos'],['','',IR_TXT('el resumen del mes')]])})),{neg:true})+

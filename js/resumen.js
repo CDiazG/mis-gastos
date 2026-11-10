@@ -65,7 +65,7 @@ function rResumen(){
     const gp=cs.reduce((a,c)=>a+presupuestoCat(MES,c.id,st).p,0);
     const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
     const pctG=Math.round(cs.reduce((a,c)=>a+pctCat(c.id,st.base),0)*10)/10;
-    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar"><span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span><span class="bar gb ${g.id==='AHORRO'?'':gg>gp+0.5?'over':gp>0&&gg>=gp*0.8?'warn':'ok'}"><i style="width:${gp>0?Math.max(0,Math.min(100,gg/gp*100)):(gg>0?100:0)}%"></i></span></button>`+
+    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar">${anillo(gp>0?gg/gp*100:(gg>0?100:0),g.id==='AHORRO'?'ok':gg>gp+0.5?'over':gp>0&&gg>=gp*0.8?'warn':'ok')}<span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span></button>`+
       cs.map(c=>{
         const pc=presupuestoCat(MES,c.id,st),p=pc.p, v=st.by[c.id]||0, rest=p-v;
         if(c.id==='OTROS'&&!v)return '';
@@ -82,8 +82,7 @@ function rResumen(){
           return `<div class="crow" data-cat="${c.id}"><div class="a"><span><span class="ce">${catE(c.id)}</span>${c.n} ${dz.pendiente>0.5?'<span class="tag cash">pendiente</span>':dz.debido>0?'<span class="tag good">al día</span>':''}</span><span class="num"><b>${eur(dz.pagado)}</b> <span class="mut small">de ${eur(dz.debido,0)}</span></span></div>
             <div class="bar"><i style="width:${w2}%"></i></div>
             <div class="b"><span>${dz.pct}% de los ingresos del mes</span>${dz.pendiente>0.5?`<button class="btn sm dzpag" type="button">Marcar ${eur(dz.pendiente,0)} pagado</button>`:'<span class="pos">pagado</span>'}</div></div>`}
-        return `<div class="crow" data-cat="${c.id}"><div class="a"><span><span class="ce">${catE(c.id)}</span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b></span></div>
-          <div class="bar ${isSave?'':over?'over':p>0&&v>=p*0.8?'warn':'ok'}"><i style="width:${w}%"></i></div>
+        return `<div class="crow" data-cat="${c.id}"><div class="a"><span><i class="sd ${isSave?'':p<=0&&v<=0?'nada':over?'over':p>0&&v>=p*0.8?'warn':'ok'}"></i><span class="ce">${catE(c.id)}</span>${c.n}${cerca?` <span class="tag cash">${Math.round(v/p*100)}%</span>`:''}</span><span class="num"><b>${eur(v)}</b>${p>0?` <span class="mut small">de ${eur(p,0)}</span>`:''}</span></div>
           <div class="b"><span class="bd">${enEur(c.id)?'fijo':fmt(+S.aj.pct[c.id]||0,1)+'%'} · presupuesto ${eur(p,0)}${pc.extra?` <span class="tag acc" title="Lo que no gastaste los meses anteriores">↻ ${eur(pc.extra,0)} acumulado</span>`:''}${isSave?'':cmp(c.id,v)}</span><span class="num ${isSave?(rest>0.5?'mut':'pos'):(rest<-0.5?'neg':'')}">${isSave?(p<=0.5&&v<=0.5?'':rest>0.5?'faltan '+eur(rest,0):'✓ cumplido'):(rest<-0.5?'te pasas '+eur(-rest,0):'quedan '+eur(rest,0))}</span></div></div>`;
       }).join('')+(g.id==='VARIABLES'&&Math.abs(st.by.SINCAT||0)>0.009?`<div class="crow" data-cat="SINCAT"><div class="a"><span><span class="ce">❓</span>Sin categorizar <span class="tag cash">${st.sinCat}</span></span><span class="num"><b>${eur(st.by.SINCAT)}</b></span></div>
           <div class="b"><span>Sin presupuesto · pulsa para ponerles categoría${cmp('SINCAT',st.by.SINCAT)}</span></div></div>`:'')+'</div>';
@@ -225,3 +224,7 @@ function rObjetivos(){
 
 // En el móvil, «Gastos fijos» y «Objetivos» empiezan plegados; se abren tocando su título
 document.addEventListener('click',e=>{const h=e.target.closest('.pleg>.ghead');if(!h||e.target.closest('button,a,input,select'))return;h.parentNode.classList.toggle('abierta')});
+
+// Anillo pequeño del grupo: cuánto llevas gastado de su presupuesto
+function anillo(pct,cls){const R=14,L=2*Math.PI*R,f=Math.max(0,Math.min(100,pct))/100*L;
+  return `<svg class="anillo ${cls}" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="${R}" fill="none" stroke-width="4.5" class="pista"/><circle cx="18" cy="18" r="${R}" fill="none" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="${f.toFixed(2)} ${L.toFixed(2)}" transform="rotate(-90 18 18)" class="arco"/></svg>`}
