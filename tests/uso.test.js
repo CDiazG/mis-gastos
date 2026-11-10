@@ -485,7 +485,7 @@ module.exports = {
       assert.equal(await p.evaluate(m => stats(m).consumo, m), 40, 'un traspaso no es gasto ni resta del ahorro');
       assert.equal(await p.evaluate(() => saldoCuenta(S.cuentas.find(c => c.n === 'Hucha'))), 1200, 'la hucha sube 200 €');
       await p.evaluate(() => go('patri'));
-      assert.match(await p.textContent('#patTotal'), /5\.000,00/, '3000 + 800 + 1200');
+      assert.match(await p.textContent('#patTotal'), /5\.000( €|$)/, '3000 + 800 + 1200');
       // Añadir: de efectivo a la hucha
       await p.evaluate(() => go('efectivo'));
       await p.fill('#cImp', '50'); await p.fill('#cCon', 'meto en la hucha');

@@ -222,3 +222,6 @@ function rObjetivos(){
     $('.od',row).onclick=()=>confirmar('Borrar objetivo','¿Borrar «'+o.nombre+'»? Sus aportaciones se olvidan (no afecta a tus movimientos).','Borrar',()=>{S.objetivos=os.filter(x=>x!==o);save();rObjetivos()});
   });
 }
+
+// En el móvil, «Gastos fijos» y «Objetivos» empiezan plegados; se abren tocando su título
+document.addEventListener('click',e=>{const h=e.target.closest('.pleg>.ghead');if(!h||e.target.closest('button,a,input,select'))return;h.parentNode.classList.toggle('abierta')});

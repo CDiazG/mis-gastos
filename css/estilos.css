@@ -880,3 +880,47 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
   .sugtab td.sgnota{grid-column:1/-1}
   .sugtab td.sgnota:empty{display:none}
 }
+
+@font-face{font-family:"Inter";font-weight:400 500;font-display:swap;src:url(../fuentes/Inter-Regular.woff) format("woff")}
+@font-face{font-family:"Inter";font-weight:600 700;font-display:swap;src:url(../fuentes/Inter-SemiBold.woff) format("woff")}
+/* ===== Vista limpia (2.26): Inter, jerarquía de tres niveles, tarjetas sin borde, espaciado de 8 px ===== */
+:root{--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--rad:16px;--rad-s:10px;
+  --shadow:0 1px 2px rgba(20,30,25,.04),0 4px 16px rgba(20,30,25,.05)}
+body{font-family:var(--sans);font-size:15px;font-weight:400;font-feature-settings:"tnum" 1,"cv11" 1}
+.num,.kpi .v,.mesTit .mt{font-feature-settings:"tnum" 1}
+b,strong,th,.brand,h3,h4,.tab.on{font-weight:600}
+h2{font-size:20px;font-weight:600}
+.card{border:0;border-radius:var(--rad)}
+.kpi,.tcard,.alert{border-radius:var(--rad)}
+.kpi{border-color:transparent}
+.btn,select,input,textarea{border-radius:var(--rad-s)}
+.ghead{border-bottom:0;padding:16px 20px 8px}
+.ghead h3,.ghead .t{font-size:16px;font-weight:600}
+.crow{border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);padding:12px 20px}
+.crow:last-child{border-bottom:0}
+.crow .bd,.mut,small,.tag{font-size:12.5px}
+header{border-bottom:0;box-shadow:0 1px 0 color-mix(in srgb,var(--line) 70%,transparent)}
+main{padding-top:24px}
+.card+.card,.kpis,#kpis{margin-top:16px}
+@media (max-width:640px){
+  .card{border-radius:14px}
+  .ghead{padding:14px 16px 6px}
+  .crow{padding:11px 16px}
+  main{padding:16px 16px 96px}
+}
+@media (max-width:640px){
+  .pleg>.ghead{cursor:pointer;position:relative;padding-right:34px}
+  .pleg>.ghead::after{content:'';position:absolute;right:18px;top:50%;width:7px;height:7px;border:solid var(--muted);border-width:0 2px 2px 0;transform:translateY(-70%) rotate(45deg);transition:transform .15s}
+  .pleg.abierta>.ghead::after{transform:translateY(-30%) rotate(-135deg)}
+  .pleg:not(.abierta)>:not(.ghead){display:none}
+}
+@media (min-width:901px){
+  main{max-width:1040px}
+  #s-resumen .groups{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+}
+@media (max-width:640px){
+  #s-movs td .det{display:none}
+  #s-movs td .tag{font-size:11px;padding:1px 6px;opacity:.85}
+  #s-movs .catchip{font-size:12px;color:var(--muted);background:none;padding:0;border:0}
+  #s-movs .catchip.sin{color:var(--warn)}
+}
