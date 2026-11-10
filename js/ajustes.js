@@ -119,17 +119,18 @@ function rSug(){
   if(!g){el.innerHTML='<h3>Sugerencia de presupuesto</h3><p class="small mut" style="margin:6px 0 0">Hacen falta al menos 3 meses con gastos para poder sugerir un presupuesto.</p>';return}
   const nota=f=>{
     if(f.c.id==='DIEZMO')return f.mean<0.5?'No hay ningún diezmo apuntado en estos meses':'Media '+eur(f.mean,0)+' al mes';
-    if(f.c.id==='AHORRO')return g.extraAhorro?`Incluye ${g.extraAhorro} puntos que sobran del resto`:f.recorte?`<span class="neg">Reducido ${f.recorte} puntos: los gastos habituales no dejan más</span>`:'Se mantiene tu objetivo';
-    if(f.c.g==='AHORRO')return f.recorte?`<span class="neg">Reducido ${f.recorte} puntos: los gastos habituales no dejan más</span>`:'Se mantiene tu objetivo';
-    if(f.recorte)return `<span class="neg">Recortado ${f.recorte} punto${f.recorte>1?'s':''} por debajo de lo habitual para que todo sume 100 %</span>`;
+    if(f.c.id==='AHORRO')return g.extraAhorro?`Incluye ${fmt(g.extraAhorro,1)} puntos que sobran del resto`:f.recorte?`<span class="neg">Reducido ${fmt(f.recorte,1)} puntos: los gastos habituales no dejan más</span>`:'Se mantiene tu objetivo';
+    if(f.c.g==='AHORRO')return f.recorte?`<span class="neg">Reducido ${fmt(f.recorte,1)} puntos: los gastos habituales no dejan más</span>`:'Se mantiene tu objetivo';
+    if(f.recorte)return `<span class="neg">Recortado ${fmt(f.recorte,1)} punto${f.recorte>1?'s':''} por debajo de lo habitual para que todo sume 100 %</span>`;
     if(f.sinDatos)return f.obj>0?'<span class="mut">Sin gastos todavía; se mantiene</span>':'';
     if(f.sug-f.obj>=1)return `<span class="neg">Te pasas en ${f.over} de ${f.n} meses</span>`;
     if(f.obj-f.sug>=2)return `<span class="mut">Sobra presupuesto: sueles gastar ${eur(f.hab,0)}</span>`;
     return '<span class="pos">Bien ajustado</span>';
   };
   const sigMes=nombreMes(addMes(mesDe(hoy()),1));
+  const p1=n=>Number.isInteger(+n)?String(n):fmt(n,1);
   const tabla=()=>`<div class="tablewrap"><table class="sugtab"><thead><tr><th>Categoría</th><th class="r">Gasto habitual</th><th class="r">Ahora</th><th class="r">Sugerido</th><th>Por qué</th></tr></thead><tbody>`+
-   g.filas.map(f=>`<tr${f.sug!==f.obj?' class="sugdif"':''}><td class="sgn">${f.c.n}</td><td class="r num" data-l="Gasto habitual">${f.c.g==='AHORRO'?'':eur(f.hab,0)+' <span class="mut small">('+fmt(f.habP,1)+'%)</span>'}</td><td class="r num" data-l="Ahora">${f.obj}% <span class="mut small">${eur(g.base*f.obj/100,0)}</span></td><td class="r num" data-l="Sugerido">${f.sug===f.obj?'<span class="mut">igual</span>':`<b>${f.sug}%</b> <span class="mut small">${eur(g.base*f.sug/100,0)}</span>`}</td><td class="small sgnota">${nota(f)}</td></tr>`).join('')+`</tbody></table></div>`;
+   g.filas.map(f=>`<tr${f.sug!==f.obj?' class="sugdif"':''}><td class="sgn">${f.c.n}</td><td class="r num" data-l="Gasto habitual">${f.c.g==='AHORRO'?'':eur(f.hab,0)+' <span class="mut small">('+fmt(f.habP,1)+'%)</span>'}</td><td class="r num" data-l="Ahora">${p1(f.obj)}% <span class="mut small">${eur(g.base*f.obj/100,0)}</span></td><td class="r num" data-l="Sugerido">${f.sug===f.obj?'<span class="mut">igual</span>':`<b>${p1(f.sug)}%</b> <span class="mut small">${eur(g.base*f.sug/100,0)}</span>`}</td><td class="small sgnota">${nota(f)}</td></tr>`).join('')+`</tbody></table></div>`;
   // Ya aplicada: no hay nada que cambiar
   if(g.aplicada){
     el.innerHTML=`<h3>Sugerencia según los gastos reales</h3>
@@ -253,7 +254,7 @@ function rPrefs(){
   $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab'||k==='rufo')render();if(k==='animaciones')aplicarTema();if(k==='enLinea'&&typeof presencia==='function')presencia()});
 }
 $('#verTuto').onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
-const PALETAS={"verde": {"n": "Verde", "l": ["#0f6b5c", "#e1f0eb", "#f5f4ef"], "d": ["#4db6a0", "#16332d", "#131615"]}, "lavanda": {"n": "Lavanda", "l": ["#6b4fbb", "#ece6fb", "#f6f4fa"], "d": ["#a58cf0", "#2b2445", "#15131c"]}, "oceano": {"n": "Océano", "l": ["#1f5fa8", "#e2edf8", "#f2f6f9"], "d": ["#6aa7ec", "#172b42", "#10151b"]}, "terracota": {"n": "Terracota", "l": ["#b9532f", "#f8e5dc", "#faf5ef"], "d": ["#e58a6b", "#3a241b", "#171311"]}, "frambuesa": {"n": "Frambuesa", "l": ["#ad2f5b", "#f9e1ea", "#fbf4f6"], "d": ["#ec7ca3", "#3d1f2b", "#181215"]}, "ciruela": {"n": "Ciruela", "l": ["#5b3a6e", "#efe7f3", "#f7f5f1"], "d": ["#b88fd0", "#33263b", "#151217"]}};
+const PALETAS={"verde": {"n": "Verde", "l": ["#0f6b5c", "#e1f0eb", "#f5f4ef"], "d": ["#4db6a0", "#16332d", "#131615"]}, "uva": {"n": "Uva", "l": ["#7c4dff", "#ece6ff", "#fbfaff"], "d": ["#a98bff", "#2e2557", "#16122a"]}, "lavanda": {"n": "Lavanda", "l": ["#6b4fbb", "#ece6fb", "#f6f4fa"], "d": ["#a58cf0", "#2b2445", "#15131c"]}, "oceano": {"n": "Océano", "l": ["#1f5fa8", "#e2edf8", "#f2f6f9"], "d": ["#6aa7ec", "#172b42", "#10151b"]}, "terracota": {"n": "Terracota", "l": ["#b9532f", "#f8e5dc", "#faf5ef"], "d": ["#e58a6b", "#3a241b", "#171311"]}, "frambuesa": {"n": "Frambuesa", "l": ["#ad2f5b", "#f9e1ea", "#fbf4f6"], "d": ["#ec7ca3", "#3d1f2b", "#181215"]}, "ciruela": {"n": "Ciruela", "l": ["#5b3a6e", "#efe7f3", "#f7f5f1"], "d": ["#b88fd0", "#33263b", "#151217"]}};
 function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.paleta)||'verde',de=document.documentElement;
   if(t==='auto')delete de.dataset.theme;else de.dataset.theme=t==='claro'?'light':'dark';
   if(p==='verde'||!PALETAS[p])delete de.dataset.pal;else de.dataset.pal=p;

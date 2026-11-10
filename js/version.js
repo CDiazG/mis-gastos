@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.27.0';
+const VERSION='2.28.0';
 const CAMBIOS=[
+ {v:'2.28.0',f:'2026-11-10',c:['Estilo más juguetón: bordes gruesos, botones con relieve que se hunden al tocarlos, barras de progreso más gordas y títulos redondeados.','Nueva paleta «Uva» (morado vivo) en Ajustes → Preferencias → Colores.','Rufo, más redondo, con ojos grandes, mofletes y una cola con la punta blanca.','El presupuesto sugerido ya no enseña decimales de más (6,7 puntos en vez de 6.670000000000002).']},
  {v:'2.27.0',f:'2026-11-10',c:['Resumen: el «Ahorro del mes» pasa a ser la cifra grande, con el objetivo al lado; ingresos y gastado quedan más pequeños.','El mes de la cabecera es más discreto y «Volver al mes actual» solo se ve cuando estás en otro mes.','Gráficos con colores más suaves, barras más finas y fichas más ligeras.','El modo oscuro de serie pasa a un azul marino más descansado.']},
  {v:'2.26.0',f:'2026-11-10',c:['Vista más limpia: letra Inter, tarjetas sin bordes y más aire.','En el móvil, «Gastos fijos» y «Objetivos» empiezan plegados y los movimientos se ven más simples.','Los importes a partir de 1.000 € salen sin decimales.','En el ordenador, el menú pasa a una columna a la izquierda y el contenido es más estrecho y se lee mejor.','Histórico y Patrimonio se juntan en «Evolución» (con un selector arriba), y «Importar» está ahora dentro de Movimientos.']},
  {v:'2.25.0',f:'2026-11-08',c:['Resumen: cada categoría lleva su emoji (también en Movimientos y en los desplegables), y puedes elegir el que quieras en Ajustes → Categorías.','Resumen: los tres bloques (necesidades, ocio y ahorro) muestran su barra de progreso también cuando están recogidos.','Resumen: el gráfico de barras pasa a ser un rosco con cada categoría y lo que has ahorrado, con el porcentaje ahorrado en el centro.','Móvil: el Resumen es más limpio. Los bloques empiezan recogidos, cada categoría ocupa una línea con su barra y lo que te queda, y los recuadros de arriba son más compactos.']},

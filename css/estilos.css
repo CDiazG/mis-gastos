@@ -883,6 +883,7 @@ section.desliza-i{animation:deslI .22s ease-out}section.desliza-d{animation:desl
 
 @font-face{font-family:"Inter";font-weight:400 500;font-display:swap;src:url(../fuentes/Inter-Regular.woff) format("woff")}
 @font-face{font-family:"Inter";font-weight:600 700;font-display:swap;src:url(../fuentes/Inter-SemiBold.woff) format("woff")}
+@font-face{font-family:"Poppins";font-weight:700;font-display:swap;src:url(../fuentes/Poppins-Bold.woff) format("woff")}
 /* ===== Vista limpia (2.26): Inter, jerarquía de tres niveles, tarjetas sin borde, espaciado de 8 px ===== */
 :root{--sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--rad:16px;--rad-s:10px;
   --shadow:0 1px 2px rgba(20,30,25,.04),0 4px 16px rgba(20,30,25,.05)}
@@ -986,3 +987,44 @@ main{padding-top:24px}
 /* Oscuro azulado (solo en la paleta de serie) */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-pal]){--bg:#0f141a;--card:#171e27;--ink:#e6e9ee;--muted:#9aa5b1;--line:#27313d;--soft:#1e2631}}
 :root[data-theme="dark"]:not([data-pal]){--bg:#0f141a;--card:#171e27;--ink:#e6e9ee;--muted:#9aa5b1;--line:#27313d;--soft:#1e2631}
+
+/* ===== Estilo juguetón (2.28): bordes gruesos, botones con relieve, barras gordas, títulos redondeados ===== */
+:root{--acc-d:color-mix(in srgb,var(--acc) 68%,#000);--display:"Poppins","Inter",system-ui,sans-serif}
+:root[data-pal="uva"]{--bg:#fbfaff;--card:#ffffff;--ink:#2d2650;--muted:#7b75a0;--line:#e5e0f7;--soft:#f1eefc;--acc:#7c4dff;--acc-ink:#ffffff;--acc-soft:#ece6ff;--acc-2:#cdbdff}
+@media (prefers-color-scheme:dark){:root[data-pal="uva"]:not([data-theme="light"]){--bg:#16122a;--card:#201a3b;--ink:#efeaff;--muted:#a79fcf;--line:#352d5c;--soft:#2a2349;--acc:#a98bff;--acc-ink:#1a1033;--acc-soft:#2e2557;--acc-2:#cdbdff}}
+:root[data-pal="uva"][data-theme="dark"]{--bg:#16122a;--card:#201a3b;--ink:#efeaff;--muted:#a79fcf;--line:#352d5c;--soft:#2a2349;--acc:#a98bff;--acc-ink:#1a1033;--acc-soft:#2e2557;--acc-2:#cdbdff}
+h2,h3,.brand,.mesTit .mt,.ghead .t,#kpis .kpi:nth-child(3) .v,.evseg button{font-family:var(--display);font-weight:700;letter-spacing:-.01em}
+.brand{color:var(--acc)}
+.card{border:2px solid var(--line);border-bottom-width:4px;border-radius:20px;box-shadow:none}
+.kpi.kok{border-color:var(--good)}
+.btn{border:2px solid var(--line);border-radius:14px;box-shadow:0 4px 0 var(--line);font-weight:700;padding:7px 14px;transition:transform .06s,box-shadow .06s}
+.btn:hover{border-color:var(--line);background:var(--soft)}
+.btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--line)}
+.btn.sm{padding:4px 11px;box-shadow:0 3px 0 var(--line)}
+.btn.sm:active{transform:translateY(3px)}
+.btn.pri,.fab{background:var(--acc);border-color:var(--acc-d);color:var(--acc-ink);box-shadow:0 4px 0 var(--acc-d)}
+.btn.pri:hover{background:var(--acc);filter:brightness(1.06)}
+.btn.pri:active{box-shadow:0 0 0 var(--acc-d)}
+.btn.dan{border-color:color-mix(in srgb,var(--bad) 45%,var(--line));box-shadow:0 4px 0 color-mix(in srgb,var(--bad) 45%,var(--line))}
+.btn:disabled{box-shadow:none;transform:none}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea{border:2px solid var(--line);border-radius:14px;background:var(--card)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--acc)}
+.bar{height:12px;border-radius:99px;background:var(--soft)}
+.bar i{border-radius:99px;box-shadow:inset 0 3px 0 rgba(255,255,255,.28)}
+.ghead .bar.gb{height:12px}
+.alert{border:2px solid color-mix(in srgb,var(--warn) 28%,transparent);border-radius:16px}
+.alert.info{border-color:color-mix(in srgb,var(--acc) 28%,transparent)}
+.alert.bad{border-color:color-mix(in srgb,var(--bad) 28%,transparent)}
+.tag{font-weight:700}
+.evseg{border:2px solid var(--line);background:var(--card)}
+.evseg button.on{background:var(--acc);color:var(--acc-ink);box-shadow:none}
+.kpi .l{font-weight:700}
+.monthnav .m{font-family:var(--display);font-weight:700}
+@media (min-width:901px){
+  .tab{text-transform:uppercase;letter-spacing:.05em;font-size:13px;font-weight:700;border:2px solid transparent}
+  .tab.on{border-color:var(--acc);background:var(--acc-soft)}
+}
+@media (max-width:640px){
+  .tabs .tab.on{background:var(--acc-soft);border-radius:14px}
+  .card{border-radius:18px}
+}

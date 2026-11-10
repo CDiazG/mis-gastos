@@ -7,9 +7,9 @@ const MASCOTA='Rufo';
 function mascota(px=72,pose='saluda'){
   if(pose===true)pose='saluda';if(pose===false||pose==null)pose='';
   const piensa=pose==='piensa',lee=pose==='lee',celebra=pose==='celebra',preocupa=pose==='preocupa';
-  const boca=preocupa?'<path d="M51 77q5-3 10 0" stroke="#2a1d18" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
-    :celebra?'<path d="M50 73q6 7 12 0z" fill="#2a1d18"/><path d="M53 75q3 2 6 0" fill="#f29b8c"/>'
-    :'<path d="M52 74q4 3 8 0" stroke="#2a1d18" stroke-width="1.6" fill="none" stroke-linecap="round"/>';
+  const boca=preocupa?'<path d="M50 78q6-4 12 0" stroke="#2a1d18" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+    :celebra?'<path d="M48 73q8 12 16 0z" fill="#2a1d18"/><path d="M52 77q4 4 8 0 0-2-4-2.4-4 .4-4 2.4z" fill="#ff8f9c"/>'
+    :'<path d="M49 74q3.5 4.4 7 0 3.5 4.4 7 0" stroke="#2a1d18" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
   const brazoD=piensa?'<path d="M72 92C78 86 74 80 66 78" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="65" cy="78" r="4.6" fill="#5a3324"/>'
     :celebra?'<path d="M72 90C81 84 85 76 84 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="84" cy="67" r="4.6" fill="#5a3324"/>'
     :'<path d="M72 92c4 4 5 9 3 13" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/>';
@@ -19,19 +19,21 @@ function mascota(px=72,pose='saluda'){
   return `<svg class="mascota${pose?' pose-'+pose:''}" width="${px}" height="${px}" viewBox="0 0 120 120" aria-hidden="true">
   <ellipse class="m-sombra" cx="60" cy="113" rx="30" ry="4.5" fill="#000" opacity=".1"/>
   <g class="m-todo"><g class="m-giro">
-  <g class="m-cola"><path d="M86 104c20-4 28-26 18-40-6 14-14 18-22 20z" fill="#e2733a"/><path d="M98 76c-2 10-8 16-14 18 8 0 14-4 17-12z" fill="#fff4e8"/></g>
-  <ellipse cx="56" cy="88" rx="24" ry="22" fill="#e2733a"/><ellipse cx="56" cy="94" rx="13" ry="14" fill="#fff4e8"/>
-  <ellipse cx="44" cy="108" rx="7" ry="4" fill="#5a3324"/><ellipse cx="68" cy="108" rx="7" ry="4" fill="#5a3324"/>
-  <g class="m-brazo"><path d="M40 90C31 84 27 76 28 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="28" cy="67" r="4.6" fill="#5a3324"/></g>
+  <g class="m-cola"><path d="M76 98C96 114 124 102 115 66 113 54 104 50 99 58 107 78 96 90 76 88z" fill="#e2733a"/><path d="M99 58C104 50 113 54 115 66 116 72 115 78 113 83 110 72 106 64 99 58z" fill="#fff4e8"/></g>
+  <ellipse cx="56" cy="88" rx="24" ry="22" fill="#e2733a"/><ellipse cx="56" cy="94" rx="14" ry="15" fill="#fff4e8"/>
+  <ellipse cx="44" cy="108" rx="8" ry="4.6" fill="#5a3324"/><ellipse cx="68" cy="108" rx="8" ry="4.6" fill="#5a3324"/>
+  <g class="m-brazo"><path d="M40 90C31 84 27 76 28 68" stroke="#e2733a" stroke-width="8.5" stroke-linecap="round" fill="none"/><circle cx="28" cy="67" r="5" fill="#fff4e8"/></g>
   <g class="m-cabeza">
-  <g class="m-orejai"><path d="M32 50l-4-28 22 16z" fill="#e2733a"/><path d="M33 42l-2-13 10 8z" fill="#5a3324"/></g>
-  <g class="m-orejad"><path d="M80 50l4-28-22 16z" fill="#e2733a"/><path d="M79 42l2-13-10 8z" fill="#5a3324"/></g>
-  <path d="M56 34c-20 0-28 12-28 22 0 10 12 22 28 26 16-4 28-16 28-26 0-10-8-22-28-22z" fill="#e2733a"/>
-  <path d="M56 82c-10-3-20-10-24-20 8 4 16 4 24 8 8-4 16-4 24-8-4 10-14 17-24 20z" fill="#fff4e8"/>
-  <g class="m-ojos"><g class="m-ojoi"><circle cx="46" cy="56" r="4.2" fill="#1c1a19"/><circle cx="47.4" cy="54.5" r="1.3" fill="#fff"/></g><g class="m-ojod"><circle cx="66" cy="56" r="4.2" fill="#1c1a19"/><circle cx="67.4" cy="54.5" r="1.3" fill="#fff"/></g></g>
-  ${preocupa?'<path d="M40 49l9-3M72 49l-9-3" stroke="#5a3324" stroke-width="2" stroke-linecap="round"/>':''}
-  <circle cx="38" cy="64" r="3.6" fill="#f29b8c" opacity=".6"/><circle cx="74" cy="64" r="3.6" fill="#f29b8c" opacity=".6"/>
-  <ellipse cx="56" cy="70" rx="4" ry="3" fill="#2a1d18"/>${boca}
+  <g class="m-orejai"><path d="M26 54l-6-32 26 18z" fill="#e2733a"/><path d="M28 45l-3-15 14 10z" fill="#ffd2c0"/></g>
+  <g class="m-orejad"><path d="M86 54l6-32-26 18z" fill="#e2733a"/><path d="M84 45l3-15-14 10z" fill="#ffd2c0"/></g>
+  <path d="M56 28c-27 0-38 15-38 30 0 15 14 27 38 29 24-2 38-14 38-29 0-15-11-30-38-30z" fill="#e2733a"/>
+  <path d="M19 60l-9 2 8 6zM93 60l9 2-8 6z" fill="#e2733a"/>
+  <ellipse cx="56" cy="38" rx="15" ry="6" fill="#f59a62" opacity=".55"/>
+  <path d="M56 87c-13-1-27-8-34-21 8 4 15 4 22 0 4 4 8 6 12 6s8-2 12-6c7 4 14 4 22 0-7 13-21 20-34 21z" fill="#fff4e8"/>
+  <g class="m-ojos"><g class="m-ojoi"><ellipse cx="43" cy="58" rx="6" ry="6.8" fill="#2a1d18"/><circle cx="45" cy="55.5" r="2.4" fill="#fff"/><circle cx="41" cy="61" r="1.1" fill="#fff"/></g><g class="m-ojod"><ellipse cx="69" cy="58" rx="6" ry="6.8" fill="#2a1d18"/><circle cx="71" cy="55.5" r="2.4" fill="#fff"/><circle cx="67" cy="61" r="1.1" fill="#fff"/></g></g>
+  ${preocupa?'<path d="M36 48l11-4M76 48l-11-4" stroke="#5a3324" stroke-width="2.2" stroke-linecap="round"/>':''}
+  <ellipse cx="33" cy="69" rx="5.5" ry="3.8" fill="#ff8f9c" opacity=".55"/><ellipse cx="79" cy="69" rx="5.5" ry="3.8" fill="#ff8f9c" opacity=".55"/>
+  <path d="M52 68q4-2.4 8 0 0 3.6-4 4.4-4-.8-4-4.4z" fill="#2a1d18"/><circle cx="54.4" cy="68.8" r="1" fill="#fff" opacity=".8"/>${boca}
   </g>
   ${brazoD}${extra}
   </g></g>
