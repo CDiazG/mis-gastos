@@ -64,7 +64,7 @@ async function cerrarBienvenida(p) {
     await p.click('#dlgF >> text=Empezar vacío');
 }
 
-async function salir(p) { await Promise.all([p.waitForNavigation(), p.click('#logout')]); await esperar(300); }
+async function salir(p) { if (!(await p.isVisible('#logout'))) await p.click('#uWho'); await Promise.all([p.waitForNavigation(), p.click('#logout')]); await esperar(300); }
 
 // Fija la contraseña de un usuario simulado (como si hubiera usado el correo de contraseña).
 async function ponerClave(p, correo, clave) {

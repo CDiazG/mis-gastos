@@ -204,7 +204,7 @@ function render(){
   requestAnimationFrame(marcarDeslizables);
 }
 
-function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;$('#uMail').textContent=USER.email||'';const av=$('#uAv');
+function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;$('#uCorreo').textContent=USER.email||'';const av=$('#uAv');
   const ini=(USER.nombre||USER.email||'?').trim().split(/\s+/).slice(0,2).map(s=>s.charAt(0)).join('').toUpperCase();
   [av,$('#uAv2')].forEach(a=>{if(USER.foto){a.textContent='';a.style.background=`center/cover url("${USER.foto}")`}else{a.style.background='';a.textContent=ini}});$('#uWho').title=USER.nombre+' · '+USER.email}
 function cerrarCuenta(){$('#cuentaMenu').classList.add('hide')}
