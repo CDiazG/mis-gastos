@@ -66,7 +66,7 @@ PERSONALIZAR.push({t:'¿Te faltan categorías?',d:'Ya tienes las de siempre. Si 
   init:()=>$$('[data-gcat]').forEach(b=>b.onclick=()=>{const sg=CAT_SUG.find(c=>c.n===b.dataset.gcat);const ex=S.cats.find(x=>norm(x.n)===norm(sg.n));
     if(ex){if(!S.mov.some(m=>m.cat===ex.id)&&!(+S.aj.pct[ex.id])){S.cats=S.cats.filter(x=>x!==ex);S.reglas=S.reglas.filter(r=>r.c!==ex.id);delete S.aj.pct[ex.id];save();refreshCats()}}else anadirCatSug(sg,{silencio:true});pintarTuto()})});
 const RECORRIDO=[
-  {tab:'inicio',sel:'#inicio',t:'Inicio',d:'Tu visión general: lo que tienes, cómo vas en el año, cómo evolucionan tus gastos y tu ahorro, y lo que tienes pendiente. Cada tarjeta se pliega y despliega.'},
+  {tab:'hist',sel:'#evoCards',t:'Evolución',d:'Lo que tienes, cómo vas en el año y cómo evolucionan tus gastos y tu ahorro mes a mes. Cada tarjeta se pliega y despliega.'},
   {tab:'resumen',sel:'#monthnav',t:'Resumen del mes',d:'Aquí pone siempre en qué mes estás. Para cambiarlo, usa las flechas ‹ › de arriba; «Hoy» te devuelve al mes actual.'},
   {tab:'resumen',sel:'#kpis',t:'El mes de un vistazo',d:'Lo que ha entrado, lo que has gastado, lo que ahorras (todo lo que no gastas) y si llegas a tu objetivo de ahorro, que se marca con ✓.'},
   {tab:'resumen',sel:'#groups',t:'Tu presupuesto',d:'Tres columnas: Necesidades, Ocio y caprichos, y Ahorro y donativos. Pulsa una categoría para ver sus movimientos. Si una categoría acumula (↻), lo que no gastas pasa al mes siguiente.'},
@@ -125,9 +125,9 @@ function pintarTuto(){
     ${uno?'':`<div class="tdots">${PASOS.map((_,i)=>`<i class="${i===tutoI?'on':''}"></i>`).join('')}</div>`}
     <div class="tbtns">${uno?'':`<button class="btn sm" type="button" id="tutoSkip">${ult?'Cerrar':p.html?'Omitir':'Saltar'}</button>`}<span class="sp"></span>${tutoI?'<button class="btn sm" type="button" id="tutoAnt">Anterior</button>':''}<button class="btn sm pri" type="button" id="tutoSig">${uno?'Entendido':ult?'¡Empezar!':'Siguiente'}</button></div></div></div>`;
   $('#tuto').classList.remove('hide');if(p.init)p.init();
-  const sk=$('#tutoSkip');if(sk)sk.onclick=()=>{if(p.html&&!ult){tutoI++;pintarTuto()}else{cerrarTuto();if(ult&&!uno)go('inicio')}};
+  const sk=$('#tutoSkip');if(sk)sk.onclick=()=>{if(p.html&&!ult){tutoI++;pintarTuto()}else{cerrarTuto();if(ult&&!uno)go('resumen')}};
   const a=$('#tutoAnt');if(a)a.onclick=()=>{tutoI--;pintarTuto()};
-  $('#tutoSig').onclick=()=>{if(ult){cerrarTuto();if(!uno)go('inicio')}else{tutoI++;pintarTuto()}};
+  $('#tutoSig').onclick=()=>{if(ult){cerrarTuto();if(!uno)go('resumen')}else{tutoI++;pintarTuto()}};
   requestAnimationFrame(colocarSpot);clearTimeout(pintarTuto._t);pintarTuto._t=setTimeout(colocarSpot,350);window.addEventListener('resize',colocarSpot);
 }
 document.addEventListener('keydown',e=>{if(tutoI>=0&&e.key==='Escape'){if(GUIA_COMPLETA&&S){S.aj.guiaV=GUIA_V;save()}cerrarTuto()}});

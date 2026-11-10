@@ -25,7 +25,7 @@ function escucharChat(){
   UNSUB.push(onSnapshot(ref,qs=>{const antes=USER.admin?chNoLeidosAdmin():chNoLeidosUsuario();const r=[];qs.forEach(d=>r.push({id:d.id,...d.data()}));CH_MSGS=r.sort((a,b)=>a.fecha-b.fecha);
     const ahora=USER.admin?chNoLeidosAdmin():chNoLeidosUsuario();
     if(!primera&&ahora>antes&&!(CH_ABIERTO&&CH_MODO==='admin'))toast(USER.admin?'Mensaje nuevo en el chat':'El administrador te ha respondido');
-    primera=false;chMarcarLeidos();rChat();rChatBtn();if(USER.admin){badgeUsuarios();if(TAB==='inicio')rInicio()}},e=>{console.warn('chat',e.code||e);CH_VIVO=false}));
+    primera=false;chMarcarLeidos();rChat();rChatBtn();if(USER.admin){badgeUsuarios();if(TAB==='resumen'||TAB==='hist')rInicio()}},e=>{console.warn('chat',e.code||e);CH_VIVO=false}));
   if(!USER.admin)UNSUB.push(onSnapshot(doc(fb.db,'presencia','admin'),sn=>{CH_PRES=sn.exists()?sn.data():null;rChat()},()=>{}));
 }
 // El administrador avisa de que está conectado (si no lo ha desactivado en Mi perfil)

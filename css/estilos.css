@@ -515,7 +515,7 @@ body.bajando .rufobtn:not(.on),body.bajando .fab{transform:translateY(130%);opac
   .tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line);padding:4px 4px calc(4px + env(safe-area-inset-bottom));justify-content:space-around;overflow:visible;max-width:none;box-shadow:0 -4px 18px rgba(0,0,0,.08)}
   .tabs .tab{flex:1;border-bottom:0;padding:6px 2px;font-size:11px;min-width:0}
   .tabs .tab.on{color:var(--acc)}
-  .tabs .tab[data-t="importar"],.tabs .tab[data-t="hist"],.tabs .tab[data-t="patri"],.tabs .tab[data-t="ajustes"],.tabs .tab[data-t="ayuda"],.tabs .tab[data-t="usuarios"]{display:none}
+
   .tabs .tabMas{display:inline-flex}
   .tabs .tabMas .ti{position:relative}
   .tabs .tab[data-t="efectivo"] .ti{width:40px;height:40px;padding:8px;margin-top:-18px;border-radius:999px;background:var(--acc);color:var(--acc-ink);opacity:1;box-shadow:0 4px 14px rgba(0,0,0,.22);stroke-width:2.2}
@@ -1104,3 +1104,8 @@ header{background:var(--bg);box-shadow:none}
 .cmpie{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 8px 2px;border-top:1px solid var(--line);margin-top:6px}
 .cmpie .sync{display:inline}
 @media (max-width:900px){.cmenu{position:fixed;left:12px;right:12px;top:56px;width:auto}}
+
+/* Barra: solo Resumen, Añadir, Movimientos y Evolución; lo demás está en el círculo */
+.tabs .tab[data-t="importar"],.tabs .tab[data-t="patri"],.tabs .tab[data-t="ajustes"],.tabs .tab[data-t="ayuda"],.tabs .tab[data-t="usuarios"],.tabs .tabMas{display:none!important}
+.who{position:relative}
+.who.aviso::after{content:'';position:absolute;right:-1px;top:-1px;width:10px;height:10px;border-radius:50%;background:var(--bad,#d33);border:2px solid var(--bg)}

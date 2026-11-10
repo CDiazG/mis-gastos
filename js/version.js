@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.29.0';
+const VERSION='2.30.0';
 const CAMBIOS=[
+ {v:'2.30.0',f:'2026-11-10',c:['Nuevo menú en el círculo de arriba a la derecha: Mi perfil, Ajustes, Ayuda, Usuarios y Cerrar sesión','Se acabó la pestaña Inicio: tu dinero y los gráficos de 12 meses están en Evolución, y los avisos pendientes arriba del Resumen','La barra de abajo queda con Resumen, Añadir, Movimientos y Evolución']},
  {v:'2.29.0',f:'2026-11-10',c:['Nuevo estilo sobrio: tarjetas lisas, botones en pastilla y barra de abajo flotante en el móvil.','Nueva paleta «Pizarra» (gris carbón y blanco), de serie en las cuentas nuevas. Los gráficos usan menos colores.','Resumen: el ahorro del mes va centrado, en grande, sobre un fondo con movimiento, con accesos rápidos debajo.','Las fichas se despliegan con una animación suave.','Rufo se retira: el botón de ayuda es ahora un símbolo de chat.']},
  {v:'2.28.0',f:'2026-11-10',c:['Estilo más juguetón: bordes gruesos, botones con relieve que se hunden al tocarlos, barras de progreso más gordas y títulos redondeados.','Nueva paleta «Uva» (morado vivo) en Ajustes → Preferencias → Colores.','Rufo, más redondo, con ojos grandes, mofletes y una cola con la punta blanca.','El presupuesto sugerido ya no enseña decimales de más (6,7 puntos en vez de 6.670000000000002).']},
  {v:'2.27.0',f:'2026-11-10',c:['Resumen: el «Ahorro del mes» pasa a ser la cifra grande, con el objetivo al lado; ingresos y gastado quedan más pequeños.','El mes de la cabecera es más discreto y «Volver al mes actual» solo se ve cuando estás en otro mes.','Gráficos con colores más suaves, barras más finas y fichas más ligeras.','El modo oscuro de serie pasa a un azul marino más descansado.']},

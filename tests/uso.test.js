@@ -199,19 +199,20 @@ module.exports = {
         const w = await p.evaluate(() => document.documentElement.scrollWidth);
         assert.ok(w <= 391, `la pestaña ${t} se sale (${w}px)`);
       }
-      // barra de abajo: Inicio, Resumen, Añadir, Movimientos y Más
+      // barra de abajo: Resumen, Añadir, Movimientos y Evolución
       await p.evaluate(() => go('resumen'));
       const bar = await p.evaluate(() => { const r = $('#tabs').getBoundingClientRect(); return { abajo: Math.round(r.bottom), vis: [...$$('#tabs .tab')].filter(b => b.offsetParent).map(b => b.textContent.trim()) }; });
       assert.ok(bar.abajo >= 828 && bar.abajo <= 844, 'la barra flota pegada abajo');
-      assert.deepEqual(bar.vis, ['Inicio', 'Resumen', 'Añadir', 'Movimientos', 'Más']);
+      assert.deepEqual(bar.vis, ['Resumen', 'Añadir', 'Movimientos', 'Evolución']);
       assert.ok(!(await p.isVisible('#fabCash')), 'en el móvil Añadir va en la barra');
-      await p.tap('#tabMas'); await p.waitForSelector('#masSheet.on');
-      const opc = await p.$$eval('#masSheet .msit', b => b.map(x => x.textContent.trim()));
-      assert.ok(opc.includes('Evolución') && opc.includes('Ajustes') && opc.some(x => x.endsWith('Mi perfil')), opc.join());
-      await p.tap('#masSheet .msit[data-t="hist"]'); await L.esperar(150);
+      await p.tap('#uWho'); await p.waitForSelector('#cuentaMenu:not(.hide)');
+      const opc = await p.$$eval('#cuentaMenu .cmit', b => b.filter(x => x.offsetParent).map(x => x.textContent.trim()));
+      assert.ok(opc.includes('Ajustes') && opc.includes('Ayuda') && opc.includes('Mi perfil'), opc.join());
+      await p.tap('#cuentaMenu [data-cm="ajustes"]'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => TAB), 'ajustes');
+      await p.tap('#tabs .tab[data-t="hist"]'); await L.esperar(150);
       assert.equal(await p.evaluate(() => TAB), 'hist');
-      assert.ok(await p.evaluate(() => $('#tabMas').classList.contains('on')), 'Más queda marcado');
-      assert.equal(await p.$('#masSheet'), null);
+      assert.ok(await p.evaluate(() => $('#tabs .tab[data-t="hist"]').classList.contains('on')), 'Evolución queda marcada');
       // al bajar se apartan los botones flotantes y al subir vuelven
       await p.evaluate(() => go('movs'));
       await p.evaluate(() => { document.body.style.minHeight = '3000px'; scrollTo(0, 0); });
@@ -255,15 +256,15 @@ module.exports = {
       await atras(); assert.equal(await tab(), 'ajustes/', 'atrás vuelve al menú de Ajustes');
       await p.click('.apmenu[data-menu=ajustes] .apit[data-ap=nomina]'); await p.click('#s-ajustes .migas [data-mg]');
       assert.equal(await tab(), 'ajustes/', 'las migas también vuelven');
-      await atras(); assert.equal(await tab(), 'inicio/', 'y luego a Inicio');
+      await atras(); assert.equal(await tab(), 'resumen/', 'y luego al Resumen');
       // atrás cierra primero lo que esté abierto
-      await p.evaluate(() => go('movs')); await p.tap('#tabMas'); await p.waitForSelector('#masSheet');
-      await atras(); assert.equal(await p.$('#masSheet'), null); assert.equal(await tab(), 'movs/');
-      await atras(); assert.equal(await tab(), 'inicio/');
+      await p.evaluate(() => go('movs')); await p.tap('#uWho'); await p.waitForSelector('#cuentaMenu:not(.hide)');
+      await atras(); assert.ok(await p.isHidden('#cuentaMenu')); assert.equal(await tab(), 'movs/');
+      await atras(); assert.equal(await tab(), 'resumen/');
       // desde Inicio avisa antes de salir
       await atras();
       assert.match(await p.textContent('#toast'), /otra vez atrás para salir/);
-      assert.equal(await tab(), 'inicio/');
+      assert.equal(await tab(), 'resumen/');
       // si el presupuesto se pasa del 100 % no deja salir de Ajustes, tampoco con atrás
       await p.evaluate(() => { go('ajustes', { sub: 'presupuesto' }); S.aj.pct.OCIO += 15; });
       await atras();

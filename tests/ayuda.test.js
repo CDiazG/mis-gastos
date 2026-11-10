@@ -168,7 +168,7 @@ module.exports = {
       // recorrido por las pestañas
       const vistas = new Set();
       for (let i = 0; i < 20 && await p.isVisible('#tuto'); i++) { vistas.add(await p.evaluate(() => TAB)); if (await p.textContent('#tutoSig') === '¡Empezar!') break; await p.click('#tutoSig'); }
-      for (const t of ['inicio', 'resumen', 'efectivo', 'movs', 'importar', 'hist', 'patri', 'ajustes', 'perfil', 'ayuda']) assert.ok(vistas.has(t), 'la guía pasa por ' + t);
+      for (const t of ['resumen', 'efectivo', 'movs', 'importar', 'hist', 'patri', 'ajustes', 'perfil', 'ayuda']) assert.ok(vistas.has(t), 'la guía pasa por ' + t);
       await p.click('#tutoSig');
       assert.ok(!(await p.isVisible('#tuto')));
       assert.equal(await p.evaluate(() => S.aj.guiaV), await p.evaluate(() => GUIA_V));
@@ -273,7 +273,7 @@ module.exports = {
         const ctx = await L.nuevoContexto(browser, { viewport: { width: vp.width, height: vp.height }, isMobile: !!vp.movil, hasTouch: !!vp.movil }); (estado.contextos ||= []).push(ctx);
         const p = await L.nuevaPagina(ctx); estado.paginas.push(p);
         await L.crearAdminYEntrar(p);
-        await p.evaluate(() => { const m = mesDe(hoy()); for (let k = 0; k < 40; k++) S.mov.push({ id: 'g' + k, fecha: m + '-0' + (1 + k % 9), mes: m, concepto: 'GASTO ' + k, importe: -5 - k, cat: 'OCIO', cuenta: 'EVO' }); S.cuentas.push({ n: 'EVO', v: 100, f: hoy(), banco: 1 }); save(); go('inicio'); tutorial(true); });
+        await p.evaluate(() => { const m = mesDe(hoy()); for (let k = 0; k < 40; k++) S.mov.push({ id: 'g' + k, fecha: m + '-0' + (1 + k % 9), mes: m, concepto: 'GASTO ' + k, importe: -5 - k, cat: 'OCIO', cuenta: 'EVO' }); S.cuentas.push({ n: 'EVO', v: 100, f: hoy(), banco: 1 }); save(); go('resumen'); tutorial(true); });
         for (let k = 0; k < 40; k++) {
           await L.esperar(450);
           const r = await p.evaluate(() => { const st = PASOS[tutoI]; if (!st) return null; const sp = $('#tutoSpot'), c = $('#tuto').getBoundingClientRect();

@@ -136,23 +136,24 @@ module.exports = {
     })();
   },
 
-  'inicio: tarjetas que se pliegan y gráficos con la cifra al pasar por encima'(browser, estado) {
+  'evolución: tarjetas que se pliegan y gráficos con la cifra al pasar por encima'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado, { inicio: true });
       const h = await p.evaluate(() => mesDe(hoy()));
-      await p.evaluate(m => { for (let k = 0; k < 4; k++) { const mm = addMes(m, -k); S.mov.push({ id: uid(), fecha: mm + '-01', mes: mm, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }, { id: uid(), fecha: mm + '-02', mes: mm, concepto: 'ALQUILER', importe: -700, cat: 'VIVIENDA', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }); } save(); go('inicio'); }, h);
-      assert.equal(await p.evaluate(() => TAB), 'inicio');
-      for (const c of ['dinero', 'mes', 'pend', 'gasto', 'ahorro', 'cats']) assert.ok(await p.$(`#inicio details[data-ic="${c}"][open]`), 'tarjeta ' + c);
-      await p.click('#inicio details[data-ic="gasto"] > summary');
-      assert.equal(await p.$('#inicio details[data-ic="gasto"][open]'), null);
-      await p.evaluate(() => go('resumen')); await p.evaluate(() => go('inicio'));
-      assert.equal(await p.$('#inicio details[data-ic="gasto"][open]'), null, 'recuerda las plegadas');
-      await p.$eval('#inicio details[data-ic="ahorro"]', e => e.scrollIntoView({ block: 'center' }));
-      await p.hover('#inicio details[data-ic="ahorro"] .col:last-child');
+      await p.evaluate(m => { for (let k = 0; k < 4; k++) { const mm = addMes(m, -k); S.mov.push({ id: uid(), fecha: mm + '-01', mes: mm, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }, { id: uid(), fecha: mm + '-02', mes: mm, concepto: 'ALQUILER', importe: -700, cat: 'VIVIENDA', metodo: 'banco', cuenta: 'EVO', origen: 'extracto' }); } save(); go('resumen'); }, h);
+      await p.evaluate(() => go('hist'));
+      for (const c of ['dinero', 'gasto', 'ahorro', 'cats']) assert.ok(await p.$(`#evoCards details[data-ic="${c}"][open]`), 'tarjeta ' + c);
+      assert.ok(await p.$('#resPend details[data-ic="pend"]'), 'pendiente en el Resumen');
+      await p.click('#evoCards details[data-ic="gasto"] > summary');
+      assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null); await L.esperar(100);
+      await p.evaluate(() => go('resumen')); await p.evaluate(() => go('hist'));
+      assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null, 'recuerda las plegadas');
+      await p.$eval('#evoCards details[data-ic="ahorro"]', e => e.scrollIntoView({ block: 'center' })); await L.esperar(300);
+      await p.hover('#evoCards details[data-ic="ahorro"] .col:last-child');
       await p.waitForSelector('#tip.on', { timeout: 3000 });
       assert.match(await p.textContent('#tip'), /Ahorrado/);
-      await p.click('#iniTodo');
-      assert.ok(await p.$('#inicio details[data-ic="gasto"][open]'));
+      await p.click('#evoCards details[data-ic="gasto"] > summary');
+      assert.ok(await p.$('#evoCards details[data-ic="gasto"][open]'));
     })();
   },
   'mi perfil: se abre desde el nombre, cambia el nombre y la apariencia; Usuarios con foto'(browser, estado) {

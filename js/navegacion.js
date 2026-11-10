@@ -1,7 +1,7 @@
 // Cuentas Claras · Pestañas y mes seleccionado
 "use strict";
 /* ============ Navegación ============ */
-let MES=mesDe(hoy()),TAB='inicio';
+let MES=mesDe(hoy()),TAB='resumen';
 function setMes(m){MES=m;F.todos=false;render()}
 $('#mPrev').onclick=()=>setMes(addMes(MES,-1));
 $('#mNext').onclick=()=>setMes(addMes(MES,1));
@@ -125,12 +125,12 @@ function revelar(el){if(!el)return;const c=el.closest('[data-ap]'),sec=el.closes
 addEventListener('resize',()=>{if(APARTADOS[TAB])pintarApartado(TAB)});
 
 /* ---- Botón «atrás» del móvil o del navegador ----
-   Niveles: 1 Inicio · 2 una pestaña · 3 un apartado de Ajustes/Ayuda (en el móvil). Atrás sube un nivel;
-   desde Inicio avisa y, si lo pulsas otra vez enseguida, sale de la app. Si hay algo abierto, primero lo cierra. */
+   Niveles: 1 Resumen · 2 una pestaña · 3 un apartado de Ajustes/Ayuda (en el móvil). Atrás sube un nivel;
+   desde Resumen avisa y, si lo pulsas otra vez enseguida, sale de la app. Si hay algo abierto, primero lo cierra. */
 let NAV_ON=false,NAV_CUR=null,NAV_PEND=null,NAV_SALIR=0;
-const nivelDe=(t,sub)=>t==='inicio'?1:sub&&esMovil()&&!esChips(t)?3:2;
+const nivelDe=(t,sub)=>t==='resumen'?1:sub&&esMovil()&&!esChips(t)?3:2;
 function navInit(){if(NAV_ON)return;NAV_ON=true;
-  NAV_CUR={n:1,t:'inicio',sub:''};
+  NAV_CUR={n:1,t:'resumen',sub:''};
   history.replaceState({n:0},'');history.pushState(NAV_CUR,'');
 }
 function navGuardar(){
@@ -159,8 +159,8 @@ addEventListener('popstate',e=>{
   if(st.n===0){
     if(Date.now()-NAV_SALIR<2200){NAV_SALIR=0;history.back();return}
     NAV_SALIR=Date.now();toast('Pulsa otra vez atrás para salir');
-    NAV_CUR={n:1,t:'inicio',sub:''};history.pushState(NAV_CUR,'');
-    if(TAB!=='inicio')go('inicio',{hist:true});return}
+    NAV_CUR={n:1,t:'resumen',sub:''};history.pushState(NAV_CUR,'');
+    if(TAB!=='resumen')go('resumen',{hist:true});return}
   const antes=TAB;
   if(go(st.t,{sub:st.sub||'',hist:true})===false){history.pushState(NAV_CUR,'');return}
   NAV_CUR=st;
@@ -200,7 +200,7 @@ function render(){
   $('#monthnav').classList.toggle('nomes',!(TAB==='resumen'||TAB==='movs'||TAB==='efectivo'));
   $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER)||!pref('fab'));
   if(typeof rChatBtn==='function')rChatBtn();
-  ({usuarios:rUsuarios,resumen:rResumen,efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:rHist,patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,inicio:rInicio,perfil:rPerfil})[TAB]();
+  ({usuarios:rUsuarios,resumen:()=>{rResumen();rInicio()},efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:()=>{rHist();rInicio()},patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,perfil:rPerfil})[TAB]();
   requestAnimationFrame(marcarDeslizables);
 }
 
