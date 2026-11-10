@@ -45,6 +45,7 @@ module.exports = {
       await p.evaluate(() => go('ajustes'));
       const ah = () => p.evaluate(() => Math.round(pctAhorro(0) * 10) / 10);
       assert.equal(await ah(), 10, 'de serie el ahorro es el 10 %');
+      await p.evaluate(() => $('#catCard').classList.remove('cerrada'));
       await p.fill('[data-p=OCIO]', '7');
       assert.equal(await ah(), 13, 'baja ocio 3 puntos y el ahorro sube 3');
       assert.match(await p.textContent('#pctTable [data-ah]'), /13/);
@@ -68,6 +69,7 @@ module.exports = {
     return (async () => {
       const { p } = await dentro(browser, estado);
       const m = await p.evaluate(() => { const m = mesDe(hoy()); S.mov.push({ id: 'n', fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }, { id: 'c', fecha: m + '-03', mes: m, concepto: 'CENA', importe: -40, cat: 'OCIO', cuenta: 'EVO' }); MES = m; save(); go('ajustes'); return m; });
+      await p.evaluate(() => $('#catCard').classList.remove('cerrada'));
       await p.click('#pctTable .un[data-u=OCIO]');
       assert.equal(await p.inputValue('[data-e=OCIO]'), '200', 'el 10 % de 2.000 € pasa a 200 €');
       await p.fill('[data-e=OCIO]', '50');
@@ -97,6 +99,7 @@ module.exports = {
       assert.equal(d.cat, 'DONATIVOS');
       assert.equal(d.pct, 100, 'el presupuesto sigue sumando 100');
       await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => $('#catCard').classList.remove('cerrada'));
       assert.ok(await p.isVisible('tr[data-cid=DONATIVOS] .cx'), 'se puede borrar');
       // arrastrar Transporte (5.º de Necesidades) hasta arriba del todo
       const orden = () => p.evaluate(() => S.cats.filter(c => c.g === 'FIJOS').map(c => c.id));
@@ -119,6 +122,7 @@ module.exports = {
       const mes = await p.evaluate(() => MES);
       await anadir(p, { imp: '30', con: 'regalo cumple', cat: 'REGALOS', fecha: mes + '-03' });
       await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => $('#catCard').classList.remove('cerrada'));
       await p.fill('#caNombre', 'Mascotas'); await p.click('#catAdd button'); await L.esperar(150);
       assert.ok(await p.evaluate(() => S.cats.some(c => c.n === 'Mascotas')));
       await p.click('tr[data-cid=REGALOS] .cx'); await p.selectOption('#bcDest', 'PERSONAL'); await p.click('#dlgF >> text=Borrar categoría');

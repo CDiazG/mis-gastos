@@ -49,7 +49,7 @@ function rResumen(){
     if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
     if(a==='copia')exportar();
     if(a==='imp')go('importar');
-    if(a==='aj'||a==='sug')go('ajustes');
+    if(a==='sug'){ACOR_ABRIR='sugCard';irApartado('ajustes','presupuesto')}else if(a==='aj')go('ajustes');
     if(a==='prestrev'){F.cat='PRESTAMO';F.sinCat=false;F.todos=true;F.q='';F.tag='';go('movs');return}if(a==='prestok'){S.aj.revisarPrestamos=false;save();rResumen();toast('Vale, no te lo vuelvo a decir');return}if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
     if(a==='usu')go('usuarios');
     if(a==='bz'){go('usuarios');setTimeout(()=>$('#bzAdmin').scrollIntoView({behavior:'smooth'}),80)}

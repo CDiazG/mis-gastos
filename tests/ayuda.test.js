@@ -14,6 +14,21 @@ const meter = (p, movs) => p.evaluate(ms => {
 }, movs);
 
 module.exports = {
+  'presupuesto: las dos tarjetas van plegadas y al abrir una se pliega la otra'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => irApartado('ajustes', 'presupuesto'));
+      assert.ok(await p.isVisible('#sugCard .acorb') && await p.isVisible('#catCard .acorb'), 'los dos botones');
+      assert.ok(!(await p.isVisible('#pctTable')), 'categorías plegadas');
+      await p.click('#catCard .acorb');
+      assert.ok(await p.isVisible('#pctTable'), 'se abre');
+      assert.equal((await p.textContent('#catCard .acorb')).trim(), 'Ocultar');
+      await p.click('#sugCard .acorb');
+      assert.ok(!(await p.isVisible('#pctTable')), 'al abrir la otra, se pliega');
+      await p.click('#sugCard .acorb');
+      assert.ok(!(await p.isVisible('#pctTable')) && await p.evaluate(() => $('#sugCard').classList.contains('cerrada')), 'se puede cerrar');
+    })();
+  },
   'el ahorro es lo que no se gasta y el objetivo se marca al conseguirlo'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
@@ -78,6 +93,7 @@ module.exports = {
         for (const m of ['2026-06', '2026-07', '2026-08', '2026-09']) { add(m + '-01', 'NOMINA', 2000, 'INGRESO'); add(m + '-02', 'ALQUILER', -700, 'VIVIENDA'); add(m + '-03', 'CENAS', -300, 'OCIO'); add(m + '-04', 'MERCADONA', -150, 'SUPERMERCADO'); }
         save(); go('ajustes'); });
       assert.match(await p.textContent('#sugCard'), /Aplicar \d+ cambio/);
+      await p.evaluate(() => $('#sugCard').classList.remove('cerrada'));
       await p.click('#sugApply'); await p.click('#dlgF >> text=Aplicar'); await L.esperar(200);
       assert.equal(await p.evaluate(() => sumaPct()), 100, 'aplicar la sugerencia siempre deja el 100 %');
       assert.equal(await p.evaluate(() => sugerencia().aplicada), true, 'recalculada con los mismos datos, no cambia nada');
@@ -91,6 +107,7 @@ module.exports = {
         save(); go('ajustes'); });
       assert.match(await p.textContent('#sugCard'), /Aplicar \d+ cambio/);
       assert.equal(await p.evaluate(() => sugerencia().filas.reduce((a, f) => a + f.sug, 0)), 100, 'aunque no quepa todo el ahorro');
+      await p.evaluate(() => $('#sugCard').classList.remove('cerrada'));
       await p.click('#sugLuego');
       assert.match(await p.textContent('#sugCard'), /vuelve a aparecer/);
     })();

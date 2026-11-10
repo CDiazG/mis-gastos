@@ -114,7 +114,28 @@ function sugerencia(){
   const cambia=filas.some(f=>f.c.g!=='AHORRO'&&Math.abs(f.sug-f.obj)>=2)||(!fija);
   return {ms,base,baseSug,fija,filas,extraAhorro,deficit,cambia,ings,difs,aplicada};
 }
+// Las dos tarjetas del presupuesto van plegadas: solo se ve el título y un botón; al abrir una se pliega la otra.
+let ACOR_ABRIR='';
+function acorPres(){
+  const ids=['sugCard','catCard'],els=ids.map(i=>$('#'+i));
+  els.forEach(el=>{
+    if(!el)return;
+    if(el.dataset.acor!=='1'){el.dataset.acor='1';el.classList.add('acor','cerrada')}
+    if(!el.querySelector('.acorh')){
+      const h=el.querySelector('h3');if(!h)return;
+      const w=document.createElement('div');w.className='acorh';h.replaceWith(w);w.appendChild(h);
+      const b=document.createElement('button');b.type='button';b.className='btn sm acorb';w.appendChild(b);
+      b.onclick=()=>{const abrir=el.classList.contains('cerrada');els.forEach(o=>o&&o.classList.add('cerrada'));if(abrir)el.classList.remove('cerrada');acorTxt(els)};
+    }
+  });
+  if(ACOR_ABRIR){els.forEach(o=>o&&o.classList.toggle('cerrada',o.id!==ACOR_ABRIR));ACOR_ABRIR=''}
+  acorTxt(els);
+}
+function acorTxt(els){els.forEach(el=>{if(!el)return;const b=el.querySelector('.acorb'),ab=!el.classList.contains('cerrada');if(b){b.textContent=ab?'Ocultar':(el.id==='catCard'?'Editar':'Ver');b.setAttribute('aria-expanded',ab)}})}
 function rSug(){
+  rSug0();acorPres();
+}
+function rSug0(){
   const g=sugerencia();const el=$('#sugCard');
   if(!g){el.innerHTML='<h3>Sugerencia de presupuesto</h3><p class="small mut" style="margin:6px 0 0">Hacen falta al menos 3 meses con gastos para poder sugerir un presupuesto.</p>';return}
   const nota=f=>{

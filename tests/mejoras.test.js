@@ -84,6 +84,7 @@ module.exports = {
       assert.match(await p.textContent('#groups [data-cat="REGALOS"]'), /acumulado/);
       // se activa y desactiva desde Ajustes
       await p.evaluate(() => go('ajustes'));
+      await p.evaluate(() => $('#catCard').classList.remove('cerrada'));
       await p.click('tr[data-cid="REGALOS"] .ac');
       assert.equal(await p.evaluate(() => !!(S.aj.acumula || {}).REGALOS), false);
       await p.click('tr[data-cid="VIAJES"] .ac');
@@ -126,6 +127,7 @@ module.exports = {
       await meter(p, [['2026-10-03', 'NETFLIX.COM', -13.99, 'PERSONAL'], ['2026-10-04', 'SPOTIFY P1234', -10.99, 'PERSONAL'], ['2026-10-05', 'ZARA', -40, 'PERSONAL']]);
       // como alguien con las categorías de antes (sin Suscripciones)
       await p.evaluate(() => { const c = S.cats.find(c => c.id === 'SUSCRIPCIONES'); S.cats = S.cats.filter(x => x !== c); S.reglas = S.reglas.filter(r => r.c !== 'SUSCRIPCIONES'); delete S.aj.pct.SUSCRIPCIONES; save(); go('ajustes'); });
+      await p.evaluate(() => $('#catCard').classList.remove('cerrada'));
       await p.click('#catSug [data-sug="Suscripciones"]');
       assert.match(await p.textContent('#dlgB'), /2<\/b>|2 movimientos/);
       await p.click('#dlgF >> text=Pasarlos');

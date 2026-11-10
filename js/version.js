@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.37.1';
+const VERSION='2.38.0';
 const CAMBIOS=[
+ {v:'2.38.0',f:'2026-11-10',c:['En Ajustes → Presupuesto, la sugerencia y las categorías aparecen plegadas, con un botón para verlas; al abrir una se pliega la otra']},
  {v:'2.37.1',f:'2026-11-10',c:['La pestaña Añadir se lee bien cuando está seleccionada','El título del Histórico se lee sobre el fondo']},
  {v:'2.37.0',f:'2026-11-10',c:['Paleta Fluvi con los colores de la marca, para las cuentas nuevas','Pantalla de entrada con el logo completo de Fluvi, también en oscuro','Al compartir el enlace se ve la imagen de Fluvi']},
  {v:'2.36.0',f:'2026-11-10',c:['Nuevo nombre y logo: Fluvi.','El icono de la app, la pantalla de entrada y los textos usan ya el nombre y el logo nuevos']},
