@@ -1379,3 +1379,15 @@ html:root[data-fondo="uva"]{--wa:#4b2bc4;--wb:#7a5cff;--wc:#b7a8ff;--wd:#150a58}
     background:color-mix(in srgb,var(--card) 72%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink)}
   body:not([data-tab="resumen"]) #s-hist>.sub,body:not([data-tab="resumen"]) #s-efectivo>.sub{display:block;padding:10px 14px;color:var(--ink)}
 }
+/* 2.37 marca Fluvi: paleta de la marca, logo de entrada */
+:root[data-pal="fluvi"]{--bg:#f0f9fa;--card:#ffffff;--ink:#164e63;--muted:#5b7f8c;--line:#d4e9ee;--soft:#e2f1f4;--acc:#0a7ea3;--acc-ink:#ffffff;--acc-soft:#d9f0f6;--acc-2:#06b6d4;--good:#0a9a6a;--good-soft:#dff4ec;--bad:#e5484d;--bad-soft:#fde8e8;--wa:#0891b2;--wb:#06b6d4;--wc:#a5ecf7;--wd:#0b3a4b}
+@media (prefers-color-scheme:dark){:root[data-pal="fluvi"]:not([data-theme="light"]){--bg:#0d1a1f;--card:#15262c;--ink:#e6f4f7;--muted:#8fb0ba;--line:#223941;--soft:#1d3239;--acc:#22bcda;--acc-ink:#04222b;--acc-soft:#12353f;--acc-2:#67d4e8;--good:#2fd09a;--good-soft:#16352b;--bad:#ff6b6f;--bad-soft:#3a2024}}
+:root[data-pal="fluvi"][data-theme="dark"]{--bg:#0d1a1f;--card:#15262c;--ink:#e6f4f7;--muted:#8fb0ba;--line:#223941;--soft:#1d3239;--acc:#22bcda;--acc-ink:#04222b;--acc-soft:#12353f;--acc-2:#67d4e8;--good:#2fd09a;--good-soft:#16352b;--bad:#ff6b6f;--bad-soft:#3a2024}
+.fsw[data-fsw="fluvi"]{--wa:#0891b2;--wb:#06b6d4;--wc:#a5ecf7;--wd:#0b3a4b}
+html:root[data-fondo="fluvi"]{--wa:#0891b2;--wb:#06b6d4;--wc:#a5ecf7;--wd:#0b3a4b}
+#login h1.lmarca{display:block;text-align:center;margin:0 0 10px}
+#login h1.lmarca img{height:104px;width:auto;margin:0 auto}
+#login h1.lmarca .ld{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #login h1.lmarca .lc{display:none}:root:not([data-theme="light"]) #login h1.lmarca .ld{display:block}}
+:root[data-theme="dark"] #login h1.lmarca .lc{display:none}
+:root[data-theme="dark"] #login h1.lmarca .ld{display:block}

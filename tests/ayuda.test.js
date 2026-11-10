@@ -118,7 +118,7 @@ module.exports = {
       await p.click('#temaSeg [data-v="oscuro"]');
       assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'dark');
       const fondo = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      assert.equal(fondo, 'rgb(23, 25, 29)');
+      assert.equal(fondo, 'rgb(13, 26, 31)');
       await p.click('#temaSeg [data-v="claro"]');
       assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'light');
       await p.click('#temaSeg [data-v="auto"]');

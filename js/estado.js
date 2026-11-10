@@ -7,7 +7,7 @@ function defState(){
   return {v:1,mov:[],reglas:reglasDeSerie(),
     cats:CATS_DEF.map(({id,n,g})=>({id,n,g})),
     aj:{pct:Object.fromEntries(CATS_DEF.map(c=>[c.id,c.p])),base:'ingresos',baseFija:0,diaNomina:25,umbralNomina:1000,nominaMes:'siguiente',
-      diezmo:false,bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true,paleta:'pizarra'},
+      diezmo:false,bizumReglas:false,aprender:true,aviso80:true,comparar:true,avisoCopia:true,verFijos:true,verObjetivos:true,verGrafico:true,fab:true,paleta:'fluvi'},
     cuentas:[],
     fijos:[],objetivos:[],mig:{actividades:true,inversion:true,ahorroAuto:true,prestamo:true},
     ultimaCopia:null,histCargado:false,histOfrecido:false};

@@ -6,12 +6,15 @@
 <title>Fluvi</title>
 <meta name="description" content="Control de gastos personales">
 <meta name="theme-color" content="#0f6b5c">
+<meta property="og:title" content="Fluvi">
+<meta property="og:description" content="Control de gastos personales: extractos del banco, efectivo y presupuesto.">
+<meta property="og:image" content="icons/compartir.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="favicon.ico" sizes="32x32">
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p;var f=localStorage.getItem('mg-fondo');if(f&&f!=='auto')document.documentElement.dataset.fondo=f}catch(e){}</script>
-<link rel="stylesheet" href="css/estilos.css?v=2.36.0">
+<script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(!p)p='fluvi';if(p!=='verde')document.documentElement.dataset.pal=p;var f=localStorage.getItem('mg-fondo');if(f&&f!=='auto')document.documentElement.dataset.fondo=f}catch(e){}</script>
+<link rel="stylesheet" href="css/estilos.css?v=2.37.0">
 </head>
 <body>
 <header>
@@ -356,7 +359,7 @@
 </main>
 
 <div id="login" class="hide"><div class="box card pad">
-  <h1><img class="logoapp" src="icons/logo.svg" alt="" style="width:34px;height:34px">Fluvi</h1>
+  <h1 class="lmarca"><img class="lc" src="icons/marca/apilado.svg" alt="Fluvi"><img class="ld" src="icons/marca/inverso.svg" alt="" aria-hidden="true"></h1>
   <div class="small mut" id="lSub">Entra con tu correo y tu contraseña.</div>
   <div id="lCont" class="hide" style="margin-top:16px">
     <div style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px"><span class="avatar" id="lContAv" style="width:34px;height:34px;font-size:15px"></span><div style="min-width:0"><div class="small mut">Sesión guardada en este dispositivo</div><div id="lContMail" style="font-weight:600;overflow-wrap:anywhere"></div></div></div>
@@ -387,31 +390,31 @@
 <div id="undo" role="status"><span id="undoTxt"></span><button class="btn sm" type="button" id="undoBtn">Deshacer</button></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.36.0"></script>
-<script src="js/categorias.js?v=2.36.0"></script>
-<script src="js/version.js?v=2.36.0"></script>
-<script src="js/utilidades.js?v=2.36.0"></script>
-<script src="js/estado.js?v=2.36.0"></script>
-<script src="js/reglas.js?v=2.36.0"></script>
-<script src="js/navegacion.js?v=2.36.0"></script>
-<script src="js/resumen.js?v=2.36.0"></script>
-<script src="js/movimientos.js?v=2.36.0"></script>
-<script src="js/excel.js?v=2.36.0"></script>
-<script src="js/dialogos.js?v=2.36.0"></script>
-<script src="js/pdf.js?v=2.36.0"></script>
-<script src="js/formatos.js?v=2.36.0"></script>
-<script src="js/importar.js?v=2.36.0"></script>
-<script src="js/historico.js?v=2.36.0"></script>
-<script src="js/ajustes.js?v=2.36.0"></script>
-<script src="js/usuarios.js?v=2.36.0"></script>
-<script src="js/errores.js?v=2.36.0"></script>
-<script src="js/buzon.js?v=2.36.0"></script>
-<script src="js/perfil.js?v=2.36.0"></script>
-<script src="js/inicio.js?v=2.36.0"></script>
-<script src="js/privacidad.js?v=2.36.0"></script>
-<script src="js/ayuda.js?v=2.36.0"></script>
-<script src="js/chat.js?v=2.36.0"></script>
-<script src="js/acceso.js?v=2.36.0"></script>
-<script src="js/arranque.js?v=2.36.0"></script>
+<script src="js/config.js?v=2.37.0"></script>
+<script src="js/categorias.js?v=2.37.0"></script>
+<script src="js/version.js?v=2.37.0"></script>
+<script src="js/utilidades.js?v=2.37.0"></script>
+<script src="js/estado.js?v=2.37.0"></script>
+<script src="js/reglas.js?v=2.37.0"></script>
+<script src="js/navegacion.js?v=2.37.0"></script>
+<script src="js/resumen.js?v=2.37.0"></script>
+<script src="js/movimientos.js?v=2.37.0"></script>
+<script src="js/excel.js?v=2.37.0"></script>
+<script src="js/dialogos.js?v=2.37.0"></script>
+<script src="js/pdf.js?v=2.37.0"></script>
+<script src="js/formatos.js?v=2.37.0"></script>
+<script src="js/importar.js?v=2.37.0"></script>
+<script src="js/historico.js?v=2.37.0"></script>
+<script src="js/ajustes.js?v=2.37.0"></script>
+<script src="js/usuarios.js?v=2.37.0"></script>
+<script src="js/errores.js?v=2.37.0"></script>
+<script src="js/buzon.js?v=2.37.0"></script>
+<script src="js/perfil.js?v=2.37.0"></script>
+<script src="js/inicio.js?v=2.37.0"></script>
+<script src="js/privacidad.js?v=2.37.0"></script>
+<script src="js/ayuda.js?v=2.37.0"></script>
+<script src="js/chat.js?v=2.37.0"></script>
+<script src="js/acceso.js?v=2.37.0"></script>
+<script src="js/arranque.js?v=2.37.0"></script>
 </body>
 </html>

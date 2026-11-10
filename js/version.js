@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.36.0';
+const VERSION='2.37.0';
 const CAMBIOS=[
+ {v:'2.37.0',f:'2026-11-10',c:['Paleta Fluvi con los colores de la marca, para las cuentas nuevas','Pantalla de entrada con el logo completo de Fluvi, también en oscuro','Al compartir el enlace se ve la imagen de Fluvi']},
  {v:'2.36.0',f:'2026-11-10',c:['Nuevo nombre y logo: Fluvi.','El icono de la app, la pantalla de entrada y los textos usan ya el nombre y el logo nuevos']},
  {v:'2.35.1',f:'2026-11-10',c:['El botón Actualizar ahora borra la copia antigua y carga siempre la versión nueva']},
  {v:'2.35.0',f:'2026-11-10',c:['El fondo animado es igual en todas las pestañas','Los títulos y textos sobre el fondo se leen siempre']},
