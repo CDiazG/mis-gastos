@@ -128,4 +128,4 @@ async function buscarVersion(){
   try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();
     if(j.version&&cmpV(j.version,VERSION)>0){$('#updTxt').textContent='Hay una versión nueva ('+j.version+').';$('#updBar').classList.remove('hide')}}catch(_){}
 }
-$('#updGo').onclick=async()=>{if(NUBE&&USER)await flush();const u=new URL(location.href);u.searchParams.set('v',Date.now());location.replace(u.href)};
+$('#updGo').onclick=async()=>{if(NUBE&&USER)await flush();const u=new URL(location.href);u.searchParams.delete('v');try{await fetch(u.origin+u.pathname,{cache:'reload'})}catch(_){}try{const k=await caches.keys();await Promise.all(k.filter(n=>n!=='compartido').map(n=>caches.delete(n)))}catch(_){}u.searchParams.set('v',Date.now());location.replace(u.href)};

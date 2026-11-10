@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.35.0';
+const VERSION='2.35.1';
 const CAMBIOS=[
+ {v:'2.35.1',f:'2026-11-10',c:['El botón Actualizar ahora borra la copia antigua y carga siempre la versión nueva']},
  {v:'2.35.0',f:'2026-11-10',c:['El fondo animado es igual en todas las pestañas','Los títulos y textos sobre el fondo se leen siempre']},
  {v:'2.34.0',f:'2026-11-10',c:['Fondo animado de seda como el de la cifra, en todo el móvil y en la pantalla de entrada, y ya puedes elegir su color en Apariencia','Apariencia nueva: modo claro, oscuro o sistema con miniaturas, colores y fondos en círculos','El menú del círculo lleva iconos y se despliega con animación; el mes se desliza al cambiarlo','Gasto de 12 meses en naranja y azul, con lo previsto en puntitos','Cada pestaña empieza arriba, Añadir se vuelve a plegar si lo vacías, y se quitan los restos de Rufo y un botón flotante que ya no hacía nada']},
  {v:'2.33.0',f:'2026-11-10',c:['Evolución: el gasto de 12 meses en barras apiladas (necesidades y ocio) con lo previsto del mes en curso, y el reparto del año en un anillo en arco','Resumen: cada grupo lleva su anillo y cada categoría muestra «35 € de 120 €» con un punto verde, ámbar o rojo','Las categorías tienen iconos sólidos en círculo gris (los emojis que elegiste siguen viéndose)','Ajustes, Ayuda, Mi perfil y Usuarios son páginas completas con una ✕ y el título grande']},
