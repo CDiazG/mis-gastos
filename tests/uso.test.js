@@ -202,7 +202,7 @@ module.exports = {
       // barra de abajo: Inicio, Resumen, Añadir, Movimientos y Más
       await p.evaluate(() => go('resumen'));
       const bar = await p.evaluate(() => { const r = $('#tabs').getBoundingClientRect(); return { abajo: Math.round(r.bottom), vis: [...$$('#tabs .tab')].filter(b => b.offsetParent).map(b => b.textContent.trim()) }; });
-      assert.equal(bar.abajo, 844, 'la barra va pegada abajo');
+      assert.ok(bar.abajo >= 828 && bar.abajo <= 844, 'la barra flota pegada abajo');
       assert.deepEqual(bar.vis, ['Inicio', 'Resumen', 'Añadir', 'Movimientos', 'Más']);
       assert.ok(!(await p.isVisible('#fabCash')), 'en el móvil Añadir va en la barra');
       await p.tap('#tabMas'); await p.waitForSelector('#masSheet.on');
@@ -235,7 +235,7 @@ module.exports = {
       await p.click('#s-hist .evseg [data-go="patri"]'); await L.esperar(150);
       assert.equal(await p.evaluate(() => TAB), 'patri');
       assert.ok(await p.evaluate(() => $('.tab[data-t="hist"]').classList.contains('on')), 'Evolución sigue marcada');
-      await p.click('.tab[data-t="movs"]'); await p.click('[data-go="importar"]'); await L.esperar(150);
+      await p.click('.tab[data-t="movs"]'); await p.click('#s-movs [data-go="importar"]'); await L.esperar(150);
       assert.equal(await p.evaluate(() => TAB), 'importar');
       assert.ok(await p.evaluate(() => $('.tab[data-t="movs"]').classList.contains('on')), 'Movimientos sigue marcada');
     })();

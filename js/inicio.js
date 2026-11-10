@@ -28,7 +28,7 @@ function rInicio(){
   $('#iniFecha').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const todos=mesesConDatos();
   $('#iniTodo').classList.toggle('hide',!S.mov.length);
-  if(!S.mov.length){$('#inicio').innerHTML=`<div class="card pad ivacio">${typeof mascota==='function'?mascota(80):''}<div><h3>Aún no hay movimientos</h3><p class="small mut">Empieza subiendo el extracto del banco o apuntando un gasto a mano.</p><div class="toolbar" style="margin:8px 0 0"><button class="btn pri" type="button" data-go="importar">Importar extracto</button><button class="btn" type="button" data-go="efectivo">Añadir a mano</button></div></div></div>`;
+  if(!S.mov.length){$('#inicio').innerHTML=`<div class="card pad ivacio"><span class="ivico">💸</span><div><h3>Aún no hay movimientos</h3><p class="small mut">Empieza subiendo el extracto del banco o apuntando un gasto a mano.</p><div class="toolbar" style="margin:8px 0 0"><button class="btn pri" type="button" data-go="importar">Importar extracto</button><button class="btn" type="button" data-go="efectivo">Añadir a mano</button></div></div></div>`;
     $$('#inicio [data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));return}
   // 12 meses hasta el actual
   const ult12=[];for(let k=11;k>=0;k--)ult12.push(addMes(hoyM,-k));

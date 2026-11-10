@@ -1,43 +1,13 @@
 // Cuentas Claras · Pestaña Ayuda: la mascota (un zorro), tutorial, preguntas frecuentes, foro y foto de perfil
 "use strict";
 /* ============ La mascota: un zorro ============ */
-const MASCOTA='Rufo';
+const MASCOTA='Ayuda';
 // Rufo, por piezas para poder moverlas. Poses: 'saluda', 'senala-i' / 'senala-d' (señala a un lado), 'piensa', 'lee',
 // 'celebra', 'preocupa' o '' (quieto, pero parpadea y mueve la cola). true = 'saluda' y false = '' (como antes).
-function mascota(px=72,pose='saluda'){
-  if(pose===true)pose='saluda';if(pose===false||pose==null)pose='';
-  const piensa=pose==='piensa',lee=pose==='lee',celebra=pose==='celebra',preocupa=pose==='preocupa';
-  const boca=preocupa?'<path d="M50 78q6-4 12 0" stroke="#2a1d18" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
-    :celebra?'<path d="M48 73q8 12 16 0z" fill="#2a1d18"/><path d="M52 77q4 4 8 0 0-2-4-2.4-4 .4-4 2.4z" fill="#ff8f9c"/>'
-    :'<path d="M49 74q3.5 4.4 7 0 3.5 4.4 7 0" stroke="#2a1d18" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-  const brazoD=piensa?'<path d="M72 92C78 86 74 80 66 78" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="65" cy="78" r="4.6" fill="#5a3324"/>'
-    :celebra?'<path d="M72 90C81 84 85 76 84 68" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/><circle cx="84" cy="67" r="4.6" fill="#5a3324"/>'
-    :'<path d="M72 92c4 4 5 9 3 13" stroke="#e2733a" stroke-width="8" stroke-linecap="round" fill="none"/>';
-  const extra=piensa?'<g class="m-q"><circle cx="100" cy="26" r="11" fill="#fff" stroke="#e2733a" stroke-width="2"/><text x="100" y="31" text-anchor="middle" font-size="15" font-weight="700" fill="#e2733a" font-family="system-ui,sans-serif">?</text><circle cx="88" cy="38" r="2.6" fill="#fff" stroke="#e2733a" stroke-width="1.5"/></g>'
-    :lee?'<g class="m-lupa"><circle cx="22" cy="60" r="9" fill="#dff2ff" fill-opacity=".55" stroke="#5a3324" stroke-width="3"/><path d="M28 67l6 7" stroke="#5a3324" stroke-width="4" stroke-linecap="round"/></g>'
-    :celebra?'<g class="m-confeti"><rect x="14" y="20" width="5" height="5" rx="1" fill="#f2b84b"/><rect x="96" y="14" width="5" height="5" rx="1" fill="#4e9f7a"/><rect x="26" y="6" width="4" height="4" rx="1" fill="#e2733a"/><rect x="104" y="40" width="4" height="4" rx="1" fill="#7a8be8"/><circle cx="86" cy="8" r="2.5" fill="#e86a8c"/><circle cx="10" cy="44" r="2.5" fill="#4e9f7a"/></g>':'';
-  return `<svg class="mascota${pose?' pose-'+pose:''}" width="${px}" height="${px}" viewBox="0 0 120 120" aria-hidden="true">
-  <ellipse class="m-sombra" cx="60" cy="113" rx="30" ry="4.5" fill="#000" opacity=".1"/>
-  <g class="m-todo"><g class="m-giro">
-  <g class="m-cola"><path d="M76 98C96 114 124 102 115 66 113 54 104 50 99 58 107 78 96 90 76 88z" fill="#e2733a"/><path d="M99 58C104 50 113 54 115 66 116 72 115 78 113 83 110 72 106 64 99 58z" fill="#fff4e8"/></g>
-  <ellipse cx="56" cy="88" rx="24" ry="22" fill="#e2733a"/><ellipse cx="56" cy="94" rx="14" ry="15" fill="#fff4e8"/>
-  <ellipse cx="44" cy="108" rx="8" ry="4.6" fill="#5a3324"/><ellipse cx="68" cy="108" rx="8" ry="4.6" fill="#5a3324"/>
-  <g class="m-brazo"><path d="M40 90C31 84 27 76 28 68" stroke="#e2733a" stroke-width="8.5" stroke-linecap="round" fill="none"/><circle cx="28" cy="67" r="5" fill="#fff4e8"/></g>
-  <g class="m-cabeza">
-  <g class="m-orejai"><path d="M26 54l-6-32 26 18z" fill="#e2733a"/><path d="M28 45l-3-15 14 10z" fill="#ffd2c0"/></g>
-  <g class="m-orejad"><path d="M86 54l6-32-26 18z" fill="#e2733a"/><path d="M84 45l3-15-14 10z" fill="#ffd2c0"/></g>
-  <path d="M56 28c-27 0-38 15-38 30 0 15 14 27 38 29 24-2 38-14 38-29 0-15-11-30-38-30z" fill="#e2733a"/>
-  <path d="M19 60l-9 2 8 6zM93 60l9 2-8 6z" fill="#e2733a"/>
-  <ellipse cx="56" cy="38" rx="15" ry="6" fill="#f59a62" opacity=".55"/>
-  <path d="M56 87c-13-1-27-8-34-21 8 4 15 4 22 0 4 4 8 6 12 6s8-2 12-6c7 4 14 4 22 0-7 13-21 20-34 21z" fill="#fff4e8"/>
-  <g class="m-ojos"><g class="m-ojoi"><ellipse cx="43" cy="58" rx="6" ry="6.8" fill="#2a1d18"/><circle cx="45" cy="55.5" r="2.4" fill="#fff"/><circle cx="41" cy="61" r="1.1" fill="#fff"/></g><g class="m-ojod"><ellipse cx="69" cy="58" rx="6" ry="6.8" fill="#2a1d18"/><circle cx="71" cy="55.5" r="2.4" fill="#fff"/><circle cx="67" cy="61" r="1.1" fill="#fff"/></g></g>
-  ${preocupa?'<path d="M36 48l11-4M76 48l-11-4" stroke="#5a3324" stroke-width="2.2" stroke-linecap="round"/>':''}
-  <ellipse cx="33" cy="69" rx="5.5" ry="3.8" fill="#ff8f9c" opacity=".55"/><ellipse cx="79" cy="69" rx="5.5" ry="3.8" fill="#ff8f9c" opacity=".55"/>
-  <path d="M52 68q4-2.4 8 0 0 3.6-4 4.4-4-.8-4-4.4z" fill="#2a1d18"/><circle cx="54.4" cy="68.8" r="1" fill="#fff" opacity=".8"/>${boca}
-  </g>
-  ${brazoD}${extra}
-  </g></g>
-</svg>`}
+// Sin mascota: «mascota()» ya no dibuja nada (se deja para no romper llamadas antiguas)
+function mascota(){return ''}
+// Símbolo de chat (burbuja) para el botón de ayuda
+function icoChat(px=24){return `<svg class="icochat" width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.2 3.6a.5.5 0 0 1-.8-.4V16h-0A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 8.5h7M8.5 11.5h4.5"/></svg>`}
 // Cambia la pose de un Rufo ya dibujado (p. ej. para que señale hacia el lado del recuadro de la guía)
 function poseRufo(svg,pose){if(!svg)return;svg.className.baseVal='mascota'+(pose?' pose-'+pose:'')}
 // Gesto suelto en el botón de la esquina: guiño o saltito
@@ -47,7 +17,7 @@ function gestoRufo(g){const b=$('#rufoBtn');if(!b)return;b.classList.remove('gui
 // Sube GUIA_V cuando la guía tenga cosas nuevas: a quien ya la vio le vuelve a salir una vez.
 const GUIA_V=2;
 const PERSONALIZAR=[
-  {t:'¡Hola! Soy '+MASCOTA+' 👋',d:'Te enseño Cuentas Claras en un par de minutos. Primero la dejamos a tu gusto y luego damos una vuelta por las pestañas. Puedes saltarte cualquier paso, y volver a verlo desde Ayuda.'},
+  {t:'¡Hola! 👋',d:'Te enseño Cuentas Claras en un par de minutos. Primero la dejamos a tu gusto y luego damos una vuelta por las pestañas. Puedes saltarte cualquier paso, y volver a verlo desde Ayuda.'},
   {t:'Tu foto',solo:()=>NUBE&&USER,d:'Si quieres, pon una foto: la verán los demás en el foro. Si no, se queda tu inicial.',html:()=>`<div style="display:flex;gap:12px;align-items:center;margin-top:10px">${avatarHtml(USER.uid,USER.nombre,USER.foto||'',52)}<button class="btn sm pri" type="button" id="gFoto">${USER.foto?'Cambiar foto':'Subir foto'}</button></div>`,
     init:()=>{const b=$('#gFoto');if(b)b.onclick=()=>$('#fotoFile').click()}},
   {t:'Tus colores',d:'Elige los colores de la app y si la quieres clara, oscura o como tu móvil. Lo ves al momento y lo puedes cambiar cuando quieras en Mi perfil (pulsando tu nombre, arriba).',
@@ -95,7 +65,7 @@ PERSONALIZAR.push({t:'¿Te faltan categorías?',d:'Ya tienes las de siempre. Si 
     if(ex){if(!S.mov.some(m=>m.cat===ex.id)&&!(+S.aj.pct[ex.id])){S.cats=S.cats.filter(x=>x!==ex);S.reglas=S.reglas.filter(r=>r.c!==ex.id);delete S.aj.pct[ex.id];save();refreshCats()}}else anadirCatSug(sg,{silencio:true});pintarTuto()})});
 const RECORRIDO=[
   {tab:'inicio',sel:'#inicio',t:'Inicio',d:'Tu visión general: lo que tienes, cómo vas en el año, cómo evolucionan tus gastos y tu ahorro, y lo que tienes pendiente. Cada tarjeta se pliega y despliega.'},
-  {tab:'resumen',sel:'.mesTit',t:'Resumen del mes',d:'Aquí pone siempre en qué mes estás. Para cambiarlo, usa las flechas ‹ › de arriba; «Hoy» te devuelve al mes actual.'},
+  {tab:'resumen',sel:'#monthnav',t:'Resumen del mes',d:'Aquí pone siempre en qué mes estás. Para cambiarlo, usa las flechas ‹ › de arriba; «Hoy» te devuelve al mes actual.'},
   {tab:'resumen',sel:'#kpis',t:'El mes de un vistazo',d:'Lo que ha entrado, lo que has gastado, lo que ahorras (todo lo que no gastas) y si llegas a tu objetivo de ahorro, que se marca con ✓.'},
   {tab:'resumen',sel:'#groups',t:'Tu presupuesto',d:'Tres columnas: Necesidades, Ocio y caprichos, y Ahorro y donativos. Pulsa una categoría para ver sus movimientos. Si una categoría acumula (↻), lo que no gastas pasa al mes siguiente.'},
   {tab:'efectivo',sel:'#cashForm',t:'Añadir a mano',d:'Lo que pagas en efectivo, o lo que entra o sale de una cuenta sin extracto. Puedes ponerle una etiqueta (por ejemplo «Viaje a Roma»). En el móvil tienes también el botón «＋ Añadir».'},
@@ -282,7 +252,7 @@ $('#foroF').onsubmit=async e=>{e.preventDefault();const texto=$('#foroTxt').valu
   $('#foroGo').disabled=true;if(await publicarForo({titulo:$('#foroTit').value.trim(),texto})){$('#foroTxt').value='';$('#foroTit').value=''}$('#foroGo').disabled=false};
 
 function rAyuda(){
-  $('#ayClara').innerHTML=mascota(88,'saluda');$('#ayNombre').textContent=MASCOTA;
+  $('#ayClara').innerHTML=icoChat(40);$('#ayNombre').textContent=MASCOTA;
   rPrivCard();rFaq();escucharForo();rForo();rBuzon();cargarMias();
   $('#verTag').textContent='Versión '+VERSION;$('#verList').innerHTML=cambiosHtml(null).replace('<div class="chlog">','');
   const on=NUBE&&USER;$('#foroGo').disabled=!on;$('#foroTxt').disabled=!on;$('#foroTit').disabled=!on;

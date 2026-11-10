@@ -118,7 +118,7 @@ module.exports = {
       await p.click('#temaSeg [data-v="oscuro"]');
       assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'dark');
       const fondo = await p.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      assert.equal(fondo, 'rgb(15, 20, 26)');
+      assert.equal(fondo, 'rgb(23, 25, 29)');
       await p.click('#temaSeg [data-v="claro"]');
       assert.equal(await p.evaluate(() => document.documentElement.dataset.theme), 'light');
       await p.click('#temaSeg [data-v="auto"]');
@@ -131,8 +131,7 @@ module.exports = {
     return (async () => {
       const p = await dentro(browser, estado, { conTutorial: true, inicio: true });
       await p.waitForSelector('#tuto:not(.hide)', { timeout: 5000 });
-      assert.match(await p.textContent('#tuto'), /Soy Rufo/);
-      assert.ok(await p.$('#tuto svg.mascota'));
+      assert.match(await p.textContent('#tuto'), /¡Hola!/);
       await p.click('#tutoSig');
       assert.match(await p.textContent('#tuto'), /Tu foto/);
       assert.ok(await p.$('#gFoto'));
@@ -295,33 +294,6 @@ module.exports = {
           await p.click('#tutoSig');
         }
       }
-    })();
-  },
-
-  'Rufo: saluda, señala, piensa, celebra y se preocupa; quieto si se quitan las animaciones'(browser, estado) {
-    return (async () => {
-      const p = await dentro(browser, estado);
-      const pose = () => p.evaluate(() => { const m = document.querySelector('#tuto .tcard .mascota'); return m ? m.className.baseVal.replace('mascota', '').trim() : ''; });
-      await p.evaluate(() => { go('inicio'); tutorial(true); }); await L.esperar(400);
-      assert.equal(await pose(), 'pose-saluda', 'saluda al empezar');
-      await p.evaluate(() => { tutoI = PASOS.findIndex(x => x.t === 'Cuéntame un poco'); pintarTuto(); }); await L.esperar(200);
-      assert.equal(await pose(), 'pose-piensa');
-      await p.evaluate(() => { tutoI = PASOS.findIndex(x => x.t === 'Importar el extracto'); pintarTuto(); }); await L.esperar(500);
-      assert.match(await pose(), /pose-senala-(arriba|abajo|i|d)/, 'señala lo que resalta');
-      await p.evaluate(() => { tutoI = PASOS.length - 1; pintarTuto(); }); await L.esperar(300);
-      assert.equal(await pose(), 'pose-celebra', 'celebra al terminar');
-      await p.keyboard.press('Escape');
-      // en el Resumen: celebra el objetivo conseguido y se preocupa si el mes sale en negativo
-      await p.evaluate(() => { const m = mesDe(hoy()); S.mov.push({ id: 'n', fecha: m + '-01', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', cuenta: 'EVO' }); MES = m; save(); go('resumen'); });
-      assert.ok(await p.$('#kObj .mascota.pose-celebra'));
-      await p.evaluate(() => { const m = mesDe(hoy()); S.mov.push({ id: 'g', fecha: m + '-02', mes: m, concepto: 'COCHE', importe: -2500, cat: 'TRANSPORTE', cuenta: 'EVO' }); save(); go('resumen'); });
-      assert.ok(await p.$('#kpis .mascota.pose-preocupa'));
-      assert.equal(await p.$('#kObj .mascota.pose-celebra'), null);
-      // vivo (parpadea) salvo que se quiten las animaciones
-      const anim = () => p.evaluate(() => getComputedStyle(document.querySelector('#rufoBtn .m-ojos')).animationName);
-      assert.equal(await anim(), 'parpadeo');
-      await p.evaluate(() => { S.aj.anim = false; aplicarTema(); document.documentElement.classList.add('sinanim'); });
-      assert.equal(await anim(), 'none');
     })();
   },
 };

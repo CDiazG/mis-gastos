@@ -16,7 +16,7 @@ function buscarRespuesta(texto){
 let CH_ABIERTO=false,CH_MODO='rufo',CH_RUFO=[],CH_MSGS=[],CH_ADMIN_SEL=null,CH_VIVO=false,CH_PRES=null;
 const chNoLeidosUsuario=()=>CH_MSGS.filter(m=>m.de==='admin'&&!m.leido).length;
 const chNoLeidosAdmin=()=>CH_MSGS.filter(m=>m.de==='usuario'&&!m.leido).length;
-function chSaludo(){CH_RUFO=[{de:'rufo',t:`¡Hola${USER&&USER.nombre?', '+esc(USER.nombre.split(' ')[0]):''}! Soy ${MASCOTA} 🦊 Pregúntame lo que quieras sobre la app. Si no lo sé, te paso con el administrador.`,chips:['¿Cómo subo el extracto?','¿Qué es el ahorro del mes?','¿Cómo apunto un gasto en efectivo?']}]}
+function chSaludo(){CH_RUFO=[{de:'rufo',t:`¡Hola${USER&&USER.nombre?', '+esc(USER.nombre.split(' ')[0]):''}! Pregúntame lo que quieras sobre la app. Si no lo sé, te paso con el administrador.`,chips:['¿Cómo subo el extracto?','¿Qué es el ahorro del mes?','¿Cómo apunto un gasto en efectivo?']}]}
 function escucharChat(){
   if(!NUBE||!USER||!fb.fsM.onSnapshot||CH_VIVO)return;CH_VIVO=true;
   const {collection,query,where,onSnapshot,doc}=fb.fsM;
@@ -62,7 +62,7 @@ function rChatBtn(){
   b.classList.toggle('pendiente',!!n); // con mensajes sin leer, Rufo da saltitos
 }
 function burbuja(m){
-  if(m.de==='rufo')return `<div class="cm rufo">${mascota(28,false)}<div class="cb">${m.t}${m.chips?`<div class="cchips">${m.chips.map(c=>`<button type="button" class="chip" data-q="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:''}</div></div>`;
+  if(m.de==='rufo')return `<div class="cm rufo"><span class="cav">${icoChat(15)}</span><div class="cb">${m.t}${m.chips?`<div class="cchips">${m.chips.map(c=>`<button type="button" class="chip" data-q="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:''}</div></div>`;
   if(m.de==='yo')return `<div class="cm yo"><div class="cb">${esc(m.t)}</div></div>`;
   const mio=USER&&(USER.admin?m.de==='admin':m.de==='usuario');
   return `<div class="cm ${mio?'yo':'otro'}"><div class="cb">${esc(m.texto)}<div class="ch">${new Date(m.fecha).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${mio&&m.leido?' · leído':''}</div></div></div>`;
@@ -85,9 +85,9 @@ function rChat(){
   }else if(CH_MODO==='admin'){
     cab=`<button type="button" class="btn sm icon" id="chAtras" title="Volver con Rufo">‹</button><span><b>El administrador</b><br><span class="small">${presenciaTxt()}</span></span>`;
     const mios=CH_MSGS.filter(m=>m.uid===USER.uid);
-    cuerpo=(mios.length?'':`<div class="cm rufo">${mascota(28,false)}<div class="cb">Escribe aquí tu pregunta y le llegará al administrador. Te avisaré cuando conteste.</div></div>`)+mios.map(burbuja).join('');
+    cuerpo=(mios.length?'':`<div class="cm rufo"><span class="cav">${icoChat(15)}</span><div class="cb">Escribe aquí tu pregunta y le llegará al administrador. Te avisaré cuando conteste.</div></div>`)+mios.map(burbuja).join('');
   }else{
-    cab=`${mascota(30,'piensa')}<span><b>${MASCOTA}</b><br><span class="small mut">Te ayuda con la app</span></span>`;
+    cab=`<span class="cav grande">${icoChat(20)}</span><span><b>${MASCOTA}</b><br><span class="small mut">Te ayuda con la app</span></span>`;
     cuerpo=CH_RUFO.map(burbuja).join('');
   }
   const nAdm=admin?chNoLeidosAdmin():chNoLeidosUsuario();
@@ -123,4 +123,4 @@ function abrirChat(si){
   if(si){if(!CH_RUFO.length)chSaludo();escucharChat();chMarcarLeidos();rChat();rChatBtn();const i=$('#chTxt');if(i&&matchMedia('(min-width:641px)').matches)i.focus()}
 }
 $('#rufoBtn').onclick=()=>abrirChat(!CH_ABIERTO);
-$('#rufoBtn').innerHTML=mascota(46,false)+'<span class="tag bad hide" id="rufoN"></span>';
+$('#rufoBtn').innerHTML=icoChat(26)+'<span class="tag bad hide" id="rufoN"></span>';

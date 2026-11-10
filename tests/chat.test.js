@@ -16,7 +16,7 @@ module.exports = {
       const p = await dentro(browser, estado);
       assert.ok(await p.isVisible('#rufoBtn'));
       await p.click('#rufoBtn');
-      assert.match(await p.textContent('#rufoPanel'), /Soy Rufo/);
+      assert.match(await p.textContent('#rufoPanel'), /Pregúntame/);
       await preguntar(p, 'como subo el pdf del banco');
       assert.match(await p.textContent('#chBody'), /movimientos del banco/i);
       await preguntar(p, 'quiero poner modo oscuro');
