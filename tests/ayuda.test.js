@@ -109,7 +109,7 @@ module.exports = {
       // quitar el gráfico y el botón flotante
       await p.evaluate(() => go('perfil', { sub: 'avisos' }));
       await p.click('label.pref:has([data-pref="verGrafico"])');
-      await p.evaluate(() => irApartado('perfil', 'apariencia')); await p.click('label.pref:has([data-pref="fab"])');
+      await p.evaluate(() => irApartado('perfil', 'apariencia'));
       await p.evaluate(() => go('resumen'));
       assert.ok(!(await p.isVisible('#grafCard')));
       assert.ok(!(await p.isVisible('#fabCash')));

@@ -82,8 +82,8 @@ function rInicio(){
   const media=conDatos.length?conDatos.reduce((a,x)=>a+x.consumo,0)/conDatos.length:0;
   html+=tarjeta('gasto','Gasto de los últimos 12 meses',apiladas(st12.map(x=>{const [n,o]=partesDe(x),act=x.m===hoyM,pr=act&&ritmo&&ritmo>x.consumo?r2(ritmo-x.consumo):0;
       return {m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),n:r2(n),o:r2(o),proy:pr,actual:act,tip:`${nombreMes(x.m)}: ${eur(x.consumo)} gastado`,
-      h:tipHtml(nombreMesCap(x.m)+(act?' <span class="mut">(en curso)</span>':''),[['var(--c1)','Necesidades',eur(n,0)],['var(--c3)','Ocio y otros',eur(o,0)],...(pr?[['','Previsto a fin de mes',eur(x.consumo+pr,0)]]:[]),['','',IR_TXT('el resumen del mes')]])}}),media)+
-    `<div class="leyg"><span><i style="background:var(--c1)"></i>Necesidades</span><span><i style="background:var(--c3)"></i>Ocio y otros</span><span><i class="pr"></i>Previsto</span></div>`);
+      h:tipHtml(nombreMesCap(x.m)+(act?' <span class="mut">(en curso)</span>':''),[['var(--gn)','Necesidades',eur(n,0)],['var(--go)','Ocio y otros',eur(o,0)],...(pr?[['','Previsto a fin de mes',eur(x.consumo+pr,0)]]:[]),['','',IR_TXT('el resumen del mes')]])}}),media)+
+    `<div class="leyg"><span><i style="background:var(--gn)"></i>Necesidades</span><span><i style="background:var(--go)"></i>Ocio y otros</span><span><i class="pr"></i>Previsto</span></div>`);
   // 5. Ahorro mes a mes
   html+=tarjeta('ahorro','Ahorro de los últimos 12 meses',columnas(st12.map(x=>({m:x.m,l:MESES[+x.m.slice(5)-1].slice(0,3),v:r2(x.ahorro),actual:x.m===hoyM,tip:`${nombreMes(x.m)}: ${x.ahorro<0?'gastaste '+eur(-x.ahorro)+' más de lo que entró':'ahorraste '+eur(x.ahorro)}${x.ingresos?' ('+Math.round(x.ahorro/x.ingresos*100)+'%)':''}`,
       h:tipHtml(nombreMesCap(x.m)+(x.m===hoyM?' <span class="mut">(en curso)</span>':''),[['var(--good)','Ingresos',eur(x.ingresos,0)],['var(--acc)','Gastado',eur(x.consumo,0)],[x.ahorro<0?'var(--bad)':'var(--good)',x.ahorro<0?'Gastaste de más':'Ahorrado',eur(x.ahorro,0)+(x.ingresos?` · ${Math.round(x.ahorro/x.ingresos*100)} %`:''),x.ahorro<0?'neg':'pos'],['','',IR_TXT('el resumen del mes')]])})),{neg:true})+

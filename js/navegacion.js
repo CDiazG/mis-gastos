@@ -2,7 +2,7 @@
 "use strict";
 /* ============ Navegación ============ */
 let MES=mesDe(hoy()),TAB='resumen',TAB_ANT='resumen';
-function setMes(m){MES=m;F.todos=false;render()}
+function setMes(m){const dir=m>MES?1:-1;MES=m;F.todos=false;render();const l=$('#mLabel');if(l){l.style.setProperty('--dx',(-dir*34)+'px');l.classList.remove('entra');void l.offsetWidth;l.classList.add('entra')}}
 $('#mPrev').onclick=()=>setMes(addMes(MES,-1));
 $('#mNext').onclick=()=>setMes(addMes(MES,1));
 $('#mHoy').onclick=()=>setMes(mesDe(hoy()));
@@ -172,6 +172,7 @@ function avisoPct(){const s=sumaOtrosPct();
   dialog('Te pasas del 100 %',`<p>Lo que has repartido suma <b>${fmt(s,1)}%</b>: te pasas en <b>${fmt(s-100,1)} puntos</b> y no queda nada para el ahorro. Baja alguna categoría.</p><p class="small mut">Hasta que no lo arregles no puedes salir de Ajustes.</p>`,[{t:'Arreglarlo',cls:'pri',fn:()=>{irApartado('ajustes','presupuesto');setTimeout(()=>$('#pctTable').scrollIntoView({behavior:'smooth',block:'center'}),60)}}]);
 }
 function go(t,{sub,hist=false}={}){
+  const cambia=TAB!==t;
   if(TAB==='ajustes'&&t!=='ajustes'&&presupuestoImposible()){avisoPct();return false}
   if(APARTADOS[t])SUB[t]=sub!==undefined?sub:'';
   _hh();if(TAB!==t&&!PAG_COMPLETA.includes(TAB))TAB_ANT=TAB;TAB=t;document.body.dataset.tab=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===(TAB_DE[t]||t)));$$('.evseg button').forEach(b=>b.classList.toggle('on',b.dataset.go===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(TAB_DE[t]||t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
@@ -179,6 +180,7 @@ function go(t,{sub,hist=false}={}){
   const sec=$('#s-'+t);if(sec){sec.classList.add('anim');clearTimeout(sec._a);sec._a=setTimeout(()=>sec.classList.remove('anim'),900)}
   if(APARTADOS[t])pintarApartado(t);
   if(!hist)navGuardar();
+  if(cambia&&!hist)scrollTo(0,0);
   render()}
 // Tablas que no caben en el móvil: sombra a la derecha y un aviso «Desliza» hasta que la mueves
 function marcarDeslizables(){

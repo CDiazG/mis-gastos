@@ -232,9 +232,8 @@ const PREFS=[
   {k:'verGrafico',g:'avisos',t:'Gráfico «En qué se ha ido el dinero»',d:'En el Resumen.'},
   {k:'verFijos',g:'avisos',t:'Gastos fijos previstos',d:'Tarjeta del Resumen que avisa si un fijo no llega o cambia de importe.'},
   {k:'verObjetivos',g:'avisos',t:'Objetivos de ahorro en el Resumen',d:'Siguen disponibles en Patrimonio aunque lo desactives.'},
-  {k:'fab',g:'apar',t:'Botón flotante «＋ Añadir»',d:'El botón redondo de abajo a la derecha.'},
   {k:'animaciones',g:'apar',t:'Animaciones',d:'Movimientos suaves al abrir pestañas y desplegables.'},
-  {k:'rufo',g:'apar',t:'Rufo en una esquina',d:'El botón del zorro, abajo a la izquierda, para preguntarle dudas o escribir al administrador.'},
+  {k:'rufo',g:'apar',t:'Botón de chat de ayuda',d:'El botón de chat, abajo a la izquierda, para preguntar dudas o escribir al administrador.'},
   {k:'enLinea',g:'avisos',admin:true,t:'Mostrar cuando estoy en línea',d:'En el chat, los usuarios ven «En línea» si tienes la app abierta, o cuándo fue la última vez.'},
 ];
 const pref=k=>S&&S.aj&&S.aj[k]!==false&&(k!=='bizumReglas'||S.aj[k]===true);
@@ -243,13 +242,16 @@ function rPrefs(){
   const tema=S.aj.tema||'auto';
   const pal=S.aj.paleta||'verde',osc=document.documentElement.dataset.theme==='dark'||(document.documentElement.dataset.theme!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
   const palHtml=`<div class="pref" style="cursor:default;flex-direction:column;align-items:stretch;gap:0"><span><b>Colores</b><span class="small mut">Se ven bien en claro y en oscuro.</span></span><div class="palopts" id="palSel">${Object.entries(PALETAS).map(([k,p])=>`<button type="button" class="palopt${k===pal?' on':''}" data-pal="${k}"><span class="sw3">${p[osc?'d':'l'].map(c=>`<i style="background:${c}"></i>`).join('')}</span><b>${p.n}</b></button>`).join('')}</div></div>`;
-  const temaHtml=`<div class="pref" style="cursor:default;align-items:center"><span style="flex:1"><b>Tema</b><span class="small mut">Automático: como tenga el dispositivo.</span></span><span class="seg" id="temaSeg">${[['claro','☀️ Claro'],['oscuro','🌙 Oscuro'],['auto','Auto']].map(([k,t])=>`<button type="button" data-v="${k}" class="${k===tema?'on':''}">${t}</button>`).join('')}</span></div>`;
+  const temaHtml=`<div class="pref ap-bloque" style="cursor:default"><span><b>Modo</b><span class="small mut">Automático: como tenga el dispositivo.</span></span><div class="modos" id="temaSeg">${[['claro','Claro'],['oscuro','Oscuro'],['auto','Sistema']].map(([k,t])=>`<button type="button" data-v="${k}" class="modo ${k}${k===tema?' on':''}"><i></i><b>${t}</b></button>`).join('')}</div></div>`;
+  const fon=S.aj.fondo||'auto';
+  const fondoHtml=`<div class="pref ap-bloque" style="cursor:default"><span><b>Fondo</b><span class="small mut">El fondo animado de la pantalla de entrada y del móvil.</span></span><div class="fondos" id="fondoSel"><button type="button" class="fsw auto${fon==='auto'?' on':''}" data-fondo="auto" title="Igual que los colores"><i></i><b>Igual</b></button>${Object.entries(PALETAS).map(([k,p])=>`<button type="button" class="fsw${k===fon?' on':''}" data-fsw="${k}" data-fondo="${k}" title="${p.n}"><i></i><b>${p.n}</b></button>`).join('')}</div></div>`;
   const grupo=g=>PREFS.filter(p=>p.g===g&&(!p.admin||(USER&&USER.admin))).map(prefHtml).join('');
-  if($('#aparList'))$('#aparList').innerHTML=palHtml+temaHtml+grupo('apar');
+  if($('#aparList'))$('#aparList').innerHTML=temaHtml+palHtml+fondoHtml+grupo('apar');
   if($('#prefList'))$('#prefList').innerHTML=grupo('avisos');
   if($('#clasList'))$('#clasList').innerHTML=grupo('clas');
   const dz=$('#dzOn');if(dz)dz.checked=diezmoOn();
   $$('#palSel .palopt').forEach(b=>b.onclick=()=>{S.aj.paleta=b.dataset.pal;aplicarTema();save();rPrefs();toast('Colores: '+PALETAS[b.dataset.pal].n)});
+  $$('#fondoSel .fsw').forEach(b=>b.onclick=()=>{S.aj.fondo=b.dataset.fondo;aplicarTema();save();rPrefs()});
   $$('#temaSeg button').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.v;aplicarTema();save();rPrefs()});
   $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab'||k==='rufo')render();if(k==='animaciones')aplicarTema();if(k==='enLinea'&&typeof presencia==='function')presencia()});
 }
@@ -258,8 +260,9 @@ const PALETAS={"pizarra": {"n": "Pizarra", "l": ["#16191d", "#e9ebee", "#ffffff"
 function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.paleta)||'verde',de=document.documentElement;
   if(t==='auto')delete de.dataset.theme;else de.dataset.theme=t==='claro'?'light':'dark';
   if(p==='verde'||!PALETAS[p])delete de.dataset.pal;else de.dataset.pal=p;
+  const fo=(S&&S.aj&&S.aj.fondo)||'auto';if(fo==='auto'||!PALETAS[fo])delete de.dataset.fondo;else de.dataset.fondo=fo;
   de.classList.toggle('sinanim',!!(S&&S.aj&&S.aj.animaciones===false));
-  try{localStorage.setItem('mg-tema',t);localStorage.setItem('mg-paleta',p)}catch(_){}
+  try{localStorage.setItem('mg-tema',t);localStorage.setItem('mg-paleta',p);localStorage.setItem('mg-fondo',fo)}catch(_){}
   const col=(PALETAS[p]||PALETAS.verde).l[0];
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=col;
   // el icono de la pestaña del navegador, del color elegido (el de la app instalada se queda verde)

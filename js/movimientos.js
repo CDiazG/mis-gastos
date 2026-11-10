@@ -271,9 +271,9 @@ function dividir(x){
 }
 
 /* Formulario por pasos: primero tipo e importe; al escribir el importe sale «¿En qué?» y la categoría; luego el resto */
-function pintarPaso(){const f=$('#cashForm');if(!f)return;let p=+f.dataset.paso||1;
-  if(p<2&&parseNum($('#cImp').value)>0)p=2;
-  if(p<3&&p>=2&&($('#cCon').value.trim()||cCat))p=3;
+function pintarPaso(){const f=$('#cashForm');if(!f)return;
+  const imp=parseNum($('#cImp').value)>0,algo=!!($('#cCon').value.trim()||cCat);
+  const p=algo?3:imp?2:1;
   if(String(p)!==f.dataset.paso)f.dataset.paso=String(p)}
 $('#cashForm').addEventListener('input',e=>{pintarPaso();const d=e.target.closest('#cashForm>div');if(d&&d.classList.contains('falta')){d.classList.remove('falta');const t=$('.errtxt',d);if(t)t.remove()}});
 $('#cashForm').addEventListener('click',()=>setTimeout(pintarPaso,0));

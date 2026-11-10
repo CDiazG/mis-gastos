@@ -75,7 +75,7 @@ function rChat(){
     if(!CH_ADMIN_SEL){
       const convs={};for(const m of CH_MSGS){const c=convs[m.uid]||(convs[m.uid]={uid:m.uid,nombre:'',ult:m,n:0});if(m.de==='usuario'&&m.nombre)c.nombre=m.nombre;if(m.fecha>=c.ult.fecha)c.ult=m;if(m.de==='usuario'&&!m.leido)c.n++}
       const xs=Object.values(convs).sort((a,b)=>b.ult.fecha-a.ult.fecha);
-      cab=`<button type="button" class="btn sm icon" id="chAtras" title="Volver con Rufo">‹</button><b>Mensajes de los usuarios</b>`;pie=false;
+      cab=`<button type="button" class="btn sm icon" id="chAtras" title="Volver a la ayuda">‹</button><b>Mensajes de los usuarios</b>`;pie=false;
       cuerpo=xs.length?xs.map(c=>`<button type="button" class="cconv" data-u="${esc(c.uid)}">${avatarHtml(c.uid,c.nombre,undefined,34)}<span class="cc"><b>${esc(c.nombre||'Usuario')}</b><span class="mut small">${esc(c.ult.texto.slice(0,60))}</span></span>${c.n?`<span class="tag bad">${c.n}</span>`:''}</button>`).join(''):'<p class="mut small" style="padding:12px">Nadie te ha escrito todavía. Cuando Rufo no sepa responder algo, la persona te escribirá aquí.</p>';
     }else{
       const nombre=(CH_MSGS.find(m=>m.uid===CH_ADMIN_SEL&&m.de==='usuario')||{}).nombre||'Usuario';
@@ -83,7 +83,7 @@ function rChat(){
       cuerpo=CH_MSGS.filter(m=>m.uid===CH_ADMIN_SEL).map(burbuja).join('');
     }
   }else if(CH_MODO==='admin'){
-    cab=`<button type="button" class="btn sm icon" id="chAtras" title="Volver con Rufo">‹</button><span><b>El administrador</b><br><span class="small">${presenciaTxt()}</span></span>`;
+    cab=`<button type="button" class="btn sm icon" id="chAtras" title="Volver a la ayuda">‹</button><span><b>El administrador</b><br><span class="small">${presenciaTxt()}</span></span>`;
     const mios=CH_MSGS.filter(m=>m.uid===USER.uid);
     cuerpo=(mios.length?'':`<div class="cm rufo"><span class="cav">${icoChat(15)}</span><div class="cb">Escribe aquí tu pregunta y le llegará al administrador. Te avisaré cuando conteste.</div></div>`)+mios.map(burbuja).join('');
   }else{
@@ -102,7 +102,7 @@ function rChat(){
   $$('#rufoPanel [data-q]').forEach(b=>b.onclick=()=>preguntarRufo(b.dataset.q));
   $$('#rufoPanel [data-ir]').forEach(b=>b.onclick=()=>{const f=FAQ[+b.dataset.ir];abrirChat(false);if(b.dataset.modo==='guia')guia({tab:f.ir.tab,sel:f.ir.padre?null:f.ir.sel,card:f.ir.card,t:f.p,d:f.ir.g||f.r});else{go(f.ir.tab);setTimeout(()=>{let el=$(f.ir.sel);if(el&&f.ir.card)el=el.closest('.card')||el;if(el)el.scrollIntoView({block:'center',behavior:'smooth'})},60)}});
   $$('#rufoPanel [data-esc]').forEach(b=>b.onclick=async()=>{const t=b.dataset.esc;CH_MODO='admin';rChat();if(await chEnviarAdmin(t))toast('Se lo he pasado al administrador')});
-  $$('#rufoPanel [data-ok]').forEach(b=>b.onclick=()=>{CH_RUFO.push({de:'rufo',t:'¡Genial! Si tienes otra duda, aquí estoy 🦊'});rChat()});
+  $$('#rufoPanel [data-ok]').forEach(b=>b.onclick=()=>{CH_RUFO.push({de:'rufo',t:'¡Genial! Si tienes otra duda, aquí estoy'});rChat()});
   const fm=$('#chForm');if(fm)fm.onsubmit=async e=>{e.preventDefault();const t=$('#chTxt').value.trim();if(!t)return;$('#chTxt').value='';
     if(CH_MODO==='admin')await chEnviarAdmin(t,admin?CH_ADMIN_SEL:undefined);else preguntarRufo(t);
     const i=$('#chTxt');if(i)i.focus()};
