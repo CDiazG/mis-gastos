@@ -1087,3 +1087,20 @@ header{background:var(--bg);box-shadow:none}
 .apizq{max-height:calc(100vh - 120px);overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}
 /* Botones rápidos del Resumen: solo en el móvil (en el ordenador ya está la columna lateral) */
 @media (min-width:901px){.acc4{display:none}#kpis .kpi:nth-child(3){padding-bottom:30px}}
+
+/* ===== Cuenta: círculo con menú (2.30) ===== */
+.brandtxt{display:none}
+.userbox{position:relative;margin-left:auto}
+.who{padding:0;background:none;border:0;cursor:pointer}
+.who .avatar{width:36px;height:36px;font-size:13px;letter-spacing:.02em;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.cmenu{position:absolute;right:0;top:calc(100% + 8px);width:290px;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:10px;z-index:80;display:flex;flex-direction:column;gap:2px}
+.cmenu.hide{display:none}
+.cmhead{display:flex;align-items:center;gap:12px;padding:8px 8px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.cmhead .avatar{width:44px;height:44px;font-size:15px;background:var(--soft);color:var(--ink)}
+.cmhead b{display:block;font-size:15px}.cmhead small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.cmit{text-align:left;padding:12px 10px;border-radius:12px;background:none;border:0;font-size:15px;color:var(--ink);cursor:pointer}
+.cmit:hover{background:var(--soft)}
+.cmver{color:var(--muted);font-size:12px}
+.cmpie{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 8px 2px;border-top:1px solid var(--line);margin-top:6px}
+.cmpie .sync{display:inline}
+@media (max-width:900px){.cmenu{position:fixed;left:12px;right:12px;top:56px;width:auto}}

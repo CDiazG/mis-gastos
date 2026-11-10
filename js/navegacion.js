@@ -146,6 +146,7 @@ function cerrarAbierto(){
   if($('#mesPicker')){cerrarMesPicker();return true}
   if($('#movPanel')){cerrarPanelMov();return true}
   if($('#masSheet')){cerrarMas();return true}
+  if($('#cuentaMenu')&&!$('#cuentaMenu').classList.contains('hide')){cerrarCuenta();return true}
   const d=$('#dlg');if(d&&d.open){d.close();return true}
   const rp=$('#rufoPanel');if(rp&&!rp.classList.contains('hide')&&typeof abrirChat==='function'){abrirChat(false);return true}
   return false;
@@ -203,5 +204,10 @@ function render(){
   requestAnimationFrame(marcarDeslizables);
 }
 
-function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;const av=$('#uAv');
-  if(USER.foto){av.textContent='';av.style.background=`center/cover url("${USER.foto}")`}else{av.style.background='';av.textContent=(USER.nombre||USER.email||'?').trim().charAt(0).toUpperCase()}$('#uWho').title=USER.nombre+' · '+USER.email}
+function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;$('#uMail').textContent=USER.email||'';const av=$('#uAv');
+  const ini=(USER.nombre||USER.email||'?').trim().split(/\s+/).slice(0,2).map(s=>s.charAt(0)).join('').toUpperCase();
+  [av,$('#uAv2')].forEach(a=>{if(USER.foto){a.textContent='';a.style.background=`center/cover url("${USER.foto}")`}else{a.style.background='';a.textContent=ini}});$('#uWho').title=USER.nombre+' · '+USER.email}
+function cerrarCuenta(){$('#cuentaMenu').classList.add('hide')}
+$('#uWho').onclick=e=>{e.stopPropagation();$('#cuentaMenu').classList.toggle('hide')};
+$$('#cuentaMenu [data-cm]').forEach(b=>b.onclick=()=>{cerrarCuenta();go(b.dataset.cm)});
+document.addEventListener('click',e=>{if(!e.target.closest('#userbox'))cerrarCuenta()});

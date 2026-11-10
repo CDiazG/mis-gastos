@@ -16,7 +16,7 @@
 <body>
 <header>
   <div class="top">
-    <div class="brand"><svg class="logoapp" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="var(--acc)"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="var(--acc-ink)" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="var(--acc-ink)" stroke-opacity=".7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuentas Claras <button class="ver" id="verBtn" title="Ver novedades"></button></div>
+    <div class="brand"><svg class="logoapp" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="var(--acc)"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="var(--acc-ink)" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="var(--acc-ink)" stroke-opacity=".7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandtxt">Cuentas Claras</span></div>
     <div class="monthnav" id="monthnav">
       <button class="btn icon" id="mPrev" title="Mes anterior">‹</button>
       <div class="m" id="mLabel"></div>
@@ -24,7 +24,16 @@
       <button class="btn sm" id="mHoy">Hoy</button>
     </div>
     <button class="btn sm hide" id="instalarTop" title="Crear un acceso directo en el escritorio">Instalar</button>
-    <div class="userbox hide" id="userbox"><span class="sync" id="sync"></span><button type="button" class="who" id="uWho" title="Mi perfil"><span class="avatar" id="uAv"></span><span id="uName"></span></button><button class="btn sm" id="logout">Salir</button></div>
+    <div class="userbox hide" id="userbox"><button type="button" class="who" id="uWho" title="Cuenta" aria-haspopup="true"><span class="avatar" id="uAv"></span></button>
+      <div class="cmenu hide" id="cuentaMenu" role="menu">
+        <div class="cmhead"><span class="avatar" id="uAv2"></span><div><b id="uName"></b><small id="uMail"></small></div></div>
+        <button type="button" class="cmit" data-cm="perfil" id="cmPerfil">Mi perfil</button>
+        <button type="button" class="cmit" data-cm="ajustes">Ajustes</button>
+        <button type="button" class="cmit" data-cm="ayuda">Ayuda</button>
+        <button type="button" class="cmit hide" data-cm="usuarios" id="cmUsuarios">Usuarios</button>
+        <button type="button" class="cmit cmver" id="verBtn" title="Ver novedades"></button>
+        <div class="cmpie"><span class="sync" id="sync"></span><button class="btn sm" id="logout">Cerrar sesión</button></div>
+      </div></div>
   </div>
   <nav class="tabs" id="tabs">
     <button class="tab on" data-t="inicio"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span>Inicio</span></button>

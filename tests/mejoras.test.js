@@ -158,7 +158,7 @@ module.exports = {
   'mi perfil: se abre desde el nombre, cambia el nombre y la apariencia; Usuarios con foto'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
-      await p.click('#uWho');
+      await p.click('#uWho'); await p.click('#cmPerfil');
       assert.equal(await p.evaluate(() => TAB), 'perfil');
       assert.match(await p.textContent('#pfNombre'), /Administrador/);
       for (const id of ['#fotoAj', '#aparCard #palSel', '#aparCard #temaSeg', '#prefCard [data-pref="aviso80"]', '#pfAct', '#wipe']) assert.ok(await p.$(id), id);

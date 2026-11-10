@@ -1,7 +1,6 @@
 // Cuentas Claras · Mi perfil: tu foto y tus datos, cómo ves la app, tus avisos y tu actividad
 "use strict";
 /* ============ Mi perfil ============ */
-$('#uWho').onclick=()=>go('perfil');
 $('#pfSalir').onclick=()=>$('#logout').click();
 function rPerfil(){
   const nube=NUBE&&USER;

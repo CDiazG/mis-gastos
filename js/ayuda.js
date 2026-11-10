@@ -76,7 +76,7 @@ const RECORRIDO=[
   {tab:'hist',sel:'#chart',t:'Histórico',d:'Ingresos, gastos y la línea de tu ahorro mes a mes. Debajo: comparación con el mismo mes del año pasado y cuánto ha costado cada etiqueta.'},
   {tab:'patri',sel:'#patTable',card:true,t:'Patrimonio',d:'El saldo de tus cuentas, lo que te deben y tus objetivos de ahorro (huchas).'},
   {tab:'ajustes',sel:'.apmenu[data-menu="ajustes"]',t:'Ajustes',d:'Cómo funcionan tus cuentas, por apartados: el presupuesto (en % o en €), las reglas de categorías, los gastos fijos, la nómina, el diezmo y las copias de seguridad. Toca uno y verás solo eso.'},
-  {tab:'perfil',sel:'#uWho',t:'Mi perfil',d:'Pulsa en tu foto o tu nombre, arriba a la derecha: ahí cambias tu foto, tu nombre, los colores, los avisos y la contraseña.'},
+  {tab:'perfil',sel:'#uWho',t:'Mi perfil',d:'Pulsa en tu círculo, arriba a la derecha, y entra en Mi perfil: ahí cambias tu foto, tu nombre, los colores, los avisos y la contraseña.'},
   {tab:'ayuda',sel:'.apmenu[data-menu="ayuda"]',t:'Ayuda',d:'Preguntas frecuentes (con un botón para que te lleve al sitio), privacidad, el foro para preguntar a los demás y el buzón de sugerencias. Y si tienes una duda, pregúntame a mí en la esquina. ¡Ya está, a ahorrar! 🌱'},
 ];
 let tutoI=-1,PASOS=[],GUIA_COMPLETA=false;

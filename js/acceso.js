@@ -96,7 +96,7 @@ async function entrar(u){
   if(admin){try{localStorage.setItem('mg-admin-ok','1')}catch(_){}$('#lAlta').classList.add('hide')}
   try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+(e.code||e.message),true);return}
   $('#login').classList.add('hide');$('#userbox').classList.remove('hide');pintarCuenta();setSync('ok');
-  $('#tabUsuarios').classList.toggle('hide',!admin);
+  $('#tabUsuarios').classList.toggle('hide',!admin);$('#cmUsuarios').classList.toggle('hide',!admin);
   $('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(USER.nombre)+'</b> ('+esc(USER.email)+').'+'';
   $('#miNombre').value=USER.nombre;
   iniciarUI();
