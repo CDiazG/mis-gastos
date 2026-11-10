@@ -1406,3 +1406,19 @@ html:root[data-fondo="fluvi"]{--wa:#0891b2;--wb:#06b6d4;--wc:#a5ecf7;--wd:#0b3a4
 .acor .acord{margin:3px 0 0}
 .acor:not(.cerrada) .acord{display:none}
 .acor>.acorh{display:flex!important}
+/* 2.38.2 círculo de perfil y menú: sin aro pegado al tocar, animaciones suaves */
+button.who,button.who:hover,button.who:focus{padding:0!important;background:none!important;border-radius:50%;outline:0;-webkit-tap-highlight-color:transparent}
+.who .avatar{transition:transform .3s var(--ease),box-shadow .3s var(--ease),background-color .25s}
+.who:active .avatar{transform:scale(.92)}
+.who[aria-expanded="true"] .avatar{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 55%,transparent)}
+.who:focus-visible .avatar{box-shadow:0 0 0 3px var(--acc)}
+@media (hover:hover){.who:hover .avatar{transform:scale(1.08);box-shadow:0 0 0 4px color-mix(in srgb,var(--ink) 12%,transparent)}}
+@media (max-width:900px){.cmenu{transform-origin:top left}}
+.cmenu{clip-path:inset(-60px -60px -60px -60px)}
+.cmenu.hide{clip-path:inset(-60px -60px 100% -60px);transform:translateY(-6px);transition:opacity .2s var(--ease),transform .3s var(--ease),clip-path .34s var(--ease),visibility 0s .34s}
+.cmenu:not(.hide){transition:opacity .22s var(--ease),transform .38s var(--ease),clip-path .42s var(--ease),visibility 0s}
+.cmit{transition:background-color .2s var(--ease),padding-left .25s var(--ease)}
+.cmit .cmi{transition:color .2s,transform .25s var(--ease)}
+@media (hover:hover){.cmit:hover{padding-left:16px}.cmit:hover .cmi{color:var(--ink);transform:scale(1.12)}}
+.cmit:active{background:var(--soft)}
+.sinanim .who .avatar,.sinanim .cmit,.sinanim .cmit .cmi{transition:none!important}

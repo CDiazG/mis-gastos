@@ -212,7 +212,7 @@ function render(){
 function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;$('#uCorreo').textContent=USER.email||'';const av=$('#uAv');
   const ini=(USER.nombre||USER.email||'?').trim().split(/\s+/).slice(0,2).map(s=>s.charAt(0)).join('').toUpperCase();
   [av,$('#uAv2')].forEach(a=>{if(USER.foto){a.textContent='';a.style.background=`center/cover url("${USER.foto}")`}else{a.style.background='';a.textContent=ini}});$('#uWho').title=USER.nombre+' · '+USER.email}
-function cerrarCuenta(){$('#cuentaMenu').classList.add('hide')}
-$('#uWho').onclick=e=>{e.stopPropagation();$('#cuentaMenu').classList.toggle('hide')};
+function cerrarCuenta(){$('#cuentaMenu').classList.add('hide');$('#uWho').setAttribute('aria-expanded','false')}
+$('#uWho').onclick=e=>{e.stopPropagation();const h=$('#cuentaMenu').classList.toggle('hide');$('#uWho').setAttribute('aria-expanded',!h)};
 $$('#cuentaMenu [data-cm]').forEach(b=>b.onclick=()=>{cerrarCuenta();go(b.dataset.cm)});
 document.addEventListener('click',e=>{if(!e.target.closest('#userbox'))cerrarCuenta()});
