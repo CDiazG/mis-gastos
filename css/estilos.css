@@ -924,3 +924,18 @@ main{padding-top:24px}
   #s-movs .catchip{font-size:12px;color:var(--muted);background:none;padding:0;border:0}
   #s-movs .catchip.sin{color:var(--warn)}
 }
+
+/* Evolución = Histórico + Patrimonio, con un selector en forma de pastilla */
+.evseg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px;margin:0 0 14px;gap:2px}
+.evseg button{border:0;background:none;padding:6px 16px;border-radius:999px;font-weight:600;font-size:13.5px;color:var(--muted);cursor:pointer}
+.evseg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+/* Ordenador: menú en columna a la izquierda */
+@media (min-width:901px){
+  body{padding-left:216px}
+  header{margin-left:-216px;padding-left:216px}
+  .tabs{position:fixed;left:0;top:var(--hh,58px);bottom:0;width:216px;max-width:none;margin:0;flex-direction:column;align-items:stretch;gap:2px;padding:16px 12px;overflow-y:auto;z-index:15}
+  .tab{border-bottom:0;border-radius:10px;padding:10px 12px;width:100%;font-size:14.5px}
+  .tab.on{background:var(--acc-soft);color:var(--acc)}
+  .tab:hover:not(.on){background:var(--soft)}
+  .tabMas{display:none!important}
+}

@@ -36,8 +36,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMesPicker()});
     setMes(addMes(MES,dx<0?1:-1));const s=$('#s-'+TAB);if(s){s.classList.remove('desliza-i','desliza-d');void s.offsetWidth;s.classList.add(dx<0?'desliza-i':'desliza-d')}},{passive:true});
 })();
 $$('.tab[data-t]').forEach(b=>b.onclick=()=>go(b.dataset.t));
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(b.dataset.go)});
+/* Ordenador: la columna lateral empieza justo debajo de la cabecera */
+const _hh=()=>document.documentElement.style.setProperty('--hh',($('header').offsetHeight)+'px');_hh();addEventListener('resize',_hh);if(window.ResizeObserver)new ResizeObserver(_hh).observe($('header'));
 /* Móvil: barra inferior con Inicio, Resumen, Añadir, Movimientos y «Más» */
-const EN_MAS=['importar','hist','patri','ajustes','ayuda','usuarios','perfil'];
+const EN_MAS=['hist','ajustes','ayuda','usuarios','perfil'];
+const TAB_DE={patri:'hist',importar:'movs'}; // pestañas que viven dentro de otra de la barra
 function abrirMas(){
   cerrarMas();
   const it=EN_MAS.filter(t=>t!=='perfil').map(t=>$(`.tab[data-t="${t}"]`)).filter(b=>b&&!b.classList.contains('hide'));
@@ -166,7 +170,7 @@ function avisoPct(){const s=sumaOtrosPct();
 function go(t,{sub,hist=false}={}){
   if(TAB==='ajustes'&&t!=='ajustes'&&presupuestoImposible()){avisoPct();return false}
   if(APARTADOS[t])SUB[t]=sub!==undefined?sub:'';
-  TAB=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
+  _hh();TAB=t;$$('.tab[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===(TAB_DE[t]||t)));$$('.evseg button').forEach(b=>b.classList.toggle('on',b.dataset.go===t));$('#tabMas').classList.toggle('on',EN_MAS.includes(TAB_DE[t]||t));document.body.classList.remove('bajando');$('#uWho').classList.toggle('on',t==='perfil');$$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));
   const tp=$('#tip');if(tp)tp.classList.remove('on');
   const sec=$('#s-'+t);if(sec){sec.classList.add('anim');clearTimeout(sec._a);sec._a=setTimeout(()=>sec.classList.remove('anim'),900)}
   if(APARTADOS[t])pintarApartado(t);

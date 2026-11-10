@@ -207,7 +207,7 @@ module.exports = {
       assert.ok(!(await p.isVisible('#fabCash')), 'en el móvil Añadir va en la barra');
       await p.tap('#tabMas'); await p.waitForSelector('#masSheet.on');
       const opc = await p.$$eval('#masSheet .msit', b => b.map(x => x.textContent.trim()));
-      assert.ok(opc.includes('Histórico') && opc.includes('Ajustes') && opc.some(x => x.endsWith('Mi perfil')), opc.join());
+      assert.ok(opc.includes('Evolución') && opc.includes('Ajustes') && opc.some(x => x.endsWith('Mi perfil')), opc.join());
       await p.tap('#masSheet .msit[data-t="hist"]'); await L.esperar(150);
       assert.equal(await p.evaluate(() => TAB), 'hist');
       assert.ok(await p.evaluate(() => $('#tabMas').classList.contains('on')), 'Más queda marcado');
@@ -219,6 +219,25 @@ module.exports = {
       assert.ok(await p.evaluate(() => document.body.classList.contains('bajando')));
       await p.evaluate(() => scrollTo(0, 300)); await L.esperar(100);
       assert.ok(!(await p.evaluate(() => document.body.classList.contains('bajando'))));
+    })();
+  },
+
+  'ordenador: menú en columna a la izquierda, Evolución con Histórico y Patrimonio, Importar desde Movimientos'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado, { viewport: { width: 1280, height: 800 } }); await L.esperar(200);
+      const g = await p.evaluate(() => { const t = $('#tabs').getBoundingClientRect(), m = $('main').getBoundingClientRect(), h = $('header').getBoundingClientRect(); return { tl: Math.round(t.left), tw: Math.round(t.width), tt: Math.round(t.top), hb: Math.round(h.bottom), ml: Math.round(m.left), w: document.documentElement.scrollWidth, vis: [...$$('#tabs .tab')].filter(b => b.offsetParent).map(b => b.textContent.trim()) }; });
+      assert.ok(g.tl <= 0 && g.tw >= 200, 'el menú es una columna a la izquierda');
+      assert.ok(g.tt >= g.hb - 2, 'el menú empieza debajo de la cabecera');
+      assert.ok(g.ml >= g.tw, 'el contenido no queda tapado por el menú');
+      assert.ok(g.w <= 1281, 'no hay desplazamiento horizontal');
+      assert.ok(g.vis.includes('Evolución') && !g.vis.includes('Patrimonio') && !g.vis.includes('Importar'), g.vis.join());
+      await p.click('.tab[data-t="hist"]'); await L.esperar(150);
+      await p.click('#s-hist .evseg [data-go="patri"]'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => TAB), 'patri');
+      assert.ok(await p.evaluate(() => $('.tab[data-t="hist"]').classList.contains('on')), 'Evolución sigue marcada');
+      await p.click('.tab[data-t="movs"]'); await p.click('[data-go="importar"]'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => TAB), 'importar');
+      assert.ok(await p.evaluate(() => $('.tab[data-t="movs"]').classList.contains('on')), 'Movimientos sigue marcada');
     })();
   },
 
