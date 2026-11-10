@@ -939,3 +939,50 @@ main{padding-top:24px}
   .tab:hover:not(.on){background:var(--soft)}
   .tabMas{display:none!important}
 }
+
+/* ===== Más calma (2.27): cifra protagonista, mes discreto, paleta suave, oscuro azulado ===== */
+/* Resumen: «Ahorro del mes» manda; Objetivo al lado; Ingresos y Gastado más pequeños debajo */
+#kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#kpis .kpi:nth-child(3){order:1;grid-column:span 2;padding:20px 22px}
+#kpis .kpi:nth-child(4){order:2;grid-column:span 2;padding:20px 22px}
+#kpis .kpi:nth-child(1){order:3;grid-column:span 2;padding:12px 22px}
+#kpis .kpi:nth-child(2){order:4;grid-column:span 2;padding:12px 22px}
+#kpis .kpi:nth-child(3) .v{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-top:6px}
+#kpis .kpi:nth-child(4) .v{font-size:26px;font-weight:600;margin-top:6px}
+#kpis .kpi:nth-child(1) .v,#kpis .kpi:nth-child(2) .v{font-size:19px;font-weight:600}
+#kpis .kpi:nth-child(1) .s,#kpis .kpi:nth-child(2) .s{display:none}
+.kpi .l{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.kpi .pos,.kpi .neg{font-weight:600}
+@media (max-width:640px){
+  #kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  #kpis .kpi:nth-child(3),#kpis .kpi:nth-child(4){grid-column:1/-1;padding:16px 18px}
+  #kpis .kpi:nth-child(3) .v{font-size:34px}
+  #kpis .kpi:nth-child(1),#kpis .kpi:nth-child(2){grid-column:span 1;padding:12px 16px}
+  #kpis .kpi:nth-child(3) .s,#kpis .kpi:nth-child(4) .s{display:block}
+}
+/* Mes: texto discreto en la cabecera y título tranquilo */
+.monthnav .m{width:auto;min-width:150px;background:none!important;color:var(--ink)!important;font-size:15px;font-weight:600;padding:2px 6px;border-radius:8px}
+.monthnav .m small{font-weight:500;color:var(--muted)}
+.monthnav .btn{border-color:transparent;background:none;color:var(--muted)}
+.monthnav .btn:hover{background:var(--soft);color:var(--ink)}
+#mHoy{font-size:13px;color:var(--acc)!important;font-weight:600}
+.monthnav.pasado .m small{color:var(--warn)}
+.mesTit .mt{font-size:26px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.mesTit .tag{background:none;color:var(--muted);padding:0;font-size:12.5px}
+.mesTit .tag.good::before{content:'● ';color:var(--good)}
+.mesTit .mtHoy{font-size:13px;font-weight:600}
+/* Gráficos: colores suaves del mismo tono */
+:root{--c1:#4f8f86;--c2:#7a9cc6;--c3:#d4b483;--c4:#c98f7a;--c5:#9db88d;--c6:#a68fb5;--c7:#8e9aa3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c1:#6fb3a8;--c2:#8fb0d8;--c3:#dcc392;--c4:#d9a08c;--c5:#aec99f;--c6:#b9a3c7;--c7:#a3afb8}}
+:root[data-theme="dark"]{--c1:#6fb3a8;--c2:#8fb0d8;--c3:#dcc392;--c4:#d9a08c;--c5:#aec99f;--c6:#b9a3c7;--c7:#a3afb8}
+.bar{height:6px;border-radius:99px}.bar i{border-radius:99px}
+/* Fichas desplegables más ligeras */
+.ghead .t{font-weight:600;font-size:15.5px}
+.ghead .r{font-size:12.5px}
+.grupo .crow .bd{font-size:12px}
+.crow{font-size:14.5px}
+/* Títulos de sección pequeños */
+.hola{font-size:13px}
+/* Oscuro azulado (solo en la paleta de serie) */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-pal]){--bg:#0f141a;--card:#171e27;--ink:#e6e9ee;--muted:#9aa5b1;--line:#27313d;--soft:#1e2631}}
+:root[data-theme="dark"]:not([data-pal]){--bg:#0f141a;--card:#171e27;--ink:#e6e9ee;--muted:#9aa5b1;--line:#27313d;--soft:#1e2631}
