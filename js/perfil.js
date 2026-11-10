@@ -1,4 +1,4 @@
-// Cuentas Claras · Mi perfil: tu foto y tus datos, cómo ves la app, tus avisos y tu actividad
+// Fluvi · Mi perfil: tu foto y tus datos, cómo ves la app, tus avisos y tu actividad
 "use strict";
 /* ============ Mi perfil ============ */
 $('#pfSalir').onclick=()=>$('#logout').click();

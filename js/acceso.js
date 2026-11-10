@@ -1,4 +1,4 @@
-// Cuentas Claras · Pantalla de entrada, instalación como app y aviso de versión nueva
+// Fluvi · Pantalla de entrada, instalación como app y aviso de versión nueva
 "use strict";
 /* ============ Acceso ============ */
 const ERR_AUTH={'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'Correo o contraseña incorrectos.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos o recupera la contraseña.','auth/invalid-email':'El correo no es válido.','auth/network-request-failed':'Sin conexión a internet.','auth/weak-password':'La contraseña tiene que tener al menos 6 caracteres.','auth/email-already-in-use':'Ya existe una cuenta con ese correo: entra con tu contraseña.','auth/password-does-not-meet-requirements':'La contraseña no cumple los requisitos: mínimo 8 caracteres, con minúsculas y números.'};
@@ -110,7 +110,7 @@ function instUI(){
   $('#instalarTop').classList.toggle('hide',!puede);
   const b=$('#instalarBtn');if(!b)return;b.classList.toggle('hide',!puede);
   if(instalada()){$('#instTxt').textContent='Ya la estás usando como aplicación instalada. Aparece en el escritorio y en el menú de inicio.';$('#instPasos').innerHTML='';return}
-  $('#instTxt').textContent=puede?'Crea un icono en el escritorio que abre Cuentas Claras en su propia ventana, como un programa más.':'Puedes crear un icono en el escritorio que abre Cuentas Claras en su propia ventana:';
+  $('#instTxt').textContent=puede?'Crea un icono en el escritorio que abre Fluvi en su propia ventana, como un programa más.':'Puedes crear un icono en el escritorio que abre Fluvi en su propia ventana:';
   $('#instPasos').innerHTML=puede?'':`<ul style="margin:8px 0 0;padding-left:18px">
     <li><b>Chrome:</b> menú ⋮ → «Enviar, guardar y compartir» → «Instalar página como aplicación…» (o el icono de instalar a la derecha de la barra de direcciones).</li>
     <li><b>Edge:</b> menú … → «Aplicaciones» → «Instalar este sitio como una aplicación».</li>

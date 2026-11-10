@@ -1,4 +1,4 @@
-// Cuentas Claras · Funciones de apoyo: formato, fechas, normalización de texto
+// Fluvi · Funciones de apoyo: formato, fechas, normalización de texto
 "use strict";
 /* ============ Utilidades ============ */
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];

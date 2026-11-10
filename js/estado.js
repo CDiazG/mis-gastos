@@ -1,4 +1,4 @@
-// Cuentas Claras · Datos del usuario: guardado local o en Firebase y sincronización en tiempo real
+// Fluvi · Datos del usuario: guardado local o en Firebase y sincronización en tiempo real
 "use strict";
 /* ============ Estado ============ */
 const KEY='mis-gastos-v1';

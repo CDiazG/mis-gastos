@@ -1,4 +1,4 @@
-// Cuentas Claras · Privacidad (qué se guarda, dónde y quién lo ve) y extracto de ejemplo para probar
+// Fluvi · Privacidad (qué se guarda, dónde y quién lo ve) y extracto de ejemplo para probar
 "use strict";
 const REPO='https://github.com/CDiazG/mis-gastos';
 function privacidadHtml(){return `

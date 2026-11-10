@@ -1,4 +1,4 @@
-// Cuentas Claras · Registro de errores: lo que falla (extractos que no se leen, fallos de la app)
+// Fluvi · Registro de errores: lo que falla (extractos que no se leen, fallos de la app)
 // queda anotado para que el administrador lo vea en Usuarios. Nunca se guarda el contenido del extracto.
 "use strict";
 let ERR_TODOS=[],ERR_N=0;const ERR_VISTOS=new Set();

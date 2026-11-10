@@ -1,4 +1,4 @@
-// Cuentas Claras · Pestaña Resumen, gastos fijos previstos y objetivos de ahorro
+// Fluvi · Pestaña Resumen, gastos fijos previstos y objetivos de ahorro
 "use strict";
 // Grupos del presupuesto que la persona ha plegado (se recuerda en este dispositivo)
 const GR_PLEG=(()=>{try{const g=localStorage.getItem('mg-grupos-plegados');if(g===null&&matchMedia('(max-width:640px)').matches)return new Set(['FIJOS','VARIABLES','AHORRO']);return new Set(JSON.parse(g||'[]'))}catch(e){return new Set()}})();

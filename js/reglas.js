@@ -1,4 +1,4 @@
-// Cuentas Claras · Reglas de categorías automáticas y cálculos del mes
+// Fluvi · Reglas de categorías automáticas y cálculos del mes
 "use strict";
 /* ============ Reglas ============ */
 function matchRule(text){

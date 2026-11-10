@@ -1,4 +1,4 @@
-// Cuentas Claras · Buzón de sugerencias y quejas (Ajustes) y su lectura por el administrador (Usuarios)
+// Fluvi · Buzón de sugerencias y quejas (Ajustes) y su lectura por el administrador (Usuarios)
 "use strict";
 /* ============ Buzón de sugerencias ============ */
 const BZ_TIPOS={sugerencia:'💡 Sugerencia',queja:'😕 Queja',error:'🐞 Algo no funciona'};

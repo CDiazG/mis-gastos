@@ -1,4 +1,4 @@
-// Cuentas Claras · Lectura de extractos en PDF (EVO, Revolut y formatos parecidos)
+// Fluvi · Lectura de extractos en PDF (EVO, Revolut y formatos parecidos)
 "use strict";
 /* ============ PDF ============ */
 let _pdfjs=null;

@@ -1,4 +1,4 @@
-// Cuentas Claras · Categorías, grupos y reglas de serie
+// Fluvi · Categorías, grupos y reglas de serie
 "use strict";
 /* ============ Configuración ============ */
 // Categorías de las cuentas nuevas (versión 2.22.0): reparto 50 / 30 / 20.

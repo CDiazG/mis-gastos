@@ -168,9 +168,9 @@ module.exports = {
       await p.fill('#miNombre', 'Carlos'); await p.click('#miNombreF button'); await L.esperar(300);
       assert.equal(await p.textContent('#uName'), 'Carlos');
       assert.equal(await p.evaluate(() => JSON.parse(localStorage.__mockDb)['perfiles/' + USER.uid].nombre), 'Carlos');
-      // el icono de la pestaña sigue a la paleta
+      // el icono de la pestaña es siempre el logo de la marca
       await p.evaluate(() => irApartado('perfil', 'apariencia')); await p.click('#palSel [data-pal="frambuesa"]');
-      assert.match(await p.evaluate(() => decodeURIComponent(document.querySelector('link[rel="icon"][type="image/svg+xml"]').href)), /#ad2f5b/);
+      assert.match(await p.evaluate(() => document.querySelector('link[rel="icon"][type="image/svg+xml"]').href), /logo\.svg$/);
       await p.click('#palSel [data-pal="verde"]');
       assert.match(await p.evaluate(() => document.querySelector('link[rel="icon"][type="image/svg+xml"]').href), /logo\.svg$/);
       // apariencia: quitar animaciones

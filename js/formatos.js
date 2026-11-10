@@ -1,4 +1,4 @@
-// Cuentas Claras · Lectura de movimientos en Norma 43 (CSB43), CSV y Excel (.xlsx y .xls en HTML)
+// Fluvi · Lectura de movimientos en Norma 43 (CSB43), CSV y Excel (.xlsx y .xls en HTML)
 "use strict";
 /* ============ Formatos de extracto ============ */
 // Todos devuelven lo mismo que parseStatement (pdf.js): {banco, movs:[{fecha,concepto,detalle,importe,saldo}], saldoIni, saldoFin, finCalc, cuadra, malos}

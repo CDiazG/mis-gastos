@@ -1,4 +1,4 @@
-// Cuentas Claras · Pestaña Usuarios (solo administrador)
+// Fluvi · Pestaña Usuarios (solo administrador)
 "use strict";
 /* ============ Usuarios (administrador) ============ */
 function haceCuanto(t){const d=Math.floor((Date.now()-t)/864e5);const h=new Date(t);

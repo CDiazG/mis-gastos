@@ -1,4 +1,4 @@
-// Cuentas Claras · Pestañas y mes seleccionado
+// Fluvi · Pestañas y mes seleccionado
 "use strict";
 /* ============ Navegación ============ */
 let MES=mesDe(hoy()),TAB='resumen',TAB_ANT='resumen';

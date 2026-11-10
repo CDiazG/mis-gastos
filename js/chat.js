@@ -1,4 +1,4 @@
-// Cuentas Claras · Chat con Rufo (responde con las preguntas frecuentes) y, si no sabe, con el administrador
+// Fluvi · Chat con Rufo (responde con las preguntas frecuentes) y, si no sabe, con el administrador
 // La conversación con Rufo se queda en el dispositivo; solo lo que se manda al administrador se guarda.
 "use strict";
 /* ============ Rufo responde ============ */

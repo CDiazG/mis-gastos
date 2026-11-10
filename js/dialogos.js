@@ -1,4 +1,4 @@
-// Cuentas Claras · Ventanas de diálogo
+// Fluvi · Ventanas de diálogo
 "use strict";
 /* ============ Diálogos ============ */
 function dialog(title,body,buttons){

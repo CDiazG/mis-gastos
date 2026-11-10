@@ -1,4 +1,4 @@
-// Cuentas Claras · Exportar a Excel (.xlsx) sin librerías externas
+// Fluvi · Exportar a Excel (.xlsx) sin librerías externas
 "use strict";
 /* ============ Exportar a Excel (.xlsx) ============ */
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
@@ -100,7 +100,7 @@ function hojaMes(m,st){
   const big=st({b:true,sz:14,fmt:'eurneg',bd:'thin',al:'center'}),bigOk=st({b:true,sz:14,fmt:'eurneg',bd:'thin',al:'center',c:XC.ok}),bigP=st({b:true,sz:14,fmt:'pct',bd:'thin',al:'center'});
   // título
   const [y,mm]=m.split('-');H.set('A1',nombreMes(m).replace(/^./,c=>c.toUpperCase()),T);H.merges.push('A1:D2');H.alto(1,22);H.alto(2,22);
-  H.set('F1',NUBE&&USER?'Cuentas de '+USER.nombre:'Cuentas Claras',st({c:XC.mut,i:true}));H.set('F2','Exportado el '+fFecha(hoy()),st({c:XC.mut,i:true,sz:9}));
+  H.set('F1',NUBE&&USER?'Cuentas de '+USER.nombre:'Fluvi',st({c:XC.mut,i:true}));H.set('F2','Exportado el '+fFecha(hoy()),st({c:XC.mut,i:true,sz:9}));
   // cifras del mes
   const kp=[['INGRESOS',s.ingresos,bigOk],['GASTADO',s.consumo,big],['AHORRO DEL MES',s.ahorro,s.ahorro<0?big:bigOk],['% AHORRO',s.ingresos?R(s.ahorro/s.ingresos*100)/100:'',bigP],['INVERTIDO',s.by.INVERSION||0,big],...(diezmoOn()||s.diezmo?[['DIEZMO',s.diezmo,big]]:[])];
   kp.forEach(([t,v,sv],i)=>{const c=String.fromCharCode(65+i);H.set(c+'4',t,hd);H.set(c+'5',typeof v==='number'?R(v):v,sv)});H.alto(5,24);
@@ -246,7 +246,7 @@ function informeAnio(y){
 }
 function imprimirInforme(tipo,val){
   const quien=NUBE&&USER?esc(USER.nombre)+' · ':'';
-  $('#informe').innerHTML=`<h1>Cuentas Claras · ${tipo==='mes'?'Informe de '+nombreMes(val):'Informe del año '+val}</h1><p class="sub">${quien}generado el ${fFecha(hoy())}</p>`+(tipo==='mes'?informeMes(val):informeAnio(val));
+  $('#informe').innerHTML=`<h1>Fluvi · ${tipo==='mes'?'Informe de '+nombreMes(val):'Informe del año '+val}</h1><p class="sub">${quien}generado el ${fFecha(hoy())}</p>`+(tipo==='mes'?informeMes(val):informeAnio(val));
   const limpiar=()=>{$('#informe').innerHTML='';window.removeEventListener('afterprint',limpiar)};
   window.addEventListener('afterprint',limpiar);
   setTimeout(()=>window.print(),50);

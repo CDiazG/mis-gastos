@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Cuentas Claras</title>
+<title>Fluvi</title>
 <meta name="description" content="Control de gastos personales">
 <meta name="theme-color" content="#0f6b5c">
 <link rel="manifest" href="manifest.webmanifest">
@@ -11,12 +11,12 @@
 <link rel="icon" href="icons/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <script>try{var t=localStorage.getItem('mg-tema'),p=localStorage.getItem('mg-paleta');if(t==='claro'||t==='oscuro')document.documentElement.dataset.theme=t==='claro'?'light':'dark';if(p&&p!=='verde')document.documentElement.dataset.pal=p;var f=localStorage.getItem('mg-fondo');if(f&&f!=='auto')document.documentElement.dataset.fondo=f}catch(e){}</script>
-<link rel="stylesheet" href="css/estilos.css?v=2.35.1">
+<link rel="stylesheet" href="css/estilos.css?v=2.36.0">
 </head>
 <body>
 <header>
   <div class="top">
-    <div class="brand"><svg class="logoapp" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="var(--acc)"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="var(--acc-ink)" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="var(--acc-ink)" stroke-opacity=".7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandtxt">Cuentas Claras</span></div>
+    <div class="brand"><img class="logoapp" src="icons/logo.svg" alt=""><span class="brandtxt">Fluvi</span></div>
     <div class="monthnav" id="monthnav">
       <button class="btn icon" id="mPrev" title="Mes anterior">‹</button>
       <div class="m" id="mLabel"></div>
@@ -127,7 +127,7 @@
     <p class="small mut imppriv">🔒 Se lee aquí mismo, en tu dispositivo: el archivo no se sube a ningún sitio. <button class="link" type="button" data-priv>Más sobre privacidad</button></p>
     <details class="impmas"><summary>¿Qué formatos acepta y cómo funciona?</summary><p class="small">Sube el extracto del banco: en <b>PDF</b> (EVO, Revolut, Trade Republic y muchos otros bancos), en <b>Norma 43</b> (el formato estándar que dan todos los bancos españoles, a veces llamado «fichero de movimientos» o «CSB43»), en <b>CSV</b> o en <b>Excel</b> (.xlsx o .xls, como el del Santander). El programa lee los movimientos, comprueba que cuadran con el saldo, les pone categoría y te deja revisarlos antes de guardar.</p><p class="small">Solo se guardan los movimientos que confirmes (fecha, concepto, importe y categoría), en tu cuenta.</p></details>
     <div class="toolbar" style="margin:10px 0 0"><span class="small mut" style="flex:1">¿Quieres ver cómo funciona antes de subir el tuyo?</span><button class="btn sm" type="button" id="impDemo">Probar con un extracto de ejemplo</button></div>
-    <p class="small mut hide" id="shareTip" style="margin:8px 2px 0">📲 Más rápido: en la app del banco, <b>Compartir → Cuentas Claras</b> y se abre aquí directamente (con la app instalada en el móvil).</p>
+    <p class="small mut hide" id="shareTip" style="margin:8px 2px 0">📲 Más rápido: en la app del banco, <b>Compartir → Fluvi</b> y se abre aquí directamente (con la app instalada en el móvil).</p>
     <input type="file" id="pdfInput" accept=".pdf,.csv,.txt,.xlsx,.xls,.n43,.q43,.aeb,.c43,application/pdf,text/csv" multiple class="hide">
     <div id="impOut"></div>
   </section>
@@ -250,7 +250,7 @@
 <div data-ap="instalar" class="card pad">
           <h3>Instalar la app</h3>
           <p class="small mut" style="margin:4px 0 10px" id="instTxt"></p>
-          <div class="toolbar" style="margin:0"><button class="btn pri hide" id="instalarBtn">Instalar Cuentas Claras</button></div>
+          <div class="toolbar" style="margin:0"><button class="btn pri hide" id="instalarBtn">Instalar Fluvi</button></div>
           <div class="small" id="instPasos"></div>
         </div>
       </div>
@@ -356,7 +356,7 @@
 </main>
 
 <div id="login" class="hide"><div class="box card pad">
-  <h1><svg class="logoapp" viewBox="0 0 512 512" aria-hidden="true" style="width:34px;height:34px"><rect width="512" height="512" rx="112" fill="var(--acc)"/><path d="M355 157 A140 140 0 1 0 355 355" fill="none" stroke="var(--acc-ink)" stroke-width="44" stroke-linecap="round"/><path d="M190 262 L240 312 L340 200" fill="none" stroke="var(--acc-ink)" stroke-opacity=".7" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/></svg>Cuentas Claras</h1>
+  <h1><img class="logoapp" src="icons/logo.svg" alt="" style="width:34px;height:34px">Fluvi</h1>
   <div class="small mut" id="lSub">Entra con tu correo y tu contraseña.</div>
   <div id="lCont" class="hide" style="margin-top:16px">
     <div style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px"><span class="avatar" id="lContAv" style="width:34px;height:34px;font-size:15px"></span><div style="min-width:0"><div class="small mut">Sesión guardada en este dispositivo</div><div id="lContMail" style="font-weight:600;overflow-wrap:anywhere"></div></div></div>
@@ -387,31 +387,31 @@
 <div id="undo" role="status"><span id="undoTxt"></span><button class="btn sm" type="button" id="undoBtn">Deshacer</button></div>
 <div id="informe"></div>
 
-<script src="js/config.js?v=2.35.1"></script>
-<script src="js/categorias.js?v=2.35.1"></script>
-<script src="js/version.js?v=2.35.1"></script>
-<script src="js/utilidades.js?v=2.35.1"></script>
-<script src="js/estado.js?v=2.35.1"></script>
-<script src="js/reglas.js?v=2.35.1"></script>
-<script src="js/navegacion.js?v=2.35.1"></script>
-<script src="js/resumen.js?v=2.35.1"></script>
-<script src="js/movimientos.js?v=2.35.1"></script>
-<script src="js/excel.js?v=2.35.1"></script>
-<script src="js/dialogos.js?v=2.35.1"></script>
-<script src="js/pdf.js?v=2.35.1"></script>
-<script src="js/formatos.js?v=2.35.1"></script>
-<script src="js/importar.js?v=2.35.1"></script>
-<script src="js/historico.js?v=2.35.1"></script>
-<script src="js/ajustes.js?v=2.35.1"></script>
-<script src="js/usuarios.js?v=2.35.1"></script>
-<script src="js/errores.js?v=2.35.1"></script>
-<script src="js/buzon.js?v=2.35.1"></script>
-<script src="js/perfil.js?v=2.35.1"></script>
-<script src="js/inicio.js?v=2.35.1"></script>
-<script src="js/privacidad.js?v=2.35.1"></script>
-<script src="js/ayuda.js?v=2.35.1"></script>
-<script src="js/chat.js?v=2.35.1"></script>
-<script src="js/acceso.js?v=2.35.1"></script>
-<script src="js/arranque.js?v=2.35.1"></script>
+<script src="js/config.js?v=2.36.0"></script>
+<script src="js/categorias.js?v=2.36.0"></script>
+<script src="js/version.js?v=2.36.0"></script>
+<script src="js/utilidades.js?v=2.36.0"></script>
+<script src="js/estado.js?v=2.36.0"></script>
+<script src="js/reglas.js?v=2.36.0"></script>
+<script src="js/navegacion.js?v=2.36.0"></script>
+<script src="js/resumen.js?v=2.36.0"></script>
+<script src="js/movimientos.js?v=2.36.0"></script>
+<script src="js/excel.js?v=2.36.0"></script>
+<script src="js/dialogos.js?v=2.36.0"></script>
+<script src="js/pdf.js?v=2.36.0"></script>
+<script src="js/formatos.js?v=2.36.0"></script>
+<script src="js/importar.js?v=2.36.0"></script>
+<script src="js/historico.js?v=2.36.0"></script>
+<script src="js/ajustes.js?v=2.36.0"></script>
+<script src="js/usuarios.js?v=2.36.0"></script>
+<script src="js/errores.js?v=2.36.0"></script>
+<script src="js/buzon.js?v=2.36.0"></script>
+<script src="js/perfil.js?v=2.36.0"></script>
+<script src="js/inicio.js?v=2.36.0"></script>
+<script src="js/privacidad.js?v=2.36.0"></script>
+<script src="js/ayuda.js?v=2.36.0"></script>
+<script src="js/chat.js?v=2.36.0"></script>
+<script src="js/acceso.js?v=2.36.0"></script>
+<script src="js/arranque.js?v=2.36.0"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-// Cuentas Claras · Pestaña Inicio: visión general en tarjetas que se pliegan
+// Fluvi · Pestaña Inicio: visión general en tarjetas que se pliegan
 "use strict";
 /* ============ Inicio ============ */
 const INI_PLEGADAS=(()=>{try{return new Set(JSON.parse(localStorage.getItem('mg-inicio-plegadas')||'[]'))}catch(e){return new Set()}})();

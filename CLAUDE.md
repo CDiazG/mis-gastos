@@ -1,4 +1,4 @@
-# Cuentas Claras — cómo trabajamos
+# Fluvi (antes «Cuentas Claras») — cómo trabajamos
 
 App web de gastos personales (multiusuario) hecha a partir del Excel de Loreto, la hermana de Carlos.
 Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnicismos.
@@ -39,7 +39,7 @@ Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnic
 
 - `fuser -k 8765/tcp; NODE_PATH=$(npm root -g) node tests/run.js [filtro]` (Playwright, 4 en paralelo, Firebase simulado en `tests/simulador`).
 - Pasar solo las del archivo afectado (`node tests/run.js uso`). La batería completa la pasa GitHub Actions al publicar; si falla allí, se arregla en `siguiente-version`.
-- Hay una prueba que recorre toda la guía de Rufo en móvil y ordenador y falla si el recuadro se tapa o se corta: si cambia la navegación, mirarla.
+- Hay una prueba que recorre toda la guía en móvil y ordenador y falla si el recuadro se tapa o se corta: si cambia la navegación, mirarla.
 - Capturas solo si Carlos las pide (gastan mucho). Scripts de captura: Playwright con `tests/lib.js` (`nuevoContexto`, `crearAdminYEntrar`).
 
 ## Reglas que no se rompen
@@ -55,5 +55,7 @@ Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnic
 - JS sin compilar, scripts clásicos con ámbito global, cargados en orden en `index.html` con `?v=VERSION`.
 - Estado del usuario en `S` (`js/estado.js`), cálculos en `js/reglas.js` (`stats`, presupuesto en % o €, ahorro = lo que sobra, traspasos, saldos), categorías y reglas de serie en `js/categorias.js`.
 - Navegación en `js/navegacion.js`: pestañas, barra inferior del móvil, apartados de Ajustes/Ayuda/Perfil (`data-ap`), pestañas internas del Histórico, botón atrás (historial), calendario de meses.
-- Rufo (el zorro) y la guía en `js/ayuda.js` (`mascota(px, pose)`), chat en `js/chat.js`.
+- Ya no hay mascota (Rufo): la guía está en `js/ayuda.js` y el botón de chat en `js/chat.js` (los ids internos `rufoBtn`/`rufoPanel` se conservan). No escribir «Rufo» en textos.
+- Estilo Revolut: 4 pestañas (Resumen, Añadir, Movimientos, Evolución), sin «Inicio»; menú del círculo con las iniciales (`#uWho`) con avisos, Perfil, Ajustes, Ayuda y Usuarios como páginas completas con ✕; fondo de seda animado seleccionable (`S.aj.fondo`) igual en todas las pestañas; paleta por defecto Pizarra.
+- Marca: Fluvi, logo en `icons/logo.svg` (icono, pestaña y entrada); el favicon no cambia con la paleta.
 - Estilos en `css/estilos.css` con variables por paleta y modo oscuro.

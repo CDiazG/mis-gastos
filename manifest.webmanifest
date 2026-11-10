@@ -1,6 +1,6 @@
 {
-  "name": "Cuentas Claras",
-  "short_name": "Cuentas Claras",
+  "name": "Fluvi",
+  "short_name": "Fluvi",
   "description": "Control de gastos personales: extractos del banco, efectivo y presupuesto.",
   "lang": "es",
   "start_url": "./",

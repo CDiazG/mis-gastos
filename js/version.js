@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.35.1';
+const VERSION='2.36.0';
 const CAMBIOS=[
+ {v:'2.36.0',f:'2026-11-10',c:['Nuevo nombre y logo: Fluvi.','El icono de la app, la pantalla de entrada y los textos usan ya el nombre y el logo nuevos']},
  {v:'2.35.1',f:'2026-11-10',c:['El botón Actualizar ahora borra la copia antigua y carga siempre la versión nueva']},
  {v:'2.35.0',f:'2026-11-10',c:['El fondo animado es igual en todas las pestañas','Los títulos y textos sobre el fondo se leen siempre']},
  {v:'2.34.0',f:'2026-11-10',c:['Fondo animado de seda como el de la cifra, en todo el móvil y en la pantalla de entrada, y ya puedes elegir su color en Apariencia','Apariencia nueva: modo claro, oscuro o sistema con miniaturas, colores y fondos en círculos','El menú del círculo lleva iconos y se despliega con animación; el mes se desliza al cambiarlo','Gasto de 12 meses en naranja y azul, con lo previsto en puntitos','Cada pestaña empieza arriba, Añadir se vuelve a plegar si lo vacías, y se quitan los restos de Rufo y un botón flotante que ya no hacía nada']},
