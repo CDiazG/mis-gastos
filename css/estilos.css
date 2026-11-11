@@ -1427,3 +1427,8 @@ button.who,button.who:hover,button.who:focus{padding:0!important;background:none
   body[data-tab="ajustes"] .tabs,body[data-tab="ayuda"] .tabs,body[data-tab="perfil"] .tabs,body[data-tab="usuarios"] .tabs{display:none}
   body[data-tab="ajustes"] main,body[data-tab="ayuda"] main,body[data-tab="perfil"] main,body[data-tab="usuarios"] main{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 }
+/* 2.39 fondo de seda en 3D (opcional, móvil) */
+#seda3d{position:fixed;top:0;left:0;width:100%;height:min(112vh,940px);z-index:-1;pointer-events:none;opacity:0;transition:opacity .7s var(--ease);-webkit-mask-image:linear-gradient(180deg,#000 0,#000 52%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 52%,transparent 100%)}
+#seda3d.on{opacity:1}
+@media (min-width:901px){#seda3d{display:none}}
+@media (max-width:900px){body.seda3d::before{display:none!important}}

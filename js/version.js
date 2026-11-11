@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.38.3';
+const VERSION='2.39.0';
 const CAMBIOS=[
+ {v:'2.39.0',f:'2026-11-11',c:['Nuevo fondo de seda en 3D (en prueba, solo móvil): actívalo en Ajustes → Apariencia']},
  {v:'2.38.3',f:'2026-11-10',c:['En el móvil, Ajustes, Mi perfil, Ayuda y Usuarios ya no tienen la barra de abajo tapando la última opción']},
  {v:'2.38.2',f:'2026-11-10',c:['El círculo de tu perfil ya no se queda con un aro al tocarlo','El menú del perfil se despliega con una animación más suave y los elementos reaccionan al pasar por encima']},
  {v:'2.38.1',f:'2026-11-10',c:['Presupuesto: las dos tarjetas plegadas muestran una descripción corta y el botón Ver o Editar']},

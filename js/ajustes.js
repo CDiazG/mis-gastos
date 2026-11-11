@@ -258,10 +258,11 @@ const PREFS=[
   {k:'verFijos',g:'avisos',t:'Gastos fijos previstos',d:'Tarjeta del Resumen que avisa si un fijo no llega o cambia de importe.'},
   {k:'verObjetivos',g:'avisos',t:'Objetivos de ahorro en el Resumen',d:'Siguen disponibles en Patrimonio aunque lo desactives.'},
   {k:'animaciones',g:'apar',t:'Animaciones',d:'Movimientos suaves al abrir pestañas y desplegables.'},
+  {k:'seda3d',g:'apar',t:'Fondo de seda en 3D (prueba)',d:'Un fondo más realista, con brillos que se mueven como una tela. Gasta algo más de batería. Solo en el móvil.'},
   {k:'rufo',g:'apar',t:'Botón de chat de ayuda',d:'El botón de chat, abajo a la izquierda, para preguntar dudas o escribir al administrador.'},
   {k:'enLinea',g:'avisos',admin:true,t:'Mostrar cuando estoy en línea',d:'En el chat, los usuarios ven «En línea» si tienes la app abierta, o cuándo fue la última vez.'},
 ];
-const pref=k=>S&&S.aj&&S.aj[k]!==false&&(k!=='bizumReglas'||S.aj[k]===true);
+const pref=k=>S&&S.aj&&S.aj[k]!==false&&(!['bizumReglas','seda3d'].includes(k)||S.aj[k]===true);
 const prefHtml=p=>`<label class="pref"><span class="sw"><input type="checkbox" data-pref="${p.k}" ${pref(p.k)?'checked':''}><i></i></span><span><b>${p.t}</b><span class="small mut">${p.d}</span></span></label>`;
 function rPrefs(){
   const tema=S.aj.tema||'auto';
@@ -278,7 +279,7 @@ function rPrefs(){
   $$('#palSel .palopt').forEach(b=>b.onclick=()=>{S.aj.paleta=b.dataset.pal;aplicarTema();save();rPrefs();toast('Colores: '+PALETAS[b.dataset.pal].n)});
   $$('#fondoSel .fsw').forEach(b=>b.onclick=()=>{S.aj.fondo=b.dataset.fondo;aplicarTema();save();rPrefs()});
   $$('#temaSeg button').forEach(b=>b.onclick=()=>{S.aj.tema=b.dataset.v;aplicarTema();save();rPrefs()});
-  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab'||k==='rufo')render();if(k==='animaciones')aplicarTema();if(k==='enLinea'&&typeof presencia==='function')presencia()});
+  $$('[data-pref]').forEach(c=>c.onchange=()=>{const k=c.dataset.pref;if(k==='diezmo'){ponerDiezmo(c.checked);return}S.aj[k]=c.checked;save();toast(c.checked?'Activado':'Desactivado');if(k==='fab'||k==='rufo')render();if(k==='animaciones')aplicarTema();if(k==='seda3d'&&typeof sedaAplicar==='function')sedaAplicar();if(k==='enLinea'&&typeof presencia==='function')presencia()});
 }
 $('#verTuto').onclick=()=>{if(typeof tutorial==='function')tutorial(true)};
 const PALETAS={"fluvi": {"n": "Fluvi", "l": ["#0a7ea3", "#d9f0f6", "#f0f9fa"], "d": ["#22bcda", "#12353f", "#0d1a1f"]}, "pizarra": {"n": "Pizarra", "l": ["#16191d", "#e9ebee", "#ffffff"], "d": ["#ffffff", "#34383e", "#17191d"]}, "verde": {"n": "Verde", "l": ["#0f6b5c", "#e1f0eb", "#f5f4ef"], "d": ["#4db6a0", "#16332d", "#131615"]}, "uva": {"n": "Uva", "l": ["#7c4dff", "#ece6ff", "#fbfaff"], "d": ["#a98bff", "#2e2557", "#16122a"]}, "lavanda": {"n": "Lavanda", "l": ["#6b4fbb", "#ece6fb", "#f6f4fa"], "d": ["#a58cf0", "#2b2445", "#15131c"]}, "oceano": {"n": "Océano", "l": ["#1f5fa8", "#e2edf8", "#f2f6f9"], "d": ["#6aa7ec", "#172b42", "#10151b"]}, "terracota": {"n": "Terracota", "l": ["#b9532f", "#f8e5dc", "#faf5ef"], "d": ["#e58a6b", "#3a241b", "#171311"]}, "frambuesa": {"n": "Frambuesa", "l": ["#ad2f5b", "#f9e1ea", "#fbf4f6"], "d": ["#ec7ca3", "#3d1f2b", "#181215"]}, "ciruela": {"n": "Ciruela", "l": ["#5b3a6e", "#efe7f3", "#f7f5f1"], "d": ["#b88fd0", "#33263b", "#151217"]}};
@@ -290,6 +291,7 @@ function aplicarTema(){const t=(S&&S.aj&&S.aj.tema)||'auto',p=(S&&S.aj&&S.aj.pal
   try{localStorage.setItem('mg-tema',t);localStorage.setItem('mg-paleta',p);localStorage.setItem('mg-fondo',fo)}catch(_){}
   const col=(PALETAS[p]||PALETAS.verde).l[0];
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=col;
+  if(typeof sedaAplicar==='function')sedaAplicar();
 }
 // Activar o desactivar el diezmo sin descuadrar el 100 %: su porcentaje va y viene del ahorro.
 function ponerDiezmo(on){
