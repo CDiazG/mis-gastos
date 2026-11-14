@@ -123,13 +123,14 @@ function rDiasCard(st){
   const prevHoy=plan?r2(plan*dHoy/n):0,encima=plan>0&&total>prevHoy+0.5;
   const resumen=plan?(actual?`Llevas <b class="${encima?'neg':''}">${eur(total,0)}</b> de ${eur(prevHoy,0)} previstos para hoy`:`Gastaste <b>${eur(total,0)}</b> de ${eur(plan,0)} previstos`):`<b>${eur(total,0)}</b> gastados`;
   if(!el.dataset.ini){el.dataset.ini='1';el.open=!esMovil();el.addEventListener('toggle',()=>{if(el.open)pintarDias(el._d)})}
-  el._d={n,dHoy,dia,diaN,diaC,acum,plan,total,encima,actual};
+  const rk=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({id:c.id,v:st.by[c.id]||0})),{id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v).map(x=>x.id),col={};rk.forEach((id,k)=>col[id]=k<6?`var(--c${k+1})`:'var(--muted)');
+  el._d={n,dHoy,dia,diaN,diaC,rk,col,acum,plan,total,encima,actual};
   el.innerHTML=`<summary><span class="t">Evolución del mes</span><span class="r small">${resumen}</span><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div id="diaChart"></div>`;
   if(el.open)pintarDias(el._d);
 }
 function pintarDias(d){
   const c=$('#diaChart');if(!c||!d)return;
-  const {n,dHoy,dia,diaN,diaC,acum,plan,total,encima}=d,W=Math.max(300,Math.round(c.clientWidth||(esMovil()?330:700))),H=esMovil()?180:210,pl=44,pr=10,pt=10,pb=24;
+  const {n,dHoy,dia,diaC,rk,col:cc,acum,plan,total,encima}=d,W=Math.max(300,Math.round(c.clientWidth||(esMovil()?330:700))),H=esMovil()?180:210,pl=44,pr=10,pt=10,pb=24;
   const top=Math.max(1,plan,...acum.slice(0,dHoy+1)),paso=pasoRedondo(top/4),max=Math.ceil(top/paso)*paso;
   const x=k=>pl+(W-pl-pr)*((k-1)/Math.max(1,n-1)),y=v=>pt+(H-pt-pb)*(1-v/max);
   const alto=H-pt-pb,maxDia=Math.max(1,...dia.slice(1,dHoy+1).map(v=>Math.max(0,v))),hb=v=>Math.max(0,v)/maxDia*alto*.42; // las barras usan su propia escala (hasta el 42 % del alto)
@@ -137,18 +138,20 @@ function pintarDias(d){
   let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gasto de cada día y acumulado del mes">`;
   for(let v=0;v<=max+0.01;v+=paso)svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${v>=1000?(v/1000).toLocaleString('es-ES')+' k':Math.round(v)}</text>`;
   for(let k=1;k<=n;k++)if(k===1||k===n||(k%5===0&&n-k>=3))svg+=`<text x="${x(k)}" y="${H-7}" font-size="11" text-anchor="middle" fill="var(--muted)">${k}</text>`;
-  // barras de cada día, apiladas por grupo (mismos colores que el gasto de 12 meses): necesidades abajo, ocio y otros encima
-  for(let k=1;k<=dHoy;k++){const hn=hb(diaN[k]),ho=hb(dia[k]-diaN[k]);
-    if(hn>0)svg+=`<rect x="${(x(k)-bw/2).toFixed(1)}" y="${(y(0)-hn).toFixed(1)}" width="${bw.toFixed(1)}" height="${hn.toFixed(1)}" rx="1.5" fill="var(--gn)" opacity=".9"/>`;
-    if(ho>0)svg+=`<rect x="${(x(k)-bw/2).toFixed(1)}" y="${(y(0)-hn-ho).toFixed(1)}" width="${bw.toFixed(1)}" height="${ho.toFixed(1)}" rx="1.5" fill="var(--go)" opacity=".9"/>`}
+  // barras de cada día, apiladas por categoría con los mismos colores que el rosco (las 6 mayores del mes; el resto en gris)
+  const colDe=id=>cc[id]||'var(--muted)';
+  for(let k=1;k<=dHoy;k++){let base=y(0);
+    for(const id of [...rk].reverse()){const v=diaC[k][id]||0;if(v<=0.004)continue;const h=hb(v);
+      svg+=`<rect x="${(x(k)-bw/2).toFixed(1)}" y="${(base-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${colDe(id)}" opacity=".92"/>`;base-=h}}
   if(plan)svg+=`<line x1="${x(1)}" y1="${y(0)}" x2="${x(n)}" y2="${y(plan)}" stroke="var(--ink)" opacity=".5" stroke-dasharray="6 5" stroke-width="1.5"/>`;
   const col=encima?'var(--bad)':'var(--ink)';let ruta='';for(let k=1;k<=dHoy;k++)ruta+=(k===1?'M':'L')+x(k).toFixed(1)+' '+y(acum[k]).toFixed(1);
   svg+=`<path d="${ruta}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(dHoy)}" cy="${y(total)}" r="4" fill="${col}"/>`;
   for(let k=1;k<=dHoy;k++){const fe=MES+'-'+String(k).padStart(2,'0');
-    const cats=Object.entries(diaC[k]).filter(([,v])=>Math.abs(v)>0.004).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v])=>['',id==='SINCAT'?'Sin categoría':esc(catN(id)),eur(v)]);
+    const cats=Object.entries(diaC[k]).filter(([,v])=>Math.abs(v)>0.004).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v])=>[colDe(id),id==='SINCAT'?'Sin categoría':esc(catN(id)),eur(v)]);
     const filas=(cats.length?cats:[['','Sin gastos','—']]).concat([['var(--ink)','Gastado ese día',eur(dia[k])],['','Acumulado',eur(acum[k])]],plan?[['','Previsto hasta ese día',eur(plan*k/n)]]:[]);
     svg+=`<rect class="hz" x="${(x(k)-paso1/2).toFixed(1)}" y="${pt}" width="${paso1.toFixed(1)}" height="${alto}" data-tiph="${esc(tipHtml(esc(fFecha(fe)),filas))}"/>`}
-  c.innerHTML=svg+`</svg><div class="legend"><span><i style="background:var(--gn)"></i>Necesidades</span><span><i style="background:var(--go)"></i>Ocio y otros</span><span><i style="background:var(--ink)"></i>Acumulado</span>${plan?'<span><i style="background:var(--ink);opacity:.5"></i>Ritmo previsto</span>':''}</div>`;
+  const lg=rk.filter(id=>(cc[id]||'')!=='var(--muted)'&&diaC.some(o=>(o[id]||0)>0.004)).map(id=>`<span><i style="background:${cc[id]}"></i>${id==='SINCAT'?'Sin categoría':esc(catN(id))}</span>`).join('');
+  c.innerHTML=svg+`</svg><div class="legend">${lg}<span><i style="background:var(--muted)"></i>Resto</span><span><i style="background:${col};height:3px;border-radius:2px"></i>Acumulado</span>${plan?'<span><i style="background:var(--ink);opacity:.5;height:3px;border-radius:2px"></i>Ritmo previsto</span>':''}</div>`;
 }
 function rGrafico(st){
   const el=$('#grafCard');

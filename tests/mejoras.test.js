@@ -27,8 +27,8 @@ module.exports = {
       assert.equal(d.acum[2], 50);
       assert.equal(d.acum[5], 70);
       assert.ok(await p.locator('#diaChart path').count() >= 1);
-      assert.ok(await p.locator('#diaChart rect[fill="var(--gn)"]').count() >= 1, 'barras de necesidades');
-      assert.ok(await p.locator('#diaChart rect[fill="var(--go)"]').count() >= 1, 'barras de ocio');
+      assert.ok(await p.locator('#diaChart rect[fill="var(--c1)"]').count() >= 1, 'barras con el color de la categoría mayor, como el rosco');
+      assert.ok(await p.locator('#diaChart rect[fill="var(--c2)"]').count() >= 1, 'y de la segunda');
     })();
   },
   'retirada de efectivo: pregunta si ya se gastó, lo apunta y el Resumen avisa de lo que falta'(browser, estado) {
