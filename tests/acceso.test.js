@@ -54,7 +54,10 @@ module.exports = {
       await L.entrar(p, L.ADMIN, L.CLAVE_ADMIN);
       assert.match(await p.textContent('#tabUsuarios'), /1/);
       await p.evaluate(() => go('usuarios')); await L.esperar(300);
-      await p.click('.uok'); await L.esperar(400);
+      await p.click('.uok'); await L.esperar(600);
+      assert.match(await p.getAttribute('#dlgB a[href^="mailto:"]', 'href'), /Ya%20puedes%20entrar/, 'ofrece avisar por correo');
+      assert.ok(await p.isVisible('#dlgB a[href*="wa.me"]'), 'y por WhatsApp');
+      await p.click('#dlgF >> text=Ahora no'); await L.esperar(200);
       await L.salir(p);
       await L.entrar(p, 'nueva@prueba.test', 'clave1234'); await L.cerrarBienvenida(p);
       assert.equal(await p.textContent('#uName'), 'Persona de prueba');
@@ -67,7 +70,7 @@ module.exports = {
       const { p } = await preparar(browser, estado);
       await L.crearAdminYEntrar(p); await L.salir(p);
       await p.click('#lSolic'); await p.fill('#lNom', 'Hermana'); await p.fill('#lMail', 'h@prueba.test'); await p.fill('#lPass', 'clave1234'); await p.click('#lGo'); await L.esperar(400);
-      await L.entrar(p, L.ADMIN, L.CLAVE_ADMIN); await p.evaluate(() => go('usuarios')); await L.esperar(200); await p.click('.uok'); await L.esperar(300); await L.salir(p);
+      await L.entrar(p, L.ADMIN, L.CLAVE_ADMIN); await p.evaluate(() => go('usuarios')); await L.esperar(200); await p.click('.uok'); await L.esperar(500); await p.click('#dlgF >> text=Ahora no'); await L.esperar(200); await L.salir(p);
       await L.entrar(p, 'h@prueba.test', 'clave1234'); await L.cerrarBienvenida(p); await L.esperar(800);
       await p.evaluate(() => go('ayuda', { sub: 'sugerencias' })); await L.esperar(200);
       await p.click('#bzTipo .chip[data-t=error]'); await p.fill('#bzTxt', 'El botón de importar no hace nada en mi móvil'); await p.click('#bzGo'); await L.esperar(400);

@@ -32,7 +32,7 @@ async function rUsuarios(){
       try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:!u.activo});toast('Hecho');parcheLocal(u.id,{activo:!u.activo});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
     const ux=$('.ux',tr);if(ux)ux.onclick=()=>eliminarUsuario(u);
     const urev=$('.urev',tr);if(urev)urev.onclick=()=>reactivarUsuario(u,u.nombre);
-    const uok=$('.uok',tr);if(uok)uok.onclick=async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:true,estado:'activo',aprobado:Date.now()});toast(u.nombre+' ya puede entrar');parcheLocal(u.id,{activo:true,estado:'activo'});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}};
+    const uok=$('.uok',tr);if(uok)uok.onclick=async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:true,estado:'activo',aprobado:Date.now()});toast(u.nombre+' ya puede entrar');parcheLocal(u.id,{activo:true,estado:'activo'});rUsuarios();setTimeout(()=>avisarAprobado(u),250)}catch(e){toast('Error: '+(e.code||e.message),true)}};
     const uno=$('.uno',tr);if(uno)uno.onclick=()=>confirmar('Rechazar solicitud',`${u.nombre} (${u.email}) no podrá entrar.`,'Rechazar',async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});toast('Solicitud rechazada');parcheLocal(u.id,{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
   });
 }
@@ -90,3 +90,11 @@ $('#uAdd').onsubmit=async e=>{
   }catch(err){toast(err.code==='auth/email-already-in-use'?'Ya existe una cuenta con ese correo':'No se ha podido crear: '+(err.code||err.message),true)}
   finally{btn.disabled=false}
 };
+// Al aprobar una solicitud no se manda nada solo: se ofrece avisar a la persona con un correo o un WhatsApp ya escritos
+function avisarAprobado(u){
+  const url=location.origin+location.pathname.replace(/pruebas\/?$/,'').replace(/index\.html$/,''),nom=(u.nombre||'').split(' ')[0]||'',
+    txt=`Hola${nom?' '+nom:''}, ya puedes entrar en Fluvi con tu correo y la contraseña que elegiste: ${url}`;
+  dialog('Avisa a '+esc(nom||u.email),`<p style="margin-top:0">${esc(u.nombre||u.email)} ya puede entrar, pero la app no le ha mandado ningún aviso. Si quieres, díselo tú con un mensaje ya escrito:</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn pri" target="_blank" rel="noopener" href="mailto:${encodeURIComponent(u.email||'')}?subject=${encodeURIComponent('Ya puedes entrar en Fluvi')}&body=${encodeURIComponent(txt)}">Escribirle un correo</a>
+    <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(txt)}">Mandarle un WhatsApp</a></div>`,[{t:'Ahora no'}]);
+}
