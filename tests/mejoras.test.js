@@ -76,6 +76,7 @@ module.exports = {
       await p.selectOption(`tr[data-id="${k}"] .cat`, 'OCIO');
       await p.waitForSelector('#dlg[open]');
       assert.match(await p.textContent('#dlgB'), /2<\/b>|2 movimientos|Hay 2/);
+      assert.ok(!/<span|<svg/.test(await p.textContent('#dlgB')), 'el icono de la categoría no se enseña como código');
       await p.click('#dlgF .pri');
       const r = await p.evaluate(() => S.mov.map(x => [x.concepto.slice(-5), x.cat]));
       assert.equal(r.filter(x => x[0] === ' Cena' && x[1] === 'OCIO').length, 3, 'las 3 de «Cena» con la misma categoría: ' + JSON.stringify(r));

@@ -97,6 +97,7 @@ module.exports = {
         for (const m of ['2026-06', '2026-07', '2026-08', '2026-09']) { add(m + '-01', 'NOMINA', 2000, 'INGRESO'); add(m + '-02', 'ALQUILER', -700, 'VIVIENDA'); add(m + '-03', 'CENAS', -300, 'OCIO'); add(m + '-04', 'MERCADONA', -150, 'SUPERMERCADO'); }
         save(); go('ajustes'); });
       assert.match(await p.textContent('#sugCard'), /Aplicar \d+ cambio/);
+      assert.ok(await p.evaluate(() => $('#sugCard').classList.contains('conSug')), 'circulito de aviso si hay algo que aplicar');
       await p.evaluate(() => $('#sugCard').classList.remove('cerrada'));
       await p.click('#sugApply'); await p.click('#dlgF >> text=Aplicar'); await L.esperar(200);
       assert.equal(await p.evaluate(() => sumaPct()), 100, 'aplicar la sugerencia siempre deja el 100 %');

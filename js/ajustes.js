@@ -138,6 +138,10 @@ function acorPres(){
 function acorTxt(els){els.forEach(el=>{if(!el)return;const b=el.querySelector('.acorb'),ab=!el.classList.contains('cerrada');if(b){b.textContent=ab?'Ocultar':(el.id==='catCard'?'Editar':'Ver');b.setAttribute('aria-expanded',ab)}})}
 function rSug(){
   rSug0();acorPres();
+  // circulito en el botón si hay una sugerencia que todavía no se ha aplicado
+  const el=$('#sugCard'),g=sugerencia(),hay=!!(g&&!g.aplicada&&g.filas.some(f=>f.sug!==f.obj)),b=el&&el.querySelector('.acorb');
+  if(el)el.classList.toggle('conSug',hay);
+  if(b){b.title=hay?'Hay una sugerencia para aplicar':'';hay?b.setAttribute('data-aviso','1'):b.removeAttribute('data-aviso')}
 }
 function rSug0(){
   const g=sugerencia();const el=$('#sugCard');

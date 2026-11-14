@@ -32,7 +32,7 @@ function panelMov(x){
 function ofrecerMismos(x,c,lista,aplicar){
   if(!c||!lista.length)return;
   const n=lista.length;
-  dialog('¿Poner la misma categoría a los parecidos?',`<p style="margin-top:0">Hay <b>${n}</b> movimiento${n>1?'s':''} más sin categoría con el mismo concepto:</p><p class="small mut">${esc(verConcepto(x))}</p><p>¿Les pongo también <b>${esc(catI(c)+catN(c))}</b>?</p>`,
+  dialog('¿Poner la misma categoría a los parecidos?',`<p style="margin-top:0">Hay <b>${n}</b> movimiento${n>1?'s':''} más sin categoría con el mismo concepto:</p><p class="small mut">${esc(verConcepto(x))}</p><p>¿Les pongo también <b>${catI(c)}${esc(catN(c))}</b>?</p>`,
     [{t:'No, solo este'},{t:n>1?`Sí, a los ${n}`:'Sí, también a ese',cls:'pri',fn:()=>{aplicar(lista)}}]);
 }
 const mismosSinCat=(x,lista)=>lista.filter(y=>y!==x&&sinCatX(y)&&!y.par&&norm(y.concepto)===norm(x.concepto)&&Math.sign(y.importe)===Math.sign(x.importe));
