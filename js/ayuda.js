@@ -158,6 +158,7 @@ const FAQ=[
   {p:'¿Cómo sé cuánto me ha costado un viaje o una boda?',r:'Ponle una etiqueta (por ejemplo «Viaje a Roma») a todos sus gastos, aunque sean de categorías distintas: al añadirlos, con ✎, o marcando varios en Movimientos y pulsando «Etiquetar». En Histórico → Etiquetas ves el total.',ir:{tab:'hist',sel:'#tagsCard',t:'Histórico → Etiquetas',g:'Aquí ves lo que ha costado cada etiqueta, sumando todas sus categorías.'}},
   {p:'Me he equivocado al borrar o cambiar algo',r:'Justo después, abajo aparece «Deshacer» durante unos segundos. Si ya no está, restaura una copia de seguridad en Ajustes → Copias de seguridad.'},
   {p:'¿Qué significa la flecha ↻ de las categorías?',r:'Que esa categoría acumula: lo que no gastas de ella pasa al mes siguiente. Útil para Regalos, Viajes o Ropa, que no se gastan todos los meses. Se activa en Ajustes → Presupuesto y categorías.',ir:{tab:'ajustes',sel:'#pctTable',t:'Ajustes → Presupuesto y categorías',g:'Pulsa ↻ en la categoría que quieras que acumule.'}},
+  {p:'¿Voy bien de gasto este mes?',r:'En el Resumen, la tarjeta «Evolución del mes» dibuja lo que llevas gastado día a día y lo compara con el ritmo previsto (tu presupuesto repartido por los días del mes). Si la línea va por encima de la de puntitos, estás gastando más rápido de lo previsto. No cuentan los traspasos ni las retiradas de efectivo. Toca un día para ver su detalle.'},
   {p:'¿Gasto más o menos que el año pasado?',r:'En Histórico → «Frente al año pasado» comparas un mes con el mismo mes del año anterior, categoría a categoría.',ir:{tab:'hist',sel:'#vsAnio',t:'Histórico',g:'Elige el mes y compáralo con el mismo mes del año pasado.'}},
   {p:'Tengo Trade Republic, ¿cómo se cuenta?',r:'Sube su «Certificado de saldo y movimientos» en PDF. Las compras de fondos cuentan como Inversión el día que se hacen y el dinero que mandas desde tus otras cuentas es un traspaso, así no se cuenta dos veces.',ir:{tab:'importar',sel:'#drop',t:'Importar extracto',g:'Sube aquí el PDF de Trade Republic.'}},
   {p:'¿Cómo instalo la app en el móvil o en el ordenador?',r:'En Ajustes → «Instalar la app» tienes los pasos. En el iPhone: Safari → Compartir → «Añadir a pantalla de inicio». En Android: Chrome → menú ⋮ → «Instalar aplicación».',ir:{tab:'ajustes',sel:'#instTxt',card:true,t:'Ajustes',g:'Aquí tienes los pasos para tu móvil u ordenador.'}},
@@ -176,7 +177,7 @@ let faqQ='',faqT='';
 const FAQ_TEMAS=[
   {id:'empezar',t:'Empezar',re:/movimientos del banco|Compartir|Trade Republic|instalo|icono es el antiguo/i},
   {id:'categorias',t:'Categorías',re:/categor|Bizum/i},
-  {id:'ahorro',t:'Ahorro y presupuesto',re:/Ahorro del mes|presupuesto|cuenta como gasto|nómina|año pasado|viaje o una boda/i},
+  {id:'ahorro',t:'Ahorro y presupuesto',re:/Ahorro del mes|presupuesto|Voy bien|cuenta como gasto|nómina|año pasado|viaje o una boda/i},
   {id:'apuntar',t:'Apuntar y corregir',re:/efectivo|cajero|categoricé|equivocado|Deshacer|Excel o un informe/i},
   {id:'cuenta',t:'Tu cuenta',re:/./},
 ];

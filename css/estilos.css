@@ -1442,3 +1442,16 @@ button.who,button.who:hover,button.who:focus{padding:0!important;background:none
 #aTag+.tagsug{grid-column:auto}
 #mCal{padding:0 9px}
 #mCal svg{display:block}
+
+/* 2.41 · Evolución del mes (Resumen) */
+#diaCard>summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none}
+#diaCard>summary::-webkit-details-marker{display:none}
+#diaCard>summary .t{font-weight:700}
+#diaCard>summary .r{margin-left:auto;text-align:right;color:var(--muted)}
+#diaCard>summary .chev{flex:none;color:var(--muted)}
+#diaCard[open]>summary .chev{transform:rotate(180deg)}
+#diaCard #diaChart{margin-top:10px}
+#diaCard #diaChart svg{width:100%;height:auto;display:block}
+#diaCard .hz{fill:transparent}
+#diaCard .hz:hover{fill:var(--acc);opacity:.08}
+@media (max-width:640px){#diaCard>summary{flex-wrap:wrap}#diaCard>summary .r{margin-left:0;order:3;flex-basis:100%;text-align:left}#diaCard>summary .chev{margin-left:auto}}

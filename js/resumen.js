@@ -93,7 +93,7 @@ function rResumen(){
   $$('#groups .crow').forEach(r=>r.onclick=e=>{if(e.target.closest('.dzpag')||r.dataset.cat==='AHORRO')return;if(r.dataset.cat==='SINCAT'){F.cat='';F.sinCat=true}else{F.cat=r.dataset.cat;F.sinCat=false}F.todos=false;go('movs')});
   $$('#groups .dzpag').forEach(b=>b.onclick=()=>{aTipo='gasto';cCat='DIEZMO';cCatManual=true;aPago='__efectivo';go('efectivo');$('#cImp').value=fmt(dz.pendiente);pintarPaso();$('#cCon').value='Diezmo '+nombreMes(MES);
     const ult=addMes(MES,1)+'-01';const d=new Date(ult);d.setDate(0);const fin=d.toISOString().slice(0,10);$('#cFecha').value=hoy()<fin?hoy():fin;$('#cImp').focus();toast('Revisa el importe y la forma de pago, y pulsa «Añadir gasto»')});
-  rGrafico(st);rFijosCard();rObjCard();
+  rGrafico(st);rDiasCard(st);rFijosCard();rObjCard();
   $('#fijosCard').classList.toggle('hide',!pref('verFijos'));$('#objCard').classList.toggle('hide',!pref('verObjetivos'));
   // especiales
   const esp=SPECIAL.filter(c=>c.id!=='INGRESO').map(c=>({c,v:st.by[c.id]||0})).filter(x=>Math.abs(x.v)>0.009);
@@ -108,6 +108,39 @@ function rResumen(){
 /* ---- Gráfico del mes ---- */
 function barrasHtml(items){if(!items.length)return '';const tot=items.reduce((a,x)=>a+x.v,0),max=Math.max(...items.map(x=>x.v));
   return items.map(x=>`<div class="gbar" data-cat="${x.id}" data-tiph="${esc(tipHtml(esc(x.n),[['var(--acc)','Gastado',eur(x.v,0)],['','Del total',Math.round(x.v/tot*100)+' %'],...(x.p?[['','Presupuesto',eur(x.p,0)],['',x.v>x.p+0.5?'Te pasas':'Queda',eur(Math.abs(x.p-x.v),0),x.v>x.p+0.5?'neg':'pos']]:[]),...(x.id?[['','','<span class="mut" style="font-weight:400">Toca para ver los movimientos</span>']]:[])]))}"><span class="gn">${esc(x.n)}</span><span class="gt"><i style="width:${Math.max(1,x.v/max*100)}%"></i></span><span class="gv num">${eur(x.v,0)} <span class="mut">${Math.round(x.v/tot*100)}%</span></span></div>`).join('')}
+// Evolución del mes: lo gastado acumulado día a día frente al ritmo previsto (el presupuesto de consumo repartido por días)
+function rDiasCard(st){
+  const el=$('#diaCard');if(!el)return;
+  const [Y,M]=MES.split('-').map(Number),n=new Date(Y,M,0).getDate(),h=hoy(),actual=MES===mesDe(h),dHoy=actual?+h.slice(8,10):n;
+  const dia=new Array(n+1).fill(0);let hay=false;
+  for(const x of st.ms){if(!(sinCatX(x)||CONSUMO.includes(x.cat)))continue;const d=+x.fecha.slice(8,10);if(d>=1&&d<=n){dia[d]-=x.importe;hay=true}}
+  if(!hay){el.classList.add('hide');el.innerHTML='';return}
+  el.classList.remove('hide');
+  const acum=[0];for(let d=1;d<=n;d++)acum[d]=r2(acum[d-1]+dia[d]);
+  const total=acum[dHoy],plan=st.base>0?r2(CONSUMO.reduce((a,id)=>a+presFijo(id,st.base),0)):0;
+  const prevHoy=plan?r2(plan*dHoy/n):0,encima=plan>0&&total>prevHoy+0.5;
+  const resumen=plan?(actual?`Llevas <b class="${encima?'neg':''}">${eur(total,0)}</b> de ${eur(prevHoy,0)} previstos para hoy`:`Gastaste <b>${eur(total,0)}</b> de ${eur(plan,0)} previstos`):`<b>${eur(total,0)}</b> gastados`;
+  if(!el.dataset.ini){el.dataset.ini='1';el.open=!esMovil();el.addEventListener('toggle',()=>{if(el.open)pintarDias(el._d)})}
+  el._d={n,dHoy,dia,acum,plan,total,encima,actual};
+  el.innerHTML=`<summary><span class="t">Evolución del mes</span><span class="r small">${resumen}</span><svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary><div id="diaChart"></div>`;
+  if(el.open)pintarDias(el._d);
+}
+function pintarDias(d){
+  const c=$('#diaChart');if(!c||!d)return;
+  const {n,dHoy,dia,acum,plan,total,encima}=d,W=Math.max(300,Math.round(c.clientWidth||(esMovil()?330:700))),H=esMovil()?170:200,pl=44,pr=10,pt=10,pb=24;
+  const top=Math.max(1,plan,...acum.slice(0,dHoy+1)),paso=pasoRedondo(top/4),max=Math.ceil(top/paso)*paso;
+  const x=k=>pl+(W-pl-pr)*((k-1)/Math.max(1,n-1)),y=v=>pt+(H-pt-pb)*(1-v/max);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gasto acumulado del mes, día a día">`;
+  for(let v=0;v<=max+0.01;v+=paso)svg+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="2 4"/><text x="${pl-6}" y="${y(v)+4}" font-size="11" text-anchor="end" fill="var(--muted)">${v>=1000?(v/1000).toLocaleString('es-ES')+' k':Math.round(v)}</text>`;
+  for(let k=1;k<=n;k++)if(k===1||k===n||(k%5===0&&n-k>=3))svg+=`<text x="${x(k)}" y="${H-7}" font-size="11" text-anchor="middle" fill="var(--muted)">${k}</text>`;
+  if(plan)svg+=`<line x1="${x(1)}" y1="${y(0)}" x2="${x(n)}" y2="${y(plan)}" stroke="var(--ink)" opacity=".55" stroke-dasharray="6 5" stroke-width="1.5"/>`;
+  const col=encima?'var(--bad)':'var(--acc)';let ruta='';for(let k=1;k<=dHoy;k++)ruta+=(k===1?'M':'L')+x(k).toFixed(1)+' '+y(acum[k]).toFixed(1);
+  svg+=`<path d="${ruta} L${x(dHoy).toFixed(1)} ${y(0)} L${x(1)} ${y(0)} Z" fill="${col}" opacity=".12"/><path d="${ruta}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(dHoy)}" cy="${y(total)}" r="4" fill="${col}"/>`;
+  const paso1=(W-pl-pr)/Math.max(1,n-1);
+  for(let k=1;k<=dHoy;k++){const fe=MES+'-'+String(k).padStart(2,'0');
+    svg+=`<rect class="hz" x="${(x(k)-paso1/2).toFixed(1)}" y="${pt}" width="${paso1.toFixed(1)}" height="${H-pt-pb}" data-tiph="${esc(tipHtml(esc(fFecha(fe)),[[col,'Ese día',eur(dia[k])],['','Acumulado',eur(acum[k])]].concat(plan?[['','Previsto hasta ese día',eur(plan*k/n)]]:[])))}"/>`}
+  c.innerHTML=svg+`</svg><div class="legend"><span><i style="background:${col}"></i>Gastado</span>${plan?'<span><i style="background:var(--ink);opacity:.55"></i>Ritmo previsto</span>':''}</div>`;
+}
 function rGrafico(st){
   const el=$('#grafCard');
   const items=[...CATS.filter(c=>c.g!=='AHORRO').map(c=>({n:c.n,id:c.id,v:st.by[c.id]||0,p:presupuestoCat(MES,c.id,st).p})),{n:'Sin categorizar',id:'SINCAT',v:st.by.SINCAT||0}].filter(x=>x.v>0.5).sort((a,b)=>b.v-a.v);

@@ -14,6 +14,21 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'Resumen: la evolución del mes suma día a día sin contar traspasos ni retiradas'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-01', 'NOMINA', 2000, 'INGRESO'], ['2026-10-02', 'Mercadona', -50, 'ALIMENTACION'], ['2026-10-02', 'Cajero', -100, 'EFECTIVO'], ['2026-10-05', 'Cine', -20, 'OCIO'], ['2026-10-06', 'A hucha', -300, 'TRASPASO']]);
+      await p.evaluate(() => { go('resumen'); document.getElementById('diaCard').open = true; });
+      await p.waitForSelector('#diaChart svg');
+      const t = await p.textContent('#diaCard summary');
+      assert.match(t, /Evolución del mes/);
+      const d = await p.evaluate(() => document.getElementById('diaCard')._d);
+      assert.equal(d.total, 70, 'solo cuenta lo gastado: ' + JSON.stringify(d));
+      assert.equal(d.acum[2], 50);
+      assert.equal(d.acum[5], 70);
+      assert.ok(await p.locator('#diaChart path').count() >= 2);
+    })();
+  },
   'retirada de efectivo: pregunta si ya se gastó, lo apunta y el Resumen avisa de lo que falta'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
