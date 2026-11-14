@@ -17,6 +17,7 @@ module.exports = {
       await mov(p, { fecha: m + '-04', concepto: 'café', importe: -10, cat: 'OCIO' });
       const st = await p.evaluate(m => stats(m), m);
       assert.equal(st.consumo, 50); assert.equal(st.by.SINCAT, 40);
+      await p.evaluate(() => { GR_PLEG.clear(); render(); }); // los grupos empiezan plegados
       assert.ok(await p.isVisible('#groups .crow[data-cat=SINCAT]'));
       assert.ok(await p.isVisible('#grafCard .gbar'));
     })();
@@ -38,6 +39,7 @@ module.exports = {
       await mov(p, { fecha: m + '-02', concepto: 'Nómina', importe: 2000, cat: 'INGRESO' });
       await p.evaluate(() => go('resumen'));
       assert.match(await p.textContent('#groups .crow[data-cat=DIEZMO]'), /pendiente/);
+      await p.evaluate(() => { GR_PLEG.clear(); render(); });
       await p.click('.dzpag'); await L.esperar(200);
       assert.equal(await p.evaluate(() => TAB), 'efectivo');
       assert.equal(await p.inputValue('#cImp'), '200,00');
