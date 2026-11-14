@@ -216,3 +216,7 @@ function cerrarCuenta(){$('#cuentaMenu').classList.add('hide');$('#uWho').setAtt
 $('#uWho').onclick=e=>{e.stopPropagation();const h=$('#cuentaMenu').classList.toggle('hide');$('#uWho').setAttribute('aria-expanded',!h)};
 $$('#cuentaMenu [data-cm]').forEach(b=>b.onclick=()=>{cerrarCuenta();go(b.dataset.cm)});
 document.addEventListener('click',e=>{if(!e.target.closest('#userbox'))cerrarCuenta()});
+
+// Altura real de la cabecera (para que la barra de vistas se pegue justo debajo, sin hueco)
+(()=>{const h=document.querySelector('header');if(!h)return;const med=()=>document.documentElement.style.setProperty('--hdr',h.offsetHeight+'px');med();
+  if(window.ResizeObserver)new ResizeObserver(med).observe(h);window.addEventListener('resize',med)})();

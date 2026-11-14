@@ -1510,3 +1510,5 @@ dialog.cerrando::backdrop{animation:fundidoOut .17s ease-in forwards}
 /* barra de vistas del Histórico: misma distancia (14 px) por arriba y por abajo */
 .apchips{margin-top:10px;margin-bottom:10px}
 @media (max-width:900px){.apchips{margin:10px -12px 6px}}
+/* barra de vistas pegada justo debajo de la cabecera, sin hueco */
+@media (min-width:901px){.apchips{top:var(--hdr,63px)}}
