@@ -42,6 +42,7 @@ function rResumen(){
    if(pend.length)al.push(`<div class="alert"><span class="grow"><b>Diezmo pendiente:</b> ${pend.map(([m,v])=>nombreMes(m)+' '+eur(v,0)).join(' · ')}</span><button class="btn sm" data-act="dz" data-m="${pend[0][0]}">Ver</button></div>`)}
   {const fx=fijosDelMes(MES).filter(f=>f.estado==='falta'||f.estado==='cambia');
    if(fx.length)al.push(`<div class="alert"><span class="grow"><b>Gastos fijos:</b> ${fx.map(f=>f.estado==='falta'?`${esc(f.f.nombre)} no ha llegado`:`${esc(f.f.nombre)} ha cambiado (${eur(f.pagado)} en vez de ${eur(f.f.importe)})`).join(' · ')}</span></div>`)}
+  {const e=efectivoMes(MES);if(e.ret>0&&e.resto>0.5&&!(S.aj.efeOk||{})[MES])al.push(`<div class="alert info"><span class="grow"><b>Efectivo sin justificar:</b> sacaste ${eur(e.ret,0)} y has apuntado ${eur(e.gas,0)}; quedan ${eur(e.resto,0)}.</span><button class="btn sm" data-act="efe">Apuntar gastado</button><button class="btn sm" data-act="efeok">Lo guardo</button></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
   $('#alerts').innerHTML=al.length>2?al.slice(0,1).join('')+`<details class="masav"><summary>${al.length-1} avisos más</summary><div class="alerts" style="margin-top:8px">${al.slice(1).join('')}</div></details>`:al.join('');
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
@@ -49,6 +50,8 @@ function rResumen(){
     if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
     if(a==='copia')exportar();
     if(a==='imp')go('importar');
+    if(a==='efe'){const e=efectivoMes(MES),h=hoy();apuntarEfectivoGastado(e.resto,mesDe(h)===MES?h:MES+'-28','Efectivo gastado',`De lo que sacaste en ${nombreMes(MES)}, quedan <b>${eur(e.resto)}</b> sin apuntar.`)}
+    if(a==='efeok'){(S.aj.efeOk||(S.aj.efeOk={}))[MES]=true;save();rResumen();toast('Vale, lo dejo como efectivo guardado')}
     if(a==='sug'){ACOR_ABRIR='sugCard';irApartado('ajustes','presupuesto')}else if(a==='aj')go('ajustes');
     if(a==='prestrev'){F.cat='PRESTAMO';F.sinCat=false;F.todos=true;F.q='';F.tag='';go('movs');return}if(a==='prestok'){S.aj.revisarPrestamos=false;save();rResumen();toast('Vale, no te lo vuelvo a decir');return}if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
     if(a==='usu')go('usuarios');

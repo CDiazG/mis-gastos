@@ -14,6 +14,23 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'retirada de efectivo: pregunta si ya se gastó, lo apunta y el Resumen avisa de lo que falta'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-03', 'RETIRADA CAJERO', -100, ''], ['2026-10-05', 'Pan', -10, 'ALIMENTACION']]);
+      await p.evaluate(() => { const x = S.mov.find(m => m.concepto === 'Pan'); x.metodo = 'efectivo'; x.cuenta = ''; save(); go('movs'); });
+      const k = await p.evaluate(() => S.mov.find(x => x.concepto === 'RETIRADA CAJERO').id);
+      await p.selectOption(`tr[data-id="${k}"] .cat`, 'EFECTIVO');
+      await p.waitForSelector('#dlg[open]');
+      assert.match(await p.textContent('#dlgB'), /100/);
+      await p.fill('#efImp', '40');
+      await p.click('#dlgF .pri');
+      const e = await p.evaluate(() => efectivoMes('2026-10'));
+      assert.deepEqual(e, { ret: 100, gas: 50, resto: 50 });
+      await p.evaluate(() => go('resumen'));
+      assert.match(await p.textContent('#alerts'), /Efectivo sin justificar/);
+    })();
+  },
   'categorizar uno pregunta si poner la misma a los de igual concepto; también los huérfanos salen como sin categoría'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

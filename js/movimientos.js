@@ -36,9 +36,29 @@ function ofrecerMismos(x,c,lista,aplicar){
     [{t:'No, solo este'},{t:n>1?`Sí, a los ${n}`:'Sí, también a ese',cls:'pri',fn:()=>{aplicar(lista)}}]);
 }
 const mismosSinCat=(x,lista)=>lista.filter(y=>y!==x&&sinCatX(y)&&!y.par&&norm(y.concepto)===norm(x.concepto)&&Math.sign(y.importe)===Math.sign(x.importe));
+// Efectivo: una retirada no es gasto hasta que se gasta. Se pregunta si ya se ha gastado y el Resumen avisa de lo que queda sin justificar.
+function efectivoMes(m){
+  let ret=0,gas=0;
+  for(const x of S.mov){if(x.mes!==m||x.importe>=0)continue;
+    if(x.cat==='EFECTIVO'&&x.metodo!=='efectivo')ret-=x.importe;
+    else if(x.metodo==='efectivo'&&x.cat!=='EFECTIVO'&&x.cat!=='TRASPASO')gas-=x.importe}
+  return {ret:r2(ret),gas:r2(gas),resto:r2(ret-gas)}
+}
+function apuntarEfectivoGastado(max,fecha,titulo,intro){
+  const def=ALLC.some(c=>c.id==='OTROS')?'OTROS':'';
+  dialog(titulo,`<p style="margin-top:0">${intro}</p>
+    <label class="small mut" for="efImp">Cuánto</label><input type="number" id="efImp" step="0.01" min="0" value="${max}" inputmode="decimal">
+    <label class="small mut" for="efCat" style="margin-top:8px;display:block">En qué categoría</label><select id="efCat">${catOptions(def)}</select>
+    <p class="small mut">Se apunta como gasto en efectivo. Si fue en varias cosas, luego puedes dividirlo.</p>`,
+    [{t:'Todavía no'},{t:'Apuntar como gastado',cls:'pri',fn:()=>{
+      const v=r2(Math.abs(parseFloat($('#efImp').value)||0));if(!v){toast('Pon una cantidad',true);return false}
+      const c=$('#efCat').value;
+      conDeshacer('Efectivo apuntado: '+eur(v),()=>{const x={id:uid(),fecha,mes:mesDe(fecha),concepto:'Efectivo gastado',importe:-v,cat:c,metodo:'efectivo',cuenta:'',origen:'manual'};S.mov.push(x)})}}]);
+}
 function ponerCategoria(x,c){
   conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()});
   if(c==='TRASPASO'&&!x.par&&x.otra===undefined)setTimeout(()=>preguntarOtra(x),60);
+  else if(c==='EFECTIVO'&&x.importe<0&&x.metodo!=='efectivo')setTimeout(()=>apuntarEfectivoGastado(r2(-x.importe),x.fecha,'¿Has gastado ya ese efectivo?',`Has sacado <b>${eur(-x.importe)}</b>. Si ya lo has gastado, apúntalo para que cuente como gasto; si no, se queda como efectivo en tu bolsillo.`),200)
   else if(c&&c!=='TRASPASO'){const l=mismosSinCat(x,S.mov);if(l.length)setTimeout(()=>ofrecerMismos(x,c,l,ls=>conDeshacer('Categoría puesta a '+ls.length+' movimiento'+(ls.length>1?'s':'')+' más',()=>{ls.forEach(y=>{y.cat=c;if(y.origen!=='excel')marcarNomina(y)})})),250)}
 }
 function preguntarOtra(x){
