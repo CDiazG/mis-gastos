@@ -99,8 +99,9 @@ function rHist(){
   const years=[...new Set(all.map(m=>m.slice(0,4)))].reverse();
   $('#years').innerHTML=years.map(yr=>{const xs=data.filter(x=>x.m.startsWith(yr)&&!x.vacio);if(!xs.length)return '';
     const I=xs.reduce((a,x)=>a+x.ingresos,0),G=xs.reduce((a,x)=>a+x.consumo,0),D=xs.reduce((a,x)=>a+x.diezmo,0);
-    return `<div class="card pad"><div class="mut small">${yr} · ${xs.length} meses con datos</div><div style="font-size:20px;font-weight:650;margin:2px 0" class="num">${eur(G/xs.length,0)}<span class="small mut" style="font-weight:400"> /mes gastado</span></div>
-      <div class="small">Ingresos ${eur(I,0)} · gastado ${eur(G,0)}</div><div class="small">Ahorro ${I?Math.round((I-G-D)/I*100):0}% de lo ingresado</div></div>`}).join('');
+    const ah=I?Math.round((I-G-D)/I*100):0,gm=G/xs.length;
+    return `<div class="card pad yrc"><div class="yrh"><b>${yr}</b><span class="mut small">${xs.length} meses con datos</span></div><div style="font-size:20px;font-weight:650;margin:4px 0" class="num ${gm<0?'neg':''}">${eur(gm,0)}<span class="small mut" style="font-weight:400"> /mes gastado</span></div>
+      <div class="small">Ingresos ${eur(I,0)} · gastado <span class="${G<0?'neg':''}">${eur(G,0)}</span></div><div class="small">Ahorro <b class="${ah>=0?'pos':'neg'}">${ah}%</b> de lo ingresado</div></div>`}).join('');
   // medias por categoría
   if(!YEAR||!years.includes(YEAR))YEAR=years[0];
   $('#yearSel').innerHTML=years.map(y=>`<option${y===YEAR?' selected':''}>${y}</option>`).join('')+'<option value="12m"'+(YEAR==='12m'?' selected':'')+'>Últimos 12 meses</option>';

@@ -217,7 +217,8 @@ module.exports = {
       for (const c of ['dinero', 'gasto', 'ahorro', 'cats']) assert.ok(await p.$(`#evoCards details[data-ic="${c}"][open]`), 'tarjeta ' + c);
       assert.ok(await p.$('#uWho.avisoP'), 'los avisos se marcan con un puntito en el círculo');
       await p.click('#evoCards details[data-ic="gasto"] > summary');
-      assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null); await L.esperar(100);
+      await L.esperar(450); // se pliega con animación
+      assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null);
       await p.evaluate(() => go('resumen')); await p.evaluate(() => go('hist'));
       assert.equal(await p.$('#evoCards details[data-ic="gasto"][open]'), null, 'recuerda las plegadas');
       await p.$eval('#evoCards details[data-ic="ahorro"]', e => e.scrollIntoView({ block: 'center' })); await L.esperar(300);

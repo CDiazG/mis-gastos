@@ -61,7 +61,7 @@ async function entrar(p, correo, clave) {
 
 async function cerrarBienvenida(p) {
   if (await p.evaluate(() => document.getElementById('dlg').open && document.getElementById('dlgT').textContent === 'Bienvenida'))
-    await p.click('#dlgF >> text=Empezar vacío');
+    { await p.click('#dlgF >> text=Empezar vacío'); await esperar(350); }
 }
 
 async function salir(p) { if (!(await p.isVisible('#logout'))) await p.click('#uWho'); await Promise.all([p.waitForNavigation(), p.click('#logout')]); await esperar(300); }

@@ -58,7 +58,7 @@ module.exports = {
       await p.evaluate(() => go('resumen'));
       assert.equal(await p.evaluate(() => TAB), 'ajustes', 'si te pasas no deja salir');
       assert.match(await p.textContent('#dlgB'), /102/);
-      await p.click('#dlgF >> text=Arreglarlo');
+      await p.click('#dlgF >> text=Arreglarlo'); await L.esperar(350);
       await p.fill('[data-p=OCIO]', '10');
       await p.evaluate(() => go('resumen'));
       assert.equal(await p.evaluate(() => TAB), 'resumen');
@@ -298,7 +298,7 @@ module.exports = {
       assert.ok(await p.isVisible('#groups [data-cat=OCIO]'), 'desplegado');
       await p.evaluate(() => { go('movs'); go('resumen'); });
       assert.ok(await p.isVisible('#groups [data-cat=OCIO]'), 'lo recuerda');
-      await p.click('#groups .grupo[data-g=VARIABLES] .gtog');
+      await p.click('#groups .grupo[data-g=VARIABLES] .gtog'); await L.esperar(450);
       assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')));
       // preguntas frecuentes por temas
       await p.evaluate(() => go('ayuda', { sub: 'faq' }));

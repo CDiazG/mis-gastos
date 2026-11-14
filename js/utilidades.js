@@ -89,3 +89,19 @@ function mejorConcepto(c,d){
   return norm(r).trim().startsWith(w[0])?r:c+' · '+r;
 }
 const verConcepto=x=>conceptoCorto(x&&x.concepto!==undefined?x.concepto:x);
+
+/* ===== Animación de plegado y desplegado (respeta «Animaciones» y prefers-reduced-motion) ===== */
+const animOn=()=>!document.documentElement.classList.contains('sinanim')&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+function cerrarAnim(hs,fin){
+  hs=hs.filter(Boolean);
+  if(!animOn()||!hs.length||!hs.some(c=>c.offsetHeight)){fin();return}
+  hs.forEach(c=>{c.style.setProperty('--h',c.offsetHeight+'px');c.classList.add('cierra')});
+  setTimeout(()=>{hs.forEach(c=>{c.classList.remove('cierra');c.style.removeProperty('--h')});fin()},270)}
+function abrirAnim(hs){if(!animOn())return;hs.forEach(c=>{c.classList.add('abre');setTimeout(()=>c.classList.remove('abre'),380)})}
+// Fichas desplegables (<details>): se pliegan y se abren con animación
+document.addEventListener('click',e=>{
+  const sm=e.target.closest('details.icard>summary,details.diacard>summary,details.faq>summary,details.masav>summary,details.cartera>summary,details.impmas>summary');
+  if(!sm||e.target.closest('a,button,input,select'))return;
+  const d=sm.parentNode,hs=[...d.children].filter(c=>c!==sm);
+  if(d.open){if(!animOn())return;e.preventDefault();if(d._cierra)return;d._cierra=1;cerrarAnim(hs,()=>{d.open=false;d._cierra=0})}
+  else setTimeout(()=>abrirAnim(hs),0)});

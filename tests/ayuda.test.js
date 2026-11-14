@@ -27,9 +27,9 @@ module.exports = {
       await p.click('#catCard .acorb');
       assert.ok(await p.isVisible('#pctTable'), 'se abre');
       assert.equal((await p.textContent('#catCard .acorb')).trim(), 'Ocultar');
-      await p.click('#sugCard .acorb');
+      await p.click('#sugCard .acorb'); await L.esperar(450);
       assert.ok(!(await p.isVisible('#pctTable')), 'al abrir la otra, se pliega');
-      await p.click('#sugCard .acorb');
+      await p.click('#sugCard .acorb'); await L.esperar(450);
       assert.ok(!(await p.isVisible('#pctTable')) && await p.evaluate(() => $('#sugCard').classList.contains('cerrada')), 'se puede cerrar');
     })();
   },

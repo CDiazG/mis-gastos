@@ -3,7 +3,9 @@
 // Grupos del presupuesto que la persona ha plegado (se recuerda en este dispositivo)
 const GR_PLEG=(()=>{try{const g=localStorage.getItem('mg-grupos-plegados');if(g===null)return new Set(['FIJOS','VARIABLES','AHORRO']);return new Set(JSON.parse(g||'[]'))}catch(e){return new Set()}})();
 document.addEventListener('click',e=>{const b=e.target.closest('#groups .gtog');if(!b)return;const c=b.closest('.grupo'),g=c.dataset.g;
-  if(GR_PLEG.has(g))GR_PLEG.delete(g);else GR_PLEG.add(g);c.classList.toggle('plegado',GR_PLEG.has(g));b.setAttribute('aria-expanded',!GR_PLEG.has(g));
+  const cerrar=!GR_PLEG.has(g);if(cerrar)GR_PLEG.add(g);else GR_PLEG.delete(g);b.setAttribute('aria-expanded',!cerrar);
+  const hs=[...c.children].filter(x=>!x.classList.contains('ghead')),aplicar=()=>c.classList.toggle('plegado',GR_PLEG.has(g));
+  if(cerrar)cerrarAnim(hs,aplicar);else aplicar();
   try{localStorage.setItem('mg-grupos-plegados',JSON.stringify([...GR_PLEG]))}catch(_){}});
 /* ============ Resumen ============ */
 function rResumen(){
@@ -144,14 +146,14 @@ function pintarDias(d){
     for(const id of [...rk].reverse()){const v=diaC[k][id]||0;if(v<=0.004)continue;const h=hb(v);
       svg+=`<rect x="${(x(k)-bw/2).toFixed(1)}" y="${(base-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${colDe(id)}" opacity=".92"/>`;base-=h}}
   if(plan)svg+=`<line x1="${x(1)}" y1="${y(0)}" x2="${x(n)}" y2="${y(plan)}" stroke="var(--ink)" opacity=".5" stroke-dasharray="6 5" stroke-width="1.5"/>`;
-  const col=encima?'var(--bad)':'var(--ink)';let ruta='';for(let k=1;k<=dHoy;k++)ruta+=(k===1?'M':'L')+x(k).toFixed(1)+' '+y(acum[k]).toFixed(1);
+  const col='var(--bad)';let ruta='';for(let k=1;k<=dHoy;k++)ruta+=(k===1?'M':'L')+x(k).toFixed(1)+' '+y(acum[k]).toFixed(1);
   svg+=`<path d="${ruta}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(dHoy)}" cy="${y(total)}" r="4" fill="${col}"/>`;
   for(let k=1;k<=dHoy;k++){const fe=MES+'-'+String(k).padStart(2,'0');
     const cats=Object.entries(diaC[k]).filter(([,v])=>Math.abs(v)>0.004).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([id,v])=>[colDe(id),id==='SINCAT'?'Sin categoría':esc(catN(id)),eur(v)]);
     const filas=(cats.length?cats:[['','Sin gastos','—']]).concat([['var(--ink)','Gastado ese día',eur(dia[k])],['','Acumulado',eur(acum[k])]],plan?[['','Previsto hasta ese día',eur(plan*k/n)]]:[]);
     svg+=`<rect class="hz" x="${(x(k)-paso1/2).toFixed(1)}" y="${pt}" width="${paso1.toFixed(1)}" height="${alto}" data-tiph="${esc(tipHtml(esc(fFecha(fe)),filas))}"/>`}
   const lg=rk.filter(id=>(cc[id]||'')!=='var(--muted)'&&diaC.some(o=>(o[id]||0)>0.004)).map(id=>`<span><i style="background:${cc[id]}"></i>${id==='SINCAT'?'Sin categoría':esc(catN(id))}</span>`).join('');
-  c.innerHTML=svg+`</svg><div class="legend">${lg}<span><i style="background:var(--muted)"></i>Resto</span><span><i style="background:${col};height:3px;border-radius:2px"></i>Acumulado</span>${plan?'<span><i style="background:var(--ink);opacity:.5;height:3px;border-radius:2px"></i>Ritmo previsto</span>':''}</div>`;
+  c.innerHTML=svg+`</svg><div class="legend">${lg}<span><i style="background:var(--muted)"></i>Resto</span><span><i style="background:var(--bad);height:3px;border-radius:2px"></i>Gasto acumulado</span>${plan?'<span><i style="background:var(--ink);opacity:.5;height:3px;border-radius:2px"></i>Ritmo previsto</span>':''}</div>`;
 }
 function rGrafico(st){
   const el=$('#grafCard');
@@ -271,7 +273,7 @@ function rObjetivos(){
 }
 
 // En el móvil, «Gastos fijos» y «Objetivos» empiezan plegados; se abren tocando su título
-document.addEventListener('click',e=>{const h=e.target.closest('.pleg>.ghead');if(!h||e.target.closest('button,a,input,select'))return;h.parentNode.classList.toggle('abierta')});
+document.addEventListener('click',e=>{const h=e.target.closest('.pleg>.ghead');if(!h||e.target.closest('button,a,input,select'))return;const c=h.parentNode;if(c.classList.contains('abierta'))cerrarAnim([...c.children].filter(x=>!x.classList.contains('ghead')),()=>c.classList.remove('abierta'));else c.classList.add('abierta')});
 
 // Anillo pequeño del grupo: cuánto llevas gastado de su presupuesto
 function anillo(pct,cls){const R=14,L=2*Math.PI*R,f=Math.max(0,Math.min(100,pct))/100*L;

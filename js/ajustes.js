@@ -129,7 +129,10 @@ function acorPres(){
       const d=document.createElement('p');d.className='small mut acord';d.textContent=ACOR_DESC[el.id]||'';t.appendChild(d);
       const b=document.createElement('button');b.type='button';b.className='btn sm acorb';
       w.append(t,b);el.prepend(w);
-      b.onclick=()=>{const abrir=el.classList.contains('cerrada');els.forEach(o=>o&&o.classList.add('cerrada'));if(abrir)el.classList.remove('cerrada');acorTxt(els)};
+      b.onclick=()=>{const abrir=el.classList.contains('cerrada');
+        els.forEach(o=>{if(!o||o.classList.contains('cerrada'))return;cerrarAnim([...o.children].filter(x=>!x.classList.contains('acorh')),()=>{o.classList.add('cerrada');acorTxt(els)})});
+        if(abrir){el.classList.remove('cerrada');abrirAnim([...el.children].filter(x=>!x.classList.contains('acorh')))}
+        acorTxt(els)};
     }
   });
   if(ACOR_ABRIR){els.forEach(o=>o&&o.classList.toggle('cerrada',o.id!==ACOR_ABRIR));ACOR_ABRIR=''}
