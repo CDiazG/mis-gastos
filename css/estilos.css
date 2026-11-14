@@ -1465,3 +1465,22 @@ button.who,button.who:hover,button.who:focus{padding:0!important;background:none
   .apchips{background:transparent;margin-top:-4px;padding:4px 12px 8px}
   .apchips .apchip:not(.on){background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 }
+/* 2.40.2 plegables de una línea: mismo alto y texto centrado; títulos de las páginas sobre cristal; Importar junto a Añadir */
+.grupo{container-type:inline-size}
+.grupo>.ghead.gtog{align-items:center;flex-wrap:nowrap;min-height:62px;padding-top:10px;padding-bottom:10px}
+.grupo>.ghead.gtog .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grupo>.ghead.gtog .r{flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:10px}
+.grupo>.ghead.gtog .chev{flex:none}
+
+.icard>summary,.diacard>summary{min-height:52px;box-sizing:border-box}
+.acor:not(.cerrada) .acorh{align-items:center}
+@media (max-width:900px){
+  body:not([data-tab="resumen"]) :is(.conap .aphead h2,.conap .aphead .sub){
+    display:inline-block;max-width:100%;box-sizing:border-box;padding:6px 14px;border-radius:16px;margin-bottom:6px;
+    background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink)}
+  body:not([data-tab="resumen"]) .conap.apsub>.migas{display:inline-flex;max-width:100%;box-sizing:border-box;padding:6px 14px;border-radius:16px;margin-bottom:8px;background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink)}
+}
+@container (max-width:400px){.grupo .gde{display:none}}
+@media (max-width:900px){
+  .pghead h1{padding:4px 16px;border-radius:18px;font-size:26px;background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink)}
+}

@@ -14,6 +14,20 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'exportar a Excel: últimos 12 meses y fechas elegidas'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-03', 'Cena', -30, 'OCIO'], ['2026-10-20', 'Cine', -20, 'OCIO']]);
+      await p.evaluate(() => dlgExportar());
+      assert.ok(await p.locator('#xAl option[value="12m"]').count(), 'opción de 12 meses');
+      assert.ok(!(await p.isVisible('#xDe')), 'las fechas no salen hasta pedirlas');
+      await p.selectOption('#xAl', 'fechas');
+      assert.ok(await p.isVisible('#xDe') && await p.isVisible('#xA'), 'salen desde y hasta');
+      await p.fill('#xDe', '2026-10-10'); await p.fill('#xA', '2026-10-31');
+      const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#dlgF .pri')]);
+      assert.match(dl.suggestedFilename(), /2026-10-10 a 2026-10-31/);
+    })();
+  },
   'Resumen: la evolución del mes suma día a día sin contar traspasos ni retiradas'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

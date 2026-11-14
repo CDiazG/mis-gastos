@@ -68,7 +68,7 @@ function rResumen(){
     const gp=cs.reduce((a,c)=>a+presupuestoCat(MES,c.id,st).p,0);
     const gg=cs.reduce((a,c)=>a+(st.by[c.id]||0),0)+(g.id==='VARIABLES'?(st.by.SINCAT||0):0);
     const pctG=Math.round(cs.reduce((a,c)=>a+pctCat(c.id,st.base),0)*10)/10;
-    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar">${anillo(gp>0?gg/gp*100:(gg>0?100:0),g.id==='AHORRO'?'ok':gg>gp+0.5?'over':gp>0&&gg>=gp*0.8?'warn':'ok')}<span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)} de ${eur(gp,0)}<span class="chev" aria-hidden="true"></span></span></button>`+
+    return `<div class="card grupo${GR_PLEG.has(g.id)?' plegado':''}" data-g="${g.id}"><button type="button" class="ghead gtog" aria-expanded="${!GR_PLEG.has(g.id)}" title="Plegar o desplegar">${anillo(gp>0?gg/gp*100:(gg>0?100:0),g.id==='AHORRO'?'ok':gg>gp+0.5?'over':gp>0&&gg>=gp*0.8?'warn':'ok')}<span class="t">${g.n} <span class="mut small">${pctG}%</span></span><span class="r num">${eur(gg,0)}<span class="gde"> de ${eur(gp,0)}</span><span class="chev" aria-hidden="true"></span></span></button>`+
       cs.map(c=>{
         const pc=presupuestoCat(MES,c.id,st),p=pc.p, v=st.by[c.id]||0, rest=p-v;
         if(c.id==='OTROS'&&!v)return '';

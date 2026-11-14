@@ -204,17 +204,21 @@ function hojaPatrimonio(st){
   H.set('A'+r,'Los saldos son los últimos que hay en la app (los de las cuentas con extracto se actualizan al importarlo).',nota);
   return {name:'Patrimonio',H,opt:{widths:[44,14,14,14,16],grid:false,tab:'C9A227'}};
 }
-function exportarExcel(alcance){
+function exportarExcel(alcance,desde,hasta){
   let meses;const all=mesesConDatos();
-  if(alcance==='mes')meses=[MES];else if(alcance==='todo')meses=all;else meses=all.filter(m=>m.startsWith(alcance));
+  if(alcance==='fechas'){
+    if(!desde||!hasta||desde>hasta){toast('Pon las dos fechas, la primera antes que la segunda',true);return false}
+    meses=all.filter(m=>m>=desde.slice(0,7)&&m<=hasta.slice(0,7))}
+  else if(alcance==='12m'){const fin=mesDe(hoy()),ini=addMes(fin,-11);meses=all.filter(m=>m>=ini&&m<=fin)}
+  else if(alcance==='mes')meses=[MES];else if(alcance==='todo')meses=all;else meses=all.filter(m=>m.startsWith(alcance));
   const set=new Set(meses);
-  const movs=S.mov.filter(x=>set.has(x.mes)).sort((a,b)=>a.fecha.localeCompare(b.fecha)||(a.orden??0)-(b.orden??0));
-  if(!movs.length){toast('No hay movimientos en ese periodo',true);return}
+  const movs=S.mov.filter(x=>set.has(x.mes)&&(alcance!=='fechas'||(x.fecha>=desde&&x.fecha<=hasta))).sort((a,b)=>a.fecha.localeCompare(b.fecha)||(a.orden??0)-(b.orden??0));
+  if(!movs.length){toast('No hay movimientos en ese periodo',true);return false}
   meses=meses.filter(m=>S.mov.some(x=>x.mes===m));
   const st=nuevoLibroEstilos();
   const hojas=[...(meses.length>1?[hojaResumen(meses,st)]:[]),...meses.map(m=>hojaMes(m,st)),hojaMovs(movs,st)];
   const activa=meses.length>1?hojas.length-2:0;const hp=hojaPatrimonio(st);if(hp)hojas.push(hp);
-  const nombre='Gastos '+(alcance==='mes'?nombreMes(MES):alcance==='todo'?'completo':alcance)+'.xlsx';
+  const nombre='Gastos '+(alcance==='mes'?nombreMes(MES):alcance==='todo'?'completo':alcance==='12m'?'últimos 12 meses':alcance==='fechas'?desde+' a '+hasta:alcance)+'.xlsx';
   const a=document.createElement('a');a.href=URL.createObjectURL(libroXlsx(hojas,st,activa));a.download=nombre;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);toast('Descargado: '+nombre);
 }
@@ -259,9 +263,12 @@ function dlgInforme(){
 
 
 function dlgExportar(){
-  const ys=[...new Set(mesesConDatos().map(m=>m.slice(0,4)))].reverse();
-  dialog('Exportar a Excel',`<p class="small mut" style="margin-top:0">Se descarga un Excel con una hoja por mes (presupuesto, gastos y movimientos, como el Excel de siempre), un resumen y la lista de todos los movimientos.</p><div class="formgrid"><label>Periodo</label><select id="xAl"><option value="mes">${nombreMes(MES)}</option>${ys.map(y=>`<option value="${y}">Año ${y}</option>`).join('')}<option value="todo">Todo</option></select></div>`,
-    [{t:'Cancelar'},{t:'Descargar',cls:'pri',fn:()=>exportarExcel($('#xAl').value)}]);
+  const ys=[...new Set(mesesConDatos().map(m=>m.slice(0,4)))].reverse(),ms=mesesConDatos(),h=hoy();
+  dialog('Exportar a Excel',`<p class="small mut" style="margin-top:0">Se descarga un Excel con una hoja por mes (presupuesto, gastos y movimientos, como el Excel de siempre), un resumen y la lista de movimientos.</p><div class="formgrid"><label>Periodo</label><select id="xAl"><option value="mes">${nombreMes(MES)}</option><option value="12m">Los últimos 12 meses</option>${ys.map(y=>`<option value="${y}">Año ${y}</option>`).join('')}<option value="todo">Todo</option><option value="fechas">Elegir fechas…</option></select></div>
+    <div class="formgrid" id="xFe" style="display:none;margin-top:8px"><label for="xDe">Desde</label><input type="date" id="xDe" value="${(ms[0]||mesDe(h))+'-01'}"><label for="xA">Hasta</label><input type="date" id="xA" value="${h}"></div>
+    <p class="small mut" id="xFn" style="display:none;margin:6px 0 0">Saldrá una hoja por cada mes que toques; la hoja «Movimientos» llevará solo los de esas fechas.</p>`,
+    [{t:'Cancelar'},{t:'Descargar',cls:'pri',fn:()=>exportarExcel($('#xAl').value,$('#xDe').value,$('#xA').value)}]);
+  $('#xAl').onchange=()=>{const f=$('#xAl').value==='fechas';$('#xFe').style.display=f?'':'none';$('#xFn').style.display=f?'':'none'};
 }
 // Un solo botón «Exportar» en Resumen, Movimientos e Histórico: Excel o informe para imprimir / PDF
 function dlgExportarTodo(){
