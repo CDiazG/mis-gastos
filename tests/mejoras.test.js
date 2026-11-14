@@ -14,6 +14,13 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'menú del perfil: Usuarios conserva su icono aunque haya avisos'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => { badgeUsuarios(); });
+      assert.ok(await p.evaluate(() => !!document.querySelector('#cmUsuarios svg.cmi')), 'icono de Usuarios');
+    })();
+  },
   'exportar a Excel: últimos 12 meses y fechas elegidas'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

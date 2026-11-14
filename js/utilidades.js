@@ -96,8 +96,9 @@ function cerrarAnim(hs,fin){
   hs=hs.filter(Boolean);
   if(!animOn()||!hs.length||!hs.some(c=>c.offsetHeight)){fin();return}
   hs.forEach(c=>{c.style.setProperty('--h',c.offsetHeight+'px');c.classList.add('cierra')});
-  setTimeout(()=>{hs.forEach(c=>{c.classList.remove('cierra');c.style.removeProperty('--h')});fin()},270)}
-function abrirAnim(hs){if(!animOn())return;hs.forEach(c=>{c.classList.add('abre');setTimeout(()=>c.classList.remove('abre'),380)})}
+  setTimeout(()=>{hs.forEach(c=>{c.classList.remove('cierra');c.style.removeProperty('--h')});fin()},310)}
+function abrirAnim(hs){if(!animOn())return;hs=hs.filter(c=>c&&c.offsetHeight);hs.forEach(c=>{c.style.setProperty('--h',c.offsetHeight+'px');c.classList.add('abre')});
+  setTimeout(()=>hs.forEach(c=>{c.classList.remove('abre');c.style.removeProperty('--h')}),320)}
 // Fichas desplegables (<details>): se pliegan y se abren con animación
 document.addEventListener('click',e=>{
   const sm=e.target.closest('details.icard>summary,details.diacard>summary,details.faq>summary,details.masav>summary,details.cartera>summary,details.impmas>summary');

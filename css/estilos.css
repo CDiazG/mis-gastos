@@ -1489,8 +1489,9 @@ button.who,button.who:hover,button.who:focus{padding:0!important;background:none
 #sugCard.conSug.cerrada .acorb::after{content:'';position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:var(--bad,#d33);border:2px solid var(--card)}
 /* 2.40.3 animaciones de plegado y cierre, separaciones y años del histórico */
 @keyframes cierra{from{max-height:var(--h);opacity:1}to{max-height:0;opacity:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0}}
-.cierra{overflow:hidden;animation:cierra .26s cubic-bezier(.4,0,.2,1) forwards!important}
-.abre{animation:despl .34s cubic-bezier(.2,.9,.3,1)}
+.cierra{overflow:hidden;animation:cierra .3s cubic-bezier(.4,0,.2,1) forwards!important}
+@keyframes abrir{from{max-height:0;opacity:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0}to{max-height:var(--h);opacity:1}}
+.abre{overflow:hidden;animation:abrir .3s cubic-bezier(.4,0,.2,1)!important}
 @keyframes dlgOut{to{opacity:0;transform:translateY(8px) scale(.97)}}
 @keyframes fundidoOut{to{opacity:0}}
 dialog.cerrando{animation:dlgOut .17s ease-in forwards}

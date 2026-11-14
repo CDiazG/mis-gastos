@@ -5,7 +5,7 @@ const GR_PLEG=(()=>{try{const g=localStorage.getItem('mg-grupos-plegados');if(g=
 document.addEventListener('click',e=>{const b=e.target.closest('#groups .gtog');if(!b)return;const c=b.closest('.grupo'),g=c.dataset.g;
   const cerrar=!GR_PLEG.has(g);if(cerrar)GR_PLEG.add(g);else GR_PLEG.delete(g);b.setAttribute('aria-expanded',!cerrar);
   const hs=[...c.children].filter(x=>!x.classList.contains('ghead')),aplicar=()=>c.classList.toggle('plegado',GR_PLEG.has(g));
-  if(cerrar)cerrarAnim(hs,aplicar);else aplicar();
+  if(cerrar)cerrarAnim(hs,aplicar);else{aplicar();abrirAnim(hs)}
   try{localStorage.setItem('mg-grupos-plegados',JSON.stringify([...GR_PLEG]))}catch(_){}});
 /* ============ Resumen ============ */
 function rResumen(){
@@ -273,7 +273,7 @@ function rObjetivos(){
 }
 
 // En el móvil, «Gastos fijos» y «Objetivos» empiezan plegados; se abren tocando su título
-document.addEventListener('click',e=>{const h=e.target.closest('.pleg>.ghead');if(!h||e.target.closest('button,a,input,select'))return;const c=h.parentNode;if(c.classList.contains('abierta'))cerrarAnim([...c.children].filter(x=>!x.classList.contains('ghead')),()=>c.classList.remove('abierta'));else c.classList.add('abierta')});
+document.addEventListener('click',e=>{const h=e.target.closest('.pleg>.ghead');if(!h||e.target.closest('button,a,input,select'))return;const c=h.parentNode;if(c.classList.contains('abierta'))cerrarAnim([...c.children].filter(x=>!x.classList.contains('ghead')),()=>c.classList.remove('abierta'));else{c.classList.add('abierta');abrirAnim([...c.children].filter(x=>!x.classList.contains('ghead')))}});
 
 // Anillo pequeño del grupo: cuánto llevas gastado de su presupuesto
 function anillo(pct,cls){const R=14,L=2*Math.PI*R,f=Math.max(0,Math.min(100,pct))/100*L;

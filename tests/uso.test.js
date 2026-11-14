@@ -294,7 +294,7 @@ module.exports = {
       // grupos del resumen
       await p.evaluate(() => go('resumen'));
       assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')), 'empieza plegado');
-      await p.click('#groups .grupo[data-g=VARIABLES] .gtog');
+      await p.click('#groups .grupo[data-g=VARIABLES] .gtog'); await L.esperar(450);
       assert.ok(await p.isVisible('#groups [data-cat=OCIO]'), 'desplegado');
       await p.evaluate(() => { go('movs'); go('resumen'); });
       assert.ok(await p.isVisible('#groups [data-cat=OCIO]'), 'lo recuerda');
