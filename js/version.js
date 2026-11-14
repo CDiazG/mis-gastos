@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.40.3';
+const VERSION='2.40.4';
 const CAMBIOS=[
+ {v:'2.40.4',f:'2026-11-14',c:['Histórico: los botones de vistas (Evolución, Mes a mes…) quedan a la misma distancia por arriba y por abajo','Arreglada la animación de plegado de los tres grupos del Resumen y de las fichas']},
  {v:'2.40.3',f:'2026-11-14',c:['Todo lo que se pliega o se cierra (grupos, fichas, ventanas) ahora tiene animación','Histórico: los años van separados y con su etiqueta, y el ahorro en verde o rojo','Evolución del mes: la línea del gasto acumulado va en rojo','Más separación entre las fichas y los botones de vistas del Histórico']},
  {v:'2.40.2',f:'2026-11-14',c:['Movimientos: el botón Importar junto a Añadir y Exportar','Exportar a Excel: últimos 12 meses o de una fecha a otra','Los tres grupos del Resumen y las fichas plegables, con el mismo alto y el texto centrado','Títulos de Ajustes, Perfil y Ayuda legibles sobre el fondo','Sugerencia de presupuesto: un circulito rojo avisa cuando hay algo que aplicar','Arreglado el aviso de «poner la misma categoría», que enseñaba código en vez del icono','Al aprobar una solicitud de acceso, la app te ofrece avisar a esa persona con un correo o un WhatsApp ya escritos']},
  {v:'2.40.1',f:'2026-11-14',c:['Textos y botones sobre el fondo más legibles en el móvil (Movimientos, Histórico y barra de vistas)']},
