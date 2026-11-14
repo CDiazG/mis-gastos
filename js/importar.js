@@ -54,7 +54,7 @@ function prepararRevision(res){
       const nomina=!m.cat&&!r.inversion&&esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
       const mes=mesPara({cat,nomina,fecha:m.fecha});
       const key=[r.cuenta,m.fecha,m.importe.toFixed(2),m.saldo!=null?m.saldo.toFixed(2):'',norm(m.concepto).trim().slice(0,24)].join('|');
-      rows.push({...m,i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
+      rows.push({...m,concepto:mejorConcepto(m.concepto,m.detalle),i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
     });
   }
   const dobles=buscarDobles(rows);
@@ -223,6 +223,7 @@ function rImport(){
         const k=learnKey(x.concepto);let n=0;
         if(pref('aprender')&&(!isBizum(x.concepto)||pref('bizumReglas')))IMP.rows.forEach(y=>{if(y!==x&&!y.cat&&learnKey(y.concepto)===k){y.cat=x.cat;y.auto=true;y.regla=k;y.reglaU=true;marcarNomina(y);n++}});
         if(n)toast(`También aplicado a ${n} movimiento${n>1?'s':''} parecido${n>1?'s':''}`);
+        else if(isBizum(x.concepto)){const l=mismosSinCat(x,IMP.rows);if(l.length)setTimeout(()=>ofrecerMismos(x,x.cat,l,ls=>{ls.forEach(y=>{y.cat=x.cat;y.auto=true;y.regla='mismo Bizum';marcarNomina(y)});marcarDuplicados();rImport()}),200)}
       }
       marcarDuplicados();rImport();
     };

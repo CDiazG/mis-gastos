@@ -44,6 +44,24 @@ module.exports = {
     })();
   },
 
+  'CSV con el tipo en una columna y la referencia con lo importante en otra (estilo CaixaBank)'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const txt = ['Fecha;Fecha valor;Movimiento;Más datos;Importe;Saldo',
+        '05/10/2026;05/10/2026;Bizum;Referencia: 0012345678 Cena con Marta;-24,50;975,50',
+        '06/10/2026;06/10/2026;Compra con tarjeta;Ref. 99887766 Mercadona Valencia;-31,20;944,30',
+        '07/10/2026;07/10/2026;Recibo;Referencia 5544332211;-9,99;934,31'].join('\n');
+      await p.setInputFiles('#pdfInput', { name: 'caixa.csv', mimeType: 'text/csv', buffer: Buffer.from(txt) });
+      await p.waitForSelector('#impGo', { timeout: 30000 });
+      const r = await filas(p);
+      const c = r.filas.map(f => f.c);
+      assert.ok(c.some(x => /Cena con Marta/.test(x)), 'lee lo que va después de la referencia: ' + c.join(' | '));
+      assert.ok(c.some(x => /Mercadona/.test(x)), 'compra: ' + c.join(' | '));
+      assert.ok(c.some(x => /^Recibo$/i.test(x.trim())), 'si solo hay código, se queda el tipo');
+      assert.ok(!c.some(x => /0012345678|99887766/.test(x)), 'el código de referencia no ensucia el concepto');
+    })();
+  },
+
   'Excel con cargo y abono en columnas'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado); const x = X.xlsx();

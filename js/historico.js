@@ -30,7 +30,7 @@ const nombreMesCap=m=>{const n=nombreMes(m);return n.charAt(0).toUpperCase()+n.s
 function rEvol(data){
   const opts=[...CATS.filter(c=>c.g!=='AHORRO'),{id:'SINCAT',n:'Sin categorizar'},{id:'__TOTAL',n:'Todo lo gastado'},{id:'__ING',n:'Ingresos'}];
   if(!opts.some(o=>o.id===EVO))EVO='__TOTAL';
-  $('#evoCat').innerHTML=opts.map(o=>`<option value="${o.id}"${o.id===EVO?' selected':''}>${esc(o.n)}</option>`).join('');
+  $('#evoCat').innerHTML=opts.map(o=>`<option value="${o.id}"${o.id===EVO?' selected':''}>${({SINCAT:'❓ ',__TOTAL:'📊 ',__ING:'💶 '})[o.id]||catEs(o.id)}${esc(o.n)}</option>`).join('');
   $('#evoCat').onchange=e=>{EVO=e.target.value;rEvol(data)};
   const d=data.slice(-24);const val=x=>EVO==='__TOTAL'?x.consumo:EVO==='__ING'?x.ingresos:(x.by[EVO]||0);
   const vs=d.map(val),con=d.filter(x=>!x.vacio).map(val);

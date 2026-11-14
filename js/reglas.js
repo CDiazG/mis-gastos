@@ -76,7 +76,7 @@ function stats(m){
   const ms=S.mov.filter(x=>x.mes===m);
   const by={};let ingresos=0,sinCat=0,sinCatImp=0;
   for(const x of ms){
-    if(!x.cat){sinCat++;sinCatImp+=x.importe;by.SINCAT=(by.SINCAT||0)-x.importe;continue}
+    if(sinCatX(x)){sinCat++;sinCatImp+=x.importe;by.SINCAT=(by.SINCAT||0)-x.importe;continue}
     if(x.cat==='INGRESO')ingresos+=x.importe;
     else by[x.cat]=(by[x.cat]||0)-x.importe;
   }
@@ -112,7 +112,7 @@ const diasEntre=(a,b)=>Math.abs(new Date(a+'T12:00')-new Date(b+'T12:00'))/864e5
 function emparejarTraspasos(){
   let n=0;const ids=new Set(S.mov.map(x=>x.id));
   for(const x of S.mov)if(x.par&&!ids.has(x.par)){delete x.par}
-  const cand=S.mov.filter(x=>!x.par&&(x.cat==='TRASPASO'||!x.cat));
+  const cand=S.mov.filter(x=>!x.par&&(x.cat==='TRASPASO'||sinCatX(x)));
   for(const a of cand){
     if(a.par||a.cat!=='TRASPASO')continue;
     const b=cand.find(b=>!b.par&&b!==a&&Math.abs(b.importe+a.importe)<0.005&&norm(cuentaDe(b))!==norm(cuentaDe(a))&&diasEntre(a.fecha,b.fecha)<=4

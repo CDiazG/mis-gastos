@@ -27,9 +27,19 @@ function panelMov(x){
 }
 // Cambiar la categoría de un movimiento (desde la lista o el panel). Si pasa a ser un traspaso, se busca el otro lado
 // y, si no está, se pregunta a qué cuenta va o de cuál viene.
+// Si categorizas uno y hay otros sin categoría con exactamente el mismo concepto (mismo comercio, misma persona y mismo motivo en un Bizum),
+// se pregunta si quieres ponerles la misma. Nunca se hace sin preguntar.
+function ofrecerMismos(x,c,lista,aplicar){
+  if(!c||!lista.length)return;
+  const n=lista.length;
+  dialog('¿Poner la misma categoría a los parecidos?',`<p style="margin-top:0">Hay <b>${n}</b> movimiento${n>1?'s':''} más sin categoría con el mismo concepto:</p><p class="small mut">${esc(verConcepto(x))}</p><p>¿Les pongo también <b>${esc(catI(c)+catN(c))}</b>?</p>`,
+    [{t:'No, solo este'},{t:n>1?`Sí, a los ${n}`:'Sí, también a ese',cls:'pri',fn:()=>{aplicar(lista)}}]);
+}
+const mismosSinCat=(x,lista)=>lista.filter(y=>y!==x&&sinCatX(y)&&!y.par&&norm(y.concepto)===norm(x.concepto)&&Math.sign(y.importe)===Math.sign(x.importe));
 function ponerCategoria(x,c){
   conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()});
   if(c==='TRASPASO'&&!x.par&&x.otra===undefined)setTimeout(()=>preguntarOtra(x),60);
+  else if(c&&c!=='TRASPASO'){const l=mismosSinCat(x,S.mov);if(l.length)setTimeout(()=>ofrecerMismos(x,c,l,ls=>conDeshacer('Categoría puesta a '+ls.length+' movimiento'+(ls.length>1?'s':'')+' más',()=>{ls.forEach(y=>{y.cat=c;if(y.origen!=='excel')marcarNomina(y)})})),250)}
 }
 function preguntarOtra(x){
   const sale=x.importe<0,propia=norm(cuentaDe(x));
@@ -53,7 +63,7 @@ function rMovs(){
   const qn=norm(F.q).trim(),buscaTodo=qn.length>=2&&!F.tag;
   let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):buscaTodo||F.todos&&F.cat?S.mov.slice():S.mov.filter(x=>x.mes===MES);
   if(F.cat)list=list.filter(x=>x.cat===F.cat);
-  if(F.sinCat)list=list.filter(x=>!x.cat);
+  if(F.sinCat)list=list.filter(sinCatX);
   if(qn){list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')+' '+verConcepto(x)+' '+tagsDe(x).join(' ')).includes(qn))}
   list.sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.orden??0)-(b.orden??0));
   for(const id of [...SEL])if(!list.some(x=>x.id===id))SEL.delete(id);
@@ -75,7 +85,7 @@ function rMovs(){
     const sug=sugerirBizum(x),bs=botonSug(sug);
     return sep+`<tr data-id="${x.id}" class="${x.cat?'':'nocat'}"><td><input type="checkbox" class="sel" ${SEL.has(x.id)?'checked':''} aria-label="Marcar"></td>
       <td class="num">${fFecha(x.fecha)}</td>
-      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${x.cat?'':' sin'}">${x.cat?catI(x.cat)+esc(catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${bs.replace('sugbiz','sugbiz movil')}${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
+      <td><div><span title="${esc(ocultarNumeros(x.concepto))}">${esc(verConcepto(x))}</span>${tags.join('')}</div><span class="catchip${sinCatX(x)?' sin':''}">${!sinCatX(x)?catI(x.cat)+esc(catN(x.cat)):'Sin categoría · toca para ponerla'}</span>${bs.replace('sugbiz','sugbiz movil')}${x.detalle||x.nota?`<div class="det">${esc([x.detalle,x.nota].filter(Boolean).join(' · '))}</div>`:''}</td>
       <td><select class="cat">${catOptions(x.cat)}</select>${bs}</td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
@@ -108,7 +118,7 @@ function selUI(){
 }
 $('#bulkApply').onclick=()=>{const c=$('#bulkCat').value,n=SEL.size;conDeshacer(n+' movimientos cambiados a '+(c?catN(c):'sin categoría'),()=>{for(const x of S.mov)if(SEL.has(x.id)){if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen!=='excel')marcarNomina(x)}SEL.clear();if(c==='TRASPASO')emparejarTraspasos()})};
 $('#bulkDel').onclick=()=>{const n=SEL.size;conDeshacer(n+' movimiento'+(n>1?'s':'')+' borrado'+(n>1?'s':''),()=>{S.mov=S.mov.filter(x=>!SEL.has(x.id));SEL.clear()})};
-$('#bulkTag').onclick=()=>{pintarTagList();dialog('Etiquetar '+SEL.size+' movimientos',`<p class="small mut" style="margin-top:0">Por ejemplo «Boda Ana» o «Viaje a Roma». Luego verás cuánto ha costado en total en Histórico → Etiquetas.</p><input type="text" id="btT" list="tagList" maxlength="40" style="width:100%" placeholder="Nombre de la etiqueta">${todasEtiquetas().length?'<div class="chips" style="margin-top:8px">'+todasEtiquetas().slice(0,12).map(t=>`<button type="button" class="chip" data-t="${esc(t)}">#${esc(t)}</button>`).join('')+'</div>':''}`,
+$('#bulkTag').onclick=()=>{pintarTagList();dialog('Etiquetar '+SEL.size+' movimientos',`<p class="small mut" style="margin-top:0">Por ejemplo «Boda Ana» o «Viaje a Roma». Luego verás cuánto ha costado en total en Histórico → Etiquetas.</p><input type="text" id="btT" maxlength="40" style="width:100%" placeholder="Nombre de la etiqueta">${todasEtiquetas().length?'<div class="chips" style="margin-top:8px">'+todasEtiquetas().slice(0,12).map(t=>`<button type="button" class="chip" data-t="${esc(t)}">#${esc(t)}</button>`).join('')+'</div>':''}`,
   [{t:'Cancelar'},{t:'Etiquetar',cls:'pri',fn:()=>{const t=parseTags($('#btT').value)[0];if(!t){toast('Escribe una etiqueta',true);return false}const n=SEL.size;
     conDeshacer(n+' movimientos con #'+t,()=>{for(const x of S.mov)if(SEL.has(x.id)&&!tagsDe(x).some(y=>norm(y)===norm(t)))x.tags=[...tagsDe(x),t];SEL.clear()})}}]);
   $$('#dlgB .chip[data-t]').forEach(b=>b.onclick=()=>{$('#btT').value=b.dataset.t})};
@@ -147,7 +157,7 @@ function editar(x){
     <label class="eOtraL">Traspaso: la otra cuenta</label><select id="eOtra" class="eOtraL" ${x.par?'disabled title="Unido con el movimiento de la otra cuenta"':''}><option value="">Sin especificar</option>${[...S.cuentas.map(c=>c.n),'Efectivo'].map(n=>`<option${norm(n)===norm(x.otra||'')?' selected':''}>${esc(n)}</option>`).join('')}</select>
     <label>Nota</label><input type="text" id="eN" value="${esc(x.nota||'')}">
     <label>Persona (préstamos)</label><input type="text" id="ePer" value="${esc(x.persona||'')}" placeholder="${esc(x.cat==='PRESTAMO'?personaDe(x):'')}">
-    <label>Etiquetas</label><input type="text" id="eT" list="tagList" value="${esc(tagsDe(x).join(', '))}" placeholder="p. ej. Viaje a Roma (separa varias con comas)">
+    <label>Etiquetas</label><input type="text" id="eT" value="${esc(tagsDe(x).join(', '))}" placeholder="p. ej. Viaje a Roma (separa varias con comas)">
     </div><p class="small mut" style="margin:10px 0 0">Importe en negativo = salida; en positivo = entrada (ingresos, devoluciones, Bizum que te mandan).${x.detalle?'<br>Banco: '+esc(x.detalle):''}</p>`,
    [{t:'Borrar',cls:'dan',fn:()=>{conDeshacer('Borrado «'+x.concepto+'»',()=>{S.mov=S.mov.filter(m=>m!==x)})}},
     {t:'Dividir',fn:()=>{dividir(x);return false}},
@@ -219,6 +229,7 @@ function rEfectivo(){
     :`<div class="empty">Aún no has apuntado nada a mano en ${nombreMes(MES)}.</div>`;
   $$('#cashList .edit').forEach(b=>b.onclick=()=>editar(S.mov.find(m=>m.id===b.closest('.it').dataset.id)));
 }
+$('#cCon').addEventListener('input',()=>{const t=$('#aTag');if(t)pintarSugTags(t,$('#cCon').value)});
 $('#cCon').addEventListener('input',()=>{if(cCatManual)return;const c=autoCat($('#cCon').value,'',aTipo==='gasto'?-1:1);
   const ok=aTipo==='gasto'?catsGasto().includes(c):(c==='INGRESO'||c==='PRESTAMO'||CONSUMO.includes(c));const nc=ok?c:'';
   if(nc!==cCat){cCat=nc;$$('#cChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.c===cCat))}});

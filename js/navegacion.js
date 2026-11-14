@@ -23,7 +23,7 @@ function abrirMesPicker(){
   pintar();document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
 }
 function cerrarMesPicker(){const d=$('#mesPicker');if(d)d.remove()}
-$('#mLabel').onclick=abrirMesPicker;$('#mLabel').setAttribute('role','button');$('#mLabel').tabIndex=0;$('#mLabel').title='Elegir mes';
+$('#mCal').onclick=e=>{e.stopPropagation();abrirMesPicker()};$('#mLabel').onclick=abrirMesPicker;$('#mLabel').setAttribute('role','button');$('#mLabel').tabIndex=0;$('#mLabel').title='Elegir mes';
 $('#mLabel').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirMesPicker()}};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarMesPicker()});
 /* En el móvil, deslizar a los lados en el Resumen o en Movimientos cambia de mes */
@@ -205,7 +205,7 @@ function render(){
   $('#monthnav').classList.toggle('nomes',!(TAB==='resumen'||TAB==='movs'||TAB==='efectivo'));
   $('#fabCash').classList.toggle('hide',TAB==='efectivo'||(NUBE&&!USER)||!pref('fab'));
   if(typeof rChatBtn==='function')rChatBtn();
-  ({usuarios:rUsuarios,resumen:()=>{rResumen();rInicio()},efectivo:rEfectivo,movs:rMovs,importar:()=>{},hist:()=>{rHist();rInicio()},patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,perfil:rPerfil})[TAB]();rAvisos();
+  ({usuarios:rUsuarios,resumen:()=>{rResumen();rInicio()},efectivo:()=>{rEfectivo();pintarTagList()},movs:rMovs,importar:()=>{},hist:()=>{rHist();rInicio()},patri:rPatri,ajustes:rAjustes,ayuda:rAyuda,perfil:rPerfil})[TAB]();rAvisos();
   requestAnimationFrame(marcarDeslizables);
 }
 

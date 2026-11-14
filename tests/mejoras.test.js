@@ -14,6 +14,27 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'categorizar uno pregunta si poner la misma a los de igual concepto; también los huérfanos salen como sin categoría'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const bz = 'Bizum A Favor De Marta Lopez Concepto: Cena';
+      await meter(p, [['2026-10-02', bz, -20, ''], ['2026-10-09', bz, -20, ''], ['2026-10-16', bz, -20, ''], ['2026-10-17', 'Bizum A Favor De Marta Lopez Concepto: Regalo', -30, ''], ['2026-10-18', 'RESTO', -5, 'CATBORRADA']]);
+      await p.evaluate(() => go('movs'));
+      assert.equal(await p.evaluate(() => stats('2026-10').sinCat), 5, 'la categoría borrada cuenta como sin categoría');
+      await p.check('#fSinCat');
+      assert.equal(await p.locator('#movTable tbody tr[data-id]').count(), 5, 'el filtro enseña también la que tiene una categoría que ya no existe');
+      await p.uncheck('#fSinCat');
+      const k = await p.evaluate(b => S.mov.find(x => x.concepto === b).id, bz);
+      await p.selectOption(`tr[data-id="${k}"] .cat`, 'OCIO');
+      await p.waitForSelector('#dlg[open]');
+      assert.match(await p.textContent('#dlgB'), /2<\/b>|2 movimientos|Hay 2/);
+      await p.click('#dlgF .pri');
+      const r = await p.evaluate(() => S.mov.map(x => [x.concepto.slice(-5), x.cat]));
+      assert.equal(r.filter(x => x[0] === ' Cena' && x[1] === 'OCIO').length, 3, 'las 3 de «Cena» con la misma categoría: ' + JSON.stringify(r));
+      assert.equal(r.find(x => x[0] === 'egalo')[1], '', 'la de otro concepto no se toca');
+    })();
+  },
+
   'deshacer: borrar y cambiar en bloque se puede deshacer'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

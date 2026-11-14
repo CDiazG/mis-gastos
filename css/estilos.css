@@ -1432,3 +1432,13 @@ button.who,button.who:hover,button.who:focus{padding:0!important;background:none
 #seda3d.on{opacity:1}
 @media (min-width:901px){#seda3d{display:none}}
 @media (max-width:900px){body.seda3d::before{display:none!important}}
+/* 2.40 etiquetas con botoncitos, botón de calendario del mes */
+.tagsug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 0;grid-column:2}
+.tagsug:empty{display:none}
+.tagchip{font:inherit;font-size:.82rem;font-weight:600;padding:5px 11px;border-radius:999px;border:0;background:var(--soft);color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease),transform .2s var(--ease)}
+.tagchip::before{content:'#';opacity:.55;margin-right:1px}
+@media (hover:hover){.tagchip:hover{background:var(--acc-soft);color:var(--acc)}}
+.tagchip:active{transform:scale(.94)}
+#aTag+.tagsug{grid-column:auto}
+#mCal{padding:0 9px}
+#mCal svg{display:block}

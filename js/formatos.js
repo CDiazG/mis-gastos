@@ -196,7 +196,7 @@ function detectarColumnas(filas){
       else if(m.cargo==null&&COLS.cargo.test(x))m.cargo=j;
       else if(m.abono==null&&COLS.abono.test(x))m.abono=j;
       else if(m.saldo==null&&COLS.saldo.test(x))m.saldo=j;
-      else if(m.detalle==null&&/CONCEPTO|DESCRIPCION|INFORMACION/.test(x)&&m.concepto!=null)m.detalle=j;});
+      else if(m.detalle==null&&/CONCEPTO|DESCRIPCION|INFORMACION|^MAS DATOS|^MAS INFO|DATOS ADICIONALES|^REFERENCIA|^NOTAS?$/.test(x)&&m.concepto!=null)m.detalle=j;});
     if(m.fecha==null){const k=h.findIndex(x=>/^FECHA/.test(x));if(k>=0)m.fecha=k}
     if(m.fecha!=null&&m.concepto!=null&&(m.importe!=null||m.cargo!=null||m.abono!=null))return {cab:i,...m};
   }

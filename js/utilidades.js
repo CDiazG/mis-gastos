@@ -19,10 +19,14 @@ const fFecha=f=>{const [y,m,d]=f.split('-');return d+'/'+m+'/'+y.slice(2)};
 const parseNum=s=>{s=String(s).trim().replace(/[€\s]/g,'');if(!s)return NaN;if(s.includes(',')){s=s.replace(/\./g,'').replace(',','.')}return parseFloat(s)};
 const catN=id=>!id?'Sin categoría':id==='SINCAT'?'Sin categorizar':((ALLC.find(c=>c.id===id)||{n:id}).n);
 const isGastoCat=id=>CATS.some(c=>c.id===id);
+// Un movimiento cuenta como «sin categoría» si no tiene o si su categoría ya no existe (borrada o de una versión antigua).
+const catConocida=id=>ALLC.some(c=>c.id===id)||(S.cats||[]).some(c=>c.id===id);
+const sinCatX=x=>!x.cat||!catConocida(x.cat);
 
 function toast(msg,err){const t=$('#toast');t.textContent=msg;t.className='on'+(err?' err':'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='',err?5000:2600)}
 
 function catOptions(sel,{blank=true,blankText='— Sin categoría —'}={}){
+  if(sel&&!catConocida(sel))sel='';
   let h=blank?`<option value="">${blankText}</option>`:'';
   for(const g of GROUPS){h+=`<optgroup label="${g.n}">`+CATS.filter(c=>c.g===g.id&&(c.id!=='AHORRO'||sel==='AHORRO')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${catEs(c.id)}${c.n}</option>`).join('')+'</optgroup>'}
   const oculta=sel&&!ALLC.some(c=>c.id===sel)&&(S.cats||[]).find(c=>c.id===sel);
@@ -43,7 +47,20 @@ $('#undoBtn').onclick=()=>{if(!UNDO)return;S.mov=JSON.parse(UNDO);UNDO=null;clea
 const tagsDe=x=>Array.isArray(x.tags)?x.tags:[];
 function todasEtiquetas(){const m=new Map();for(const x of S.mov)for(const t of tagsDe(x)){const k=norm(t).trim();if(!m.has(k))m.set(k,t)}return [...m.values()].sort((a,b)=>a.localeCompare(b,'es'))}
 const parseTags=s=>[...new Set(String(s||'').split(',').map(t=>t.trim().replace(/^#/,'')).filter(Boolean).map(t=>t.slice(0,40)))];
-function pintarTagList(){const d=$('#tagList');if(d)d.innerHTML=todasEtiquetas().map(t=>`<option value="${esc(t)}">`).join('')}
+function pintarTagList(){const d=$('#tagList');if(d)d.innerHTML=todasEtiquetas().map(t=>`<option value="${esc(t)}">`).join('');
+  const e=$('#eT');if(e)pintarSugTags(e,($('#eC')||{}).value);const a=$('#aTag');if(a)pintarSugTags(a,($('#cCon')||{}).value)}
+// Etiquetas por orden de uso reciente (la más nueva primero)
+function etiquetasRecientes(){const v=new Set();[...S.mov].sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).forEach(x=>tagsDe(x).forEach(t=>v.add(t)));return [...v]}
+// Botoncitos bajo un campo de etiquetas: primero las que llevan otros movimientos parecidos, luego las últimas usadas.
+function pintarSugTags(input,concepto){
+  let box=input.nextElementSibling;if(!box||!box.classList.contains('tagsug')){box=document.createElement('div');box.className='tagsug';input.after(box)}
+  if(!input._sug){input._sug=1;input.addEventListener('input',()=>pintarSugTags(input,input._con))}
+  input._con=concepto;
+  const puestas=new Set(parseTags(input.value).map(t=>norm(t))),k=norm(String(concepto||'')).trim().slice(0,12),parecidas=[];
+  if(k.length>=4)for(const x of S.mov)if(norm(String(x.concepto||'')).trim().startsWith(k))for(const t of tagsDe(x))if(!parecidas.includes(t))parecidas.push(t);
+  const lista=[...parecidas,...etiquetasRecientes().filter(t=>!parecidas.includes(t))].filter(t=>!puestas.has(norm(t))).slice(0,8);
+  box.innerHTML=lista.length?`<span class="small mut">${parecidas.length?'Sugeridas':'Últimas usadas'}</span>`+lista.map(t=>`<button type="button" class="tagchip" data-t="${esc(t)}">${esc(t)}</button>`).join(''):'';
+  box.onclick=e=>{const b=e.target.closest('.tagchip');if(!b)return;const cur=parseTags(input.value);cur.push(b.dataset.t);input.value=cur.join(', ');input.dispatchEvent(new Event('input'));input.focus()}}
 /* ---- Conceptos del banco más legibles (sin tocar lo guardado) ---- */
 // Oculta números de tarjeta y de cuenta largos: deja solo las 4 últimas cifras
 const ocultarNumeros=s=>String(s||'').replace(/\b\d(?:[ -]?\d){11,18}\b/g,m=>'…'+m.replace(/\D/g,'').slice(-4));
@@ -60,5 +77,15 @@ function conceptoCorto(c){
     .replace(/\s*,\s*,/g,',').replace(/\s{2,}/g,' ').replace(/^[\s,·.-]+|[\s,·.-]+$/g,'').replace(/\s+,/g,',');
   s=s.replace(/\*+(?=\s|,|$)/g,'').replace(/,\s*(?!S\.?\s?[AL]\.?\b|SL\b|SA\b|SAU\b)(?=\S{3,})/,' · ');
   return s.length>=3?s:orig;
+}
+// Algunos bancos (CaixaBank, por ejemplo) ponen en la primera línea solo el tipo de operación («Bizum», «Compra con tarjeta»)
+// y en la segunda la referencia seguida de lo que es de verdad. Si el concepto es solo un tipo, se le añade lo que viene detrás de la referencia.
+const TIPO_OP=new Set('BIZUM COMPRA COMPRAS PAGO PAGOS RETIRADA REINTEGRO EFECTIVO CAJERO TRANSFERENCIA TRANSFERENCIAS TRASPASO RECIBO RECIBOS ADEUDO INGRESO ABONO DOMICILIACION DOMICILIADO COMISION COMISIONES TARJETA DE EN CON POR A LA EL DEL OPERACION MOVIMIENTO CARGO INMEDIATA INSTANTANEA RECIBIDA RECIBIDO EMITIDA ENVIADA MOVIL INTERNET CONTACTLESS NOMINA DEVOLUCION'.split(' '));
+function mejorConcepto(c,d){
+  c=String(c||'').trim();d=String(d||'').trim();if(!d||!c)return c;
+  const w=norm(c).trim().split(' ').filter(Boolean);if(!w.length||w.length>6||!w.every(x=>TIPO_OP.has(x)))return c;
+  const r=d.replace(/\b(?:N[º°o]\.?\s*)?(?:referencia|ref)\b\.?\s*:?\s*\S+/gi,' ').replace(/\s{2,}/g,' ').replace(/^[\s·,;:-]+|[\s·,;:-]+$/g,'');
+  if(!/[A-Za-zÁÉÍÓÚÑáéíóúñ]{3}/.test(r))return c;
+  return norm(r).trim().startsWith(w[0])?r:c+' · '+r;
 }
 const verConcepto=x=>conceptoCorto(x&&x.concepto!==undefined?x.concepto:x);
