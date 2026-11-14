@@ -293,12 +293,13 @@ module.exports = {
       assert.ok(!(await p.isVisible('#s-hist')), 'el histórico no se queda a la vista');
       // grupos del resumen
       await p.evaluate(() => go('resumen'));
+      assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')), 'empieza plegado');
       await p.click('#groups .grupo[data-g=VARIABLES] .gtog');
-      assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')), 'plegado');
+      assert.ok(await p.isVisible('#groups [data-cat=OCIO]'), 'desplegado');
       await p.evaluate(() => { go('movs'); go('resumen'); });
-      assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')), 'lo recuerda');
+      assert.ok(await p.isVisible('#groups [data-cat=OCIO]'), 'lo recuerda');
       await p.click('#groups .grupo[data-g=VARIABLES] .gtog');
-      assert.ok(await p.isVisible('#groups [data-cat=OCIO]'));
+      assert.ok(!(await p.isVisible('#groups [data-cat=OCIO]')));
       // preguntas frecuentes por temas
       await p.evaluate(() => go('ayuda', { sub: 'faq' }));
       assert.equal((await p.$$('#faqList h4.faqtema')).length, 5);
