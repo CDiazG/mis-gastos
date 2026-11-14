@@ -7,7 +7,7 @@ const r2=n=>Math.round(n*100)/100;
 const fmt=(n,d=2)=>Number(n||0).toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:'always'});
 // Cifra grande con los céntimos más pequeños: 1.234<small>,56</small> €
 const eurG=n=>{const t=fmt(Math.abs(n),2),k=t.lastIndexOf(',');return (n<-0.0049?'−':'')+t.slice(0,k)+'<small>'+t.slice(k)+'</small> €'};
-const eur=(n,d)=>(n<-0.0049?'−':'')+fmt(Math.abs(n),d===undefined?(Math.abs(n)>=1000?0:2):d)+' €';
+const eur=(n,d)=>(n<-0.0049?'−':'')+fmt(Math.abs(n),d===undefined?(Math.abs(n)>=1000?0:2):d)+'\u00a0€';
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const norm=s=>' '+String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9Ñ]+/g,' ').trim()+' ';
 const mesDe=f=>f.slice(0,7);

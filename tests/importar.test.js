@@ -132,6 +132,11 @@ module.exports = {
       await L.esperar(600);
       await p.evaluate(() => go('usuarios')); await L.esperar(300);
       assert.match(await p.textContent('#errAdmin'), /No he encontrado movimientos/);
+      await p.evaluate(() => { window.__copiado = ''; navigator.clipboard.writeText = async t => { window.__copiado = t }; });
+      await p.click('#errAdmin .erC'); await L.esperar(200);
+      assert.match(await p.evaluate(() => window.__copiado), /No he encontrado movimientos/, 'copia el error para pegarlo');
+      await p.click('#errCopiar'); await L.esperar(200);
+      assert.match(await p.evaluate(() => window.__copiado), /versión/, 'copia todos');
       await p.click('#errAdmin .erX'); await L.esperar(300);
       assert.match(await p.textContent('#errAdmin'), /No hay errores/);
     })();

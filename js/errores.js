@@ -22,13 +22,17 @@ function escucharErrores(){
     badgeUsuarios();if(TAB==='usuarios'&&!$('#dlg').open)rErroresAdmin()},e=>console.warn('errores',e.code||e)));
 }
 const ERR_TIPOS={importar:'📄 Extracto',app:'⚠️ App'};
+function errTexto(x){return [`${ERR_TIPOS[x.tipo]?ERR_TIPOS[x.tipo].replace(/^\S+\s/,''):x.tipo} · ${x.nombre||''} · ${new Date(x.fecha).toLocaleString('es-ES')}`,x.mensaje||'',x.detalle||'',`versión ${x.version||'?'} · ${x.dispositivo||''}`].filter(Boolean).join('\n')}
+async function errCopiar(txt){try{await navigator.clipboard.writeText(txt);toast('Copiado: ya puedes pegarlo en el chat')}catch(e){const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('Copiado: ya puedes pegarlo en el chat')}catch(_){toast('No se ha podido copiar',true)}t.remove()}}
 function rErroresAdmin(){
   const el=$('#errAdmin');if(!el)return;if(!USER||!USER.admin){el.innerHTML='';return}
   const xs=ERR_TODOS;
-  el.innerHTML=`<div class="ghead"><span class="t">Errores registrados</span><span class="r">${xs.length?`<button class="btn sm" type="button" id="errBorrarTodo">Borrar todos</button>`:''}</span></div>`+
-    (xs.length?xs.slice(0,100).map(x=>`<div class="crow" style="cursor:default" data-e="${x.id}"><div class="a" style="flex-wrap:wrap"><span>${ERR_TIPOS[x.tipo]||esc(x.tipo)} · <b>${esc(x.nombre||'')}</b> <span class="mut small">${new Date(x.fecha).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></span><button class="btn sm erX" type="button">Resuelto</button></div>
+  el.innerHTML=`<div class="ghead"><span class="t">Errores registrados</span><span class="r">${xs.length?`<button class="btn sm" type="button" id="errCopiar">Copiar todos</button> <button class="btn sm" type="button" id="errBorrarTodo">Borrar todos</button>`:''}</span></div>`+
+    (xs.length?xs.slice(0,100).map(x=>`<div class="crow" style="cursor:default" data-e="${x.id}"><div class="a" style="flex-wrap:wrap"><span>${ERR_TIPOS[x.tipo]||esc(x.tipo)} · <b>${esc(x.nombre||'')}</b> <span class="mut small">${new Date(x.fecha).toLocaleString('es-ES',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></span><span><button class="btn sm erC" type="button">Copiar</button> <button class="btn sm erX" type="button">Resuelto</button></span></div>
       <div style="margin-top:4px;font-weight:600">${esc(x.mensaje)}</div>${x.detalle?`<div class="det" style="margin-top:2px">${esc(x.detalle)}</div>`:''}<div class="det">versión ${esc(x.version||'?')} · ${esc(x.dispositivo||'')}</div></div>`).join('')
     :'<div class="pad small mut">No hay errores. Si un extracto no se puede leer o algo falla, aparecerá aquí.</div>');
+  $$('#errAdmin [data-e]').forEach(r=>{$('.erC',r).onclick=()=>errCopiar(errTexto(xs.find(x=>x.id===r.dataset.e)))});
+  const bc=$('#errCopiar');if(bc)bc.onclick=()=>errCopiar(xs.slice(0,100).map(errTexto).join('\n\n---\n\n'));
   $$('#errAdmin [data-e]').forEach(r=>$('.erX',r).onclick=async()=>{try{await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'errores',r.dataset.e));ERR_TODOS=ERR_TODOS.filter(x=>x.id!==r.dataset.e);badgeUsuarios();rErroresAdmin()}catch(e){toast('No se ha podido: '+(e.code||e.message),true)}});
   const bt=$('#errBorrarTodo');if(bt)bt.onclick=()=>confirmar('Borrar errores','¿Borrar los '+xs.length+' errores registrados?','Borrar',async()=>{try{for(const x of xs)await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'errores',x.id));ERR_TODOS=[];badgeUsuarios();rErroresAdmin();toast('Borrados')}catch(e){toast('No se ha podido: '+(e.code||e.message),true)}});
 }
