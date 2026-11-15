@@ -192,6 +192,7 @@ function editar(x){
     </div><p class="small mut" style="margin:10px 0 0">Importe en negativo = salida; en positivo = entrada (ingresos, devoluciones, Bizum que te mandan).${x.detalle?'<br>Banco: '+esc(x.detalle):''}</p>`,
    [{t:'Borrar',cls:'dan',fn:()=>{conDeshacer('Borrado «'+x.concepto+'»',()=>{S.mov=S.mov.filter(m=>m!==x)})}},
     {t:'Dividir',fn:()=>{dividir(x);return false}},
+    ...(x.importe<0?[{t:'A medias…',fn:()=>{aMedias(x);return false}}]:[]),
     {t:'Cancelar'},
     {t:'Guardar',cls:'pri',fn:()=>{
       const v=parseNum($('#eI').value);if(!isFinite(v)){toast('Importe no válido',true);return false}
@@ -290,6 +291,22 @@ $('#cashForm').onsubmit=e=>{
 };
 
 /* ---- Dividir un movimiento en varias categorías ---- */
+// Gasto a medias: tu parte se queda en su categoría y la del otro pasa a «Préstamo» a su nombre (te lo debe), con todo lo de Préstamos
+function aMedias(x){
+  const total=Math.abs(x.importe),mitad=r2(total/2);
+  const nombres=[...new Set(S.mov.filter(m=>m.cat==='PRESTAMO').map(personaDe))];
+  dialog('A medias «'+x.concepto+'»',`<p class="small mut" style="margin-top:0">Pagaste ${eur(total)}. Tu parte se queda como gasto y la de la otra persona se apunta como algo que te debe (lo verás en Préstamos).</p>
+    <label class="small mut" for="amP">¿Con quién?</label><input type="text" id="amP" list="amL" placeholder="Nombre" autocomplete="off"><datalist id="amL">${nombres.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+    <label class="small mut" for="amV" style="margin-top:8px;display:block">Su parte (€)</label><input type="text" id="amV" inputmode="decimal" value="${fmt(mitad)}">`,
+   [{t:'Cancelar'},{t:'Apuntar',cls:'pri',fn:()=>{
+     const per=$('#amP').value.trim(),v=parseNum($('#amV').value);
+     if(!per){toast('Pon con quién',true);return false}
+     if(!isFinite(v)||v<=0||v>=total){toast('Su parte tiene que ser mayor que 0 y menor que '+eur(total),true);return false}
+     conDeshacer('Gasto a medias con '+per,()=>{
+       x.importe=-r2(total-v);x.dividido=true;
+       S.mov.push({...JSON.parse(JSON.stringify(x)),id:uid(),importe:-r2(v),cat:'PRESTAMO',persona:per,concepto:'A medias con '+per+': '+x.concepto,dividido:undefined,divDe:x.id,key:x.key?x.key+'#m':undefined,tags:undefined});
+     },12000)}}]);
+}
 function dividir(x){
   const signo=x.importe<0?-1:1,total=Math.abs(x.importe);
   const fila=(imp,cat,con)=>`<div class="dvrow"><input type="text" class="dvi right" inputmode="decimal" value="${imp?fmt(imp):''}" placeholder="€"><select class="dvk">${catOptions(cat)}</select><input type="text" class="dvc" value="${esc(con)}" placeholder="Concepto"><button type="button" class="btn sm icon dvx" title="Quitar">✕</button></div>`;

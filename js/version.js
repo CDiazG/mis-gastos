@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.47.0';
+const VERSION='2.47.1';
 const CAMBIOS=[
+ {v:'2.47.1',f:'2026-11-15',c:['Movimientos: botón «A medias…» en un gasto. Tu parte se queda como gasto y la de la otra persona pasa a Préstamos, para ver quién te debe']},
  {v:'2.47.0',f:'2026-11-15',c:['Resumen: frases que te cuentan el mes (en qué categoría te pasas o vas mejor que tu media, cuánto ahorras frente al mes anterior y tu mayor gasto). Se pueden quitar en Perfil → Avisos']},
  {v:'2.46.0',f:'2026-11-15',c:['Categorías automáticas: unas 350 reglas nuevas de comercios habituales en España (supermercados, gasolineras, cadenas de comida, tiendas, viajes, suscripciones…) para las cuentas nuevas','Ajustes → Reglas: botón «Añadir comercios habituales» para añadirlas a tu cuenta sin tocar las tuyas']},
  {v:'2.45.1',f:'2026-11-15',c:['Si tienes activado «reducir movimiento» en tu dispositivo, la app quita los desplazamientos pero mantiene los cambios suaves de color y los fundidos']},

@@ -14,6 +14,18 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'gasto a medias: tu parte queda como gasto y la del otro como préstamo a su nombre'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'CENA GRUPO', -60, 'OCIO']]);
+      await p.evaluate(() => { go('movs'); });
+      await p.waitForSelector('#movTable .edit'); await p.click('#movTable .edit >> nth=0');
+      await p.click('#dlgF >> text=A medias…'); await p.waitForSelector('#amP');
+      await p.fill('#amP', 'Ana'); await p.click('#dlgF .pri'); await p.waitForTimeout(450);
+      const r = await p.evaluate(() => ({ ocio: stats('2026-10').by.OCIO, pend: prestamosPorPersona().map(x => [x.persona, x.pendiente]), tot: S.mov.reduce((a, m) => a + m.importe, 0) }));
+      assert.equal(r.ocio, 30); assert.deepEqual(r.pend, [['Ana', 30]]); assert.equal(r.tot, -60);
+    })();
+  },
   'frases del mes: categoría por encima de tu media, ahorro frente al mes anterior y mayor gasto'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
