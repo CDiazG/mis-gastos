@@ -14,6 +14,23 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'buscador único: movimientos, categorías y ajustes'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-09-05', 'TIENDA UNO', -12, 'TRANSPORTE']], '2026-09');
+      await p.click('#bBuscar');
+      await p.fill('#bqIn', 'tienda');
+      assert.match(await p.textContent('#bqRes'), /TIENDA UNO/);
+      await p.click('#bqRes [data-bq]');
+      await p.waitForTimeout(450);
+      assert.equal(await p.evaluate(() => TAB), 'movs');
+      assert.equal(await p.inputValue('#fBuscar'), 'tienda');
+      await p.click('#bBuscar'); await p.fill('#bqIn', 'diezmo');
+      assert.match(await p.textContent('#bqRes'), /Diezmo/);
+      await p.click('#bqRes [data-bq] >> nth=0'); await p.waitForTimeout(450);
+      assert.equal(await p.evaluate(() => TAB), 'ajustes');
+    })();
+  },
   'categorizar con «solo sin categoría»: el movimiento se queda a la vista y el foco pasa al siguiente'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

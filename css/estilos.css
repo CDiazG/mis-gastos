@@ -1512,3 +1512,6 @@ dialog.cerrando::backdrop{animation:fundidoOut .17s ease-in forwards}
 @media (max-width:900px){.apchips{margin:10px -12px 6px}}
 /* barra de vistas pegada justo debajo de la cabecera, sin hueco */
 @media (min-width:901px){.apchips{top:var(--hdr,63px)}}
+/* 2.42 · botón de la lupa en la cabecera */
+#bBuscar{flex:none}
+@media (max-width:640px){header .top{gap:6px}header .monthnav{min-width:0;flex:1 1 auto}header .monthnav .m{min-width:0}}
