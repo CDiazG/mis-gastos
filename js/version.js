@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.42.0';
+const VERSION='2.42.1';
 const CAMBIOS=[
+ {v:'2.42.1',f:'2026-11-15',c:['Importar PDF: se leen bien los extractos que traen lo más reciente arriba y una línea de saldo a fecha de hoy en la cabecera (Santander)']},
  {v:'2.42.0',f:'2026-11-15',c:['Préstamos: botón «Todo devuelto» para apuntar de una vez la devolución de varias personas']},
  {v:'2.41.4',f:'2026-11-15',c:['Histórico: las fichas desplegables ya no parpadean al abrirse']},
  {v:'2.41.3',f:'2026-11-15',c:['Las sugerencias de categoría muestran también el emoji de la categoría']},

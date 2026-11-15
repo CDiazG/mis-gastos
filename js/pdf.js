@@ -177,6 +177,8 @@ function parseStatementBase({lines,text}){
       last=null;continue;
     }
     if(expectSum&&amts.length>=2&&!dateAt(t,0)){if(saldoIni==null)saldoIni=amt(amts[0].s);if(saldoFin==null)saldoFin=amt(amts[amts.length-1].s);expectSum=false;prev=saldoIni;last=null;continue}
+    // «Saldo: X (a fecha …) Retenciones: Y» de la cabecera: es el saldo de hoy con lo pendiente, no el inicial
+    if(compact.includes('SALDO')&&/AFECHA|RETENCION/.test(compact)&&!dateAt(t,0)){last=null;continue}
     // líneas de saldo
     if(compact.includes('SALDO')&&amts.length&&!dateAt(t,0)){
       const v=amt(amts[amts.length-1].s);
@@ -214,6 +216,13 @@ function parseStatementBase({lines,text}){
       last.detalle=(last.detalle?last.detalle+' · ':'')+s;continue;
     }
     if(last&&l.y<lastY)last=null;
+  }
+  // Muchos bancos (Santander…) ponen lo más reciente arriba: se da la vuelta y se rehace la cadena de saldos
+  if(movs.length>1&&movs[0].fecha>movs[movs.length-1].fecha&&movs.every(m=>m.saldo!=null)){
+    movs.reverse();saldoIni=null;saldoFin=null;
+    movs.forEach((m,i)=>{if(i){const d=r2(m.saldo-movs[i-1].saldo);if(Math.abs(Math.abs(d)-Math.abs(m.importe))<0.011)m.importe=r2(d)}
+      m.chk=i?Math.abs(r2(movs[i-1].saldo+m.importe)-m.saldo)<0.011:null});
+    saldoIni=r2(movs[0].saldo-movs[0].importe);
   }
   const sum=r2(movs.reduce((a,m)=>a+m.importe,0));
   const finCalc=saldoIni!=null?r2(saldoIni+sum):null;
