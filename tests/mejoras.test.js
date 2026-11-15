@@ -14,6 +14,20 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'selector de categoría: opciones que empiezan por letra (para teclear) y deshacer que dice qué cambió'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'TIENDA UNO', -12, '']]);
+      await p.evaluate(() => go('movs'));
+      await p.waitForSelector('#movTable select.cat');
+      const ini = await p.evaluate(() => [...document.querySelector('#movTable select.cat').options].filter(o => o.value).map(o => o.text[0]));
+      assert.ok(ini.length > 5 && ini.every(c => /[A-Za-zÁÉÍÓÚÑ]/.test(c)), 'empiezan por letra: ' + ini.join(''));
+      await p.selectOption('#movTable select.cat', 'TRANSPORTE');
+      await p.waitForTimeout(300);
+      const t = await p.textContent('#undoTxt');
+      assert.ok(/TIENDA UNO/.test(t) && /sin categoría →/.test(t), t);
+    })();
+  },
   'menú del perfil: Usuarios conserva su icono aunque haya avisos'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

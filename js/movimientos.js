@@ -56,7 +56,8 @@ function apuntarEfectivoGastado(max,fecha,titulo,intro){
       conDeshacer('Efectivo apuntado: '+eur(v),()=>{const x={id:uid(),fecha,mes:mesDe(fecha),concepto:'Efectivo gastado',importe:-v,cat:c,metodo:'efectivo',cuenta:'',origen:'manual'};S.mov.push(x)})}}]);
 }
 function ponerCategoria(x,c){
-  conDeshacer('Categoría cambiada: '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()});
+  const antes=sinCatX(x)?'sin categoría':catN(x.cat),cn=String(x.concepto||'').slice(0,26);
+  conDeshacer('«'+cn+'»: '+antes+' → '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()},12000);
   if(c==='TRASPASO'&&!x.par&&x.otra===undefined)setTimeout(()=>preguntarOtra(x),60);
   else if(c==='EFECTIVO'&&x.importe<0&&x.metodo!=='efectivo')setTimeout(()=>apuntarEfectivoGastado(r2(-x.importe),x.fecha,'¿Has gastado ya ese efectivo?',`Has sacado <b>${eur(-x.importe)}</b>. Si ya lo has gastado, apúntalo para que cuente como gasto; si no, se queda como efectivo en tu bolsillo.`),200)
   else if(c&&c!=='TRASPASO'){const l=mismosSinCat(x,S.mov);if(l.length)setTimeout(()=>ofrecerMismos(x,c,l,ls=>conDeshacer('Categoría puesta a '+ls.length+' movimiento'+(ls.length>1?'s':'')+' más',()=>{ls.forEach(y=>{y.cat=c;if(y.origen!=='excel')marcarNomina(y)})})),250)}

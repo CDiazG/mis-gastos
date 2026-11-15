@@ -28,7 +28,7 @@ function toast(msg,err){const t=$('#toast');t.textContent=msg;t.className='on'+(
 function catOptions(sel,{blank=true,blankText='— Sin categoría —'}={}){
   if(sel&&!catConocida(sel))sel='';
   let h=blank?`<option value="">${blankText}</option>`:'';
-  for(const g of GROUPS){h+=`<optgroup label="${g.n}">`+CATS.filter(c=>c.g===g.id&&(c.id!=='AHORRO'||sel==='AHORRO')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${catEs(c.id)}${c.n}</option>`).join('')+'</optgroup>'}
+  for(const g of GROUPS){h+=`<optgroup label="${g.n}">`+CATS.filter(c=>c.g===g.id&&(c.id!=='AHORRO'||sel==='AHORRO')).map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${c.n}${catE(c.id)?' '+catE(c.id):''}</option>`).join('')+'</optgroup>'}
   const oculta=sel&&!ALLC.some(c=>c.id===sel)&&(S.cats||[]).find(c=>c.id===sel);
   if(oculta)h+=`<option value="${oculta.id}" selected>${esc(oculta.n)}</option>`;
   h+='<optgroup label="Otros movimientos (no son gasto)">'+SPECIAL.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${c.n}</option>`).join('')+'</optgroup>';
@@ -37,10 +37,10 @@ function catOptions(sel,{blank=true,blankText='— Sin categoría —'}={}){
 
 /* ---- Deshacer: guarda los movimientos antes de un cambio y deja volver atrás unos segundos ---- */
 let UNDO=null;
-function conDeshacer(msg,fn){
+function conDeshacer(msg,fn,ms){
   const antes=JSON.stringify(S.mov);fn();save();render();
   const u=$('#undo');$('#undoTxt').textContent=msg;u.classList.add('on');clearTimeout(u._h);UNDO=antes;
-  u._h=setTimeout(()=>{u.classList.remove('on');UNDO=null},8000);
+  u._h=setTimeout(()=>{u.classList.remove('on');UNDO=null},ms||8000);
 }
 $('#undoBtn').onclick=()=>{if(!UNDO)return;S.mov=JSON.parse(UNDO);UNDO=null;clearTimeout($('#undo')._h);$('#undo').classList.remove('on');save();render();toast('Deshecho')};
 /* ---- Etiquetas de eventos (p. ej. «Boda Ana», «Viaje a Roma») ---- */
