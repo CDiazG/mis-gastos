@@ -12,6 +12,17 @@ async function dentro(browser, estado) {
 const filas = p => p.evaluate(() => ({ res: IMP.res.map(r => ({ banco: r.banco, n: r.movs.length, cuadra: r.cuadra, ini: r.saldoIni, fin: r.saldoFin, err: r.error })), filas: IMP.rows.map(x => ({ f: x.fecha, c: x.concepto, i: x.importe, cat: x.cat, nom: !!x.nomina })) }));
 
 module.exports = {
+  'Tabla sin cabeceras reconocibles: se deduce por el contenido'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const r = await p.evaluate(() => {
+        const filas = [['Cuenta corriente'], ['Listado de operaciones'], ['16/11/2026', 'COMPRA TIENDA UNO MADRID', '-30,99', '969,01', 'EUR'], ['14/11/2026', 'BIZUM RECIBIDO DE ANA', '2,70', '1000,00', 'EUR'], ['13/11/2026', 'RECIBO SUPER DOS', '-17,50', '997,30', 'EUR'], ['12/11/2026', 'NOMINA EMPRESA', '1000,00', '1014,80', 'EUR']];
+        const m = detectarColumnas(filas); const t = tablaAMovs(filas, m);
+        return { m, n: t.movs.length, malos: t.malos };
+      });
+      assert.equal(r.n, 4, JSON.stringify(r)); assert.equal(r.m.importe, 2); assert.equal(r.m.saldo, 3); assert.equal(r.m.concepto, 1);
+    })();
+  },
   'Excel con una tabla de pendientes arriba y los movimientos debajo, con otra cabecera'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
@@ -92,17 +103,17 @@ module.exports = {
   'CSV con columnas desconocidas: las pregunta y las recuerda'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
-      const txt = 'Día;Qué;Euros\n05/10/2026;Panadería;-2,50\n06/10/2026;Farmacia;-8,00\n';
+      const txt = 'Día;Qué;Euros\n05/10/2026;Panadería;-2,50\n';
       await p.setInputFiles('#pdfInput', { name: 'raro.csv', mimeType: 'text/csv', buffer: Buffer.from(txt) });
       await p.waitForSelector('#mcF');
       await p.selectOption('#mcF', '0'); await p.selectOption('#mcC', '1'); await p.selectOption('#mcI', '2');
       await p.click('#dlgF >> text=Leer');
       await p.waitForSelector('#impGo', { timeout: 30000 });
-      assert.equal(await p.evaluate(() => IMP.rows.length), 2);
+      assert.equal(await p.evaluate(() => IMP.rows.length), 1);
       await p.click('#impCancel');
       await p.setInputFiles('#pdfInput', { name: 'raro2.csv', mimeType: 'text/csv', buffer: Buffer.from(txt) });
       await p.waitForSelector('#impGo', { timeout: 30000 });
-      assert.equal(await p.evaluate(() => IMP.rows.length), 2, 'la segunda vez ya no pregunta');
+      assert.equal(await p.evaluate(() => IMP.rows.length), 1, 'la segunda vez ya no pregunta');
     })();
   },
 };

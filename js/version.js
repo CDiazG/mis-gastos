@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.40.6';
+const VERSION='2.40.7';
 const CAMBIOS=[
+ {v:'2.40.7',f:'2026-11-15',c:['Importar: si el Excel o CSV no trae cabeceras reconocibles, la app deduce sola qué columna es la fecha, el concepto y el importe','Importar: se leen todas las hojas del Excel y se elige la tabla de movimientos']},
  {v:'2.40.6',f:'2026-11-15',c:['Importar: se leen los Excel del banco que traen varias tablas (por ejemplo, movimientos pendientes arriba y los movimientos debajo)']},
  {v:'2.40.5',f:'2026-11-15',c:['Histórico: la barra de botones (Evolución, Mes a mes…) se pega justo debajo de la cabecera, sin dejar hueco']},
  {v:'2.40.4',f:'2026-11-14',c:['Histórico: los botones de vistas (Evolución, Mes a mes…) quedan a la misma distancia por arriba y por abajo','Arreglada la animación de plegado de los tres grupos del Resumen y de las fichas','Al desplegar, las fichas de debajo bajan poco a poco, igual que al plegar','El enlace a Usuarios del menú del perfil vuelve a tener su icono','Los importes con € ya no se parten en dos líneas','Errores registrados (administrador): botones para copiar un error o todos y pegarlos en el chat']},

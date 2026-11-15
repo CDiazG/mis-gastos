@@ -81,20 +81,26 @@ async function parseXLSX(buf){
   const leer=await unzip(buf);const dp=new DOMParser();
   const ss=[];const sst=await leer('xl/sharedStrings.xml');
   if(sst){const d=dp.parseFromString(sst,'application/xml');for(const si of d.getElementsByTagName('si'))ss.push([...si.getElementsByTagName('t')].map(t=>t.textContent).join(''))}
-  // primera hoja del libro
-  let ruta='xl/worksheets/sheet1.xml';
+  // todas las hojas del libro (el detector elige después la tabla de movimientos)
+  let rutas=[];
   const wb=await leer('xl/workbook.xml'),rels=await leer('xl/_rels/workbook.xml.rels');
-  if(wb&&rels){const d=dp.parseFromString(wb,'application/xml');const sh=d.getElementsByTagName('sheet')[0];
-    const rid=sh&&(sh.getAttribute('r:id')||sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id'));
-    const r=dp.parseFromString(rels,'application/xml');for(const x of r.getElementsByTagName('Relationship'))if(x.getAttribute('Id')===rid){const t=x.getAttribute('Target');ruta=t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,'')}}
-  const hoja=await leer(ruta);if(!hoja)throw new Error('no encuentro la hoja de cálculo');
-  const d=dp.parseFromString(hoja,'application/xml');const filas=[];
+  if(wb&&rels){const d=dp.parseFromString(wb,'application/xml');const r=dp.parseFromString(rels,'application/xml');
+    for(const sh of d.getElementsByTagName('sheet')){
+      const rid=sh.getAttribute('r:id')||sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
+      for(const x of r.getElementsByTagName('Relationship'))if(x.getAttribute('Id')===rid){const t=x.getAttribute('Target');rutas.push(t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,''))}}}
+  if(!rutas.length)rutas=['xl/worksheets/sheet1.xml'];
   const col=ref=>{let n=0;for(const ch of ref.replace(/\d+/g,''))n=n*26+ch.charCodeAt(0)-64;return n-1};
-  for(const row of d.getElementsByTagName('row')){const f=[];
-    for(const c of row.getElementsByTagName('c')){const t=c.getAttribute('t');const v=c.getElementsByTagName('v')[0];let val='';
-      if(t==='s')val=ss[+(v&&v.textContent)]||'';else if(t==='inlineStr')val=[...c.getElementsByTagName('t')].map(x=>x.textContent).join('');else val=v?v.textContent:'';
-      f[col(c.getAttribute('r')||'A1')]=val}
-    filas.push([...f].map(x=>(x==null?'':String(x)).trim()))}
+  const filas=[];let alguna=false;
+  for(const ruta of rutas){
+    const hoja=await leer(ruta);if(!hoja)continue;alguna=true;
+    const d=dp.parseFromString(hoja,'application/xml');
+    for(const row of d.getElementsByTagName('row')){const f=[];
+      for(const c of row.getElementsByTagName('c')){const t=c.getAttribute('t');const v=c.getElementsByTagName('v')[0];let val='';
+        if(t==='s')val=ss[+(v&&v.textContent)]||'';else if(t==='inlineStr')val=[...c.getElementsByTagName('t')].map(x=>x.textContent).join('');else val=v?v.textContent:'';
+        f[col(c.getAttribute('r')||'A1')]=val}
+      filas.push([...f].map(x=>(x==null?'':String(x)).trim()))}
+  }
+  if(!alguna)throw new Error('no encuentro la hoja de cálculo');
   return filas.filter(f=>f.some(x=>x));
 }
 // Excel antiguo (.xls, formato binario BIFF8 dentro de un archivo OLE2), sin librerías: primera hoja
@@ -204,7 +210,43 @@ function detectarColumnas(filas){
       let n=0;for(let k=i+1;k<filas.length&&fechaFlexible(filas[k][m.fecha]);k++)n++;
       if(n>mejorN){mejorN=n;mejor={cab:i,...m}}}
   }
-  return mejor;
+  if(mejor&&mejorN>=1)return mejor;
+  return detectarPorContenido(filas)||mejor;
+}
+// Sin cabeceras reconocibles: se deduce mirando el contenido (columna de fechas, de importes y de textos)
+function detectarPorContenido(filas){
+  const ancho=Math.max(0,...filas.slice(0,400).map(f=>f.length));
+  let mejor=null;
+  for(let j=0;j<ancho;j++){
+    let i=0;
+    while(i<filas.length){
+      if(!fechaFlexible(filas[i][j])){i++;continue}
+      let k=i;while(k<filas.length&&fechaFlexible(filas[k][j]))k++;
+      if(k-i>=2&&(!mejor||k-i>mejor.n))mejor={j,s:i,e:k,n:k-i};
+      i=k;
+    }
+  }
+  if(!mejor)return null;
+  const R=filas.slice(mejor.s,mejor.e);
+  const esFecha=c=>R.filter(f=>fechaFlexible(f[c])).length>=R.length*.8;
+  const num=[],txt=[];
+  for(let c=0;c<ancho;c++){if(c===mejor.j||esFecha(c))continue;
+    const nums=R.filter(f=>String(f[c]||'').trim()&&isFinite(numFlexible(f[c]))).length;
+    if(nums>=R.length*.8)num.push(c);
+    else{const l=R.reduce((a,f)=>a+String(f[c]||'').length,0)/R.length;const t=R.filter(f=>/[A-Za-zÁÉÍÓÚáéíóú]{3}/.test(f[c]||'')).length;if(t>=R.length*.5)txt.push({c,l})}}
+  if(!num.length||!txt.length)return null;
+  txt.sort((a,b)=>b.l-a.l);
+  const m={cab:mejor.s-1,fecha:mejor.j,concepto:txt[0].c};
+  // importe y saldo: el par en que el saldo cuadra con el importe; si no, la primera columna con signos mezclados
+  let par=null,mx=0;
+  for(const a of num)for(const b of num){if(a===b)continue;let ok=0;
+    for(let q=1;q<R.length;q++){const x=numFlexible(R[q][a]),x0=numFlexible(R[q-1][a]),y=numFlexible(R[q][b]),y0=numFlexible(R[q-1][b]);
+      if(Math.abs(y0+x-y)<.011||Math.abs(y+x0-y0)<.011)ok++}
+    if(ok>mx){mx=ok;par=[a,b]}}
+  if(par&&mx>=(R.length-1)*.6){m.importe=par[0];m.saldo=par[1]}
+  else{const mixta=num.find(c=>R.some(f=>numFlexible(f[c])<0)&&R.some(f=>numFlexible(f[c])>0));m.importe=mixta!=null?mixta:num[0]}
+  if(txt[1]&&txt[1].l>3)m.detalle=txt[1].c;
+  return m;
 }
 function tablaAMovs(filas,map){
   const movs=[];
