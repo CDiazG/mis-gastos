@@ -14,6 +14,25 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'frases del mes: categoría por encima de tu media, ahorro frente al mes anterior y mayor gasto'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const mv = [];
+      for (const [m, ocio] of [['2026-07', 100], ['2026-08', 100], ['2026-09', 100], ['2026-10', 300]]) {
+        mv.push([m + '-01', 'NOMINA', 2000, 'INGRESO'], [m + '-05', 'ALQUILER', -600, 'VIVIENDA'], [m + '-10', 'CENA', -ocio, 'OCIO']);
+      }
+      await meter(p, mv, '2026-10');
+      const f = await p.evaluate(() => frasesMes('2026-10').map(t => t.replace(/<[^>]+>/g, '').replace(/\u00a0/g, ' ')));
+      assert.ok(f.some(t => /200 % más.*Restaurantes/.test(t)), JSON.stringify(f));
+      assert.ok(f.some(t => /Ahorraste 200 € menos que en septiembre/.test(t)), JSON.stringify(f));
+      assert.ok(f.length <= 3);
+      await p.evaluate(() => { S.aj.primerosPasos = false; go('resumen'); });
+      await p.waitForTimeout(300);
+      assert.ok((await p.locator('#frases .frase').count()) >= 1);
+      await p.evaluate(() => { S.aj.frases = false; render(); });
+      assert.equal(await p.locator('#frases .frase').count(), 0);
+    })();
+  },
   'comercios habituales: reglas de serie en cuentas nuevas y botón para añadirlas sin tocar las del usuario'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

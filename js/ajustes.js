@@ -274,6 +274,7 @@ const PREFS=[
   {k:'aprender',g:'clas',t:'Aprender reglas al cambiar una categoría',d:'Al poner categoría a un movimiento del banco, los siguientes con el mismo comercio se clasifican solos.'},
   {k:'aviso80',g:'avisos',t:'Avisar al llegar al 80 % de una categoría',d:'Aviso en el Resumen cuando te acercas al presupuesto.'},
   {k:'comparar',g:'avisos',t:'Comparar con el mes anterior',d:'Muestra ▲ / ▼ junto a cada categoría.'},
+  {k:'frases',g:'avisos',t:'Frases del mes en el Resumen',d:'Una o dos frases que te cuentan cómo va el mes frente a tu media.'},
   {k:'avisoCopia',g:'avisos',t:'Recordar la copia de seguridad',d:'Aviso si hace más de un mes de la última copia.'},
   {k:'verGrafico',g:'avisos',t:'Gráfico «En qué se ha ido el dinero»',d:'En el Resumen.'},
   {k:'verFijos',g:'avisos',t:'Gastos fijos previstos',d:'Tarjeta del Resumen que avisa si un fijo no llega o cambia de importe.'},

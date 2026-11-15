@@ -1482,3 +1482,5 @@ details.icard::details-content,details.diacard::details-content,details.faq::det
   dialog[open]{animation:fundido .15s ease-out!important}
   dialog[open]::backdrop{animation:fundido .15s ease-out!important}
 }
+/* 2.47 · frases del mes */
+#frases .frase{padding:9px 14px;margin:6px 0;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:.92em;line-height:1.4}

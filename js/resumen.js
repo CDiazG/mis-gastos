@@ -55,6 +55,7 @@ function rResumen(){
       <li>${n&&!sin?'✓ ':''}<b>Ponles categoría:</b> la app sugiere casi todas; tú confirmas las que falten. ${n&&sin?`<button class="btn sm pri" data-act="sincat">Categorizar ${sin}</button>`:''}</li>
       <li><b>Mira el Resumen:</b> aquí verás en qué se va tu dinero este mes.</li></ol><button class="btn sm" data-act="ppok">Ocultar esto</button></div>`)}
   $('#alerts').innerHTML=al.length>2?al.slice(0,1).join('')+`<details class="masav"><summary>${al.length-1} avisos más</summary><div class="alerts" style="margin-top:8px">${al.slice(1).join('')}</div></details>`:al.join('');
+  $('#frases').innerHTML=pref('frases')?frasesMes(MES).map(t=>`<div class="frase">${t}</div>`).join(''):'';
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
     if(a==='ana')go('efectivo');

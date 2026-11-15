@@ -89,6 +89,29 @@ function stats(m){
   return {ms,by,ingresos:r2(ingresos),consumo:r2(consumo),ahorro:r2(ahorro),diezmo:r2(diezmo),sinCat,sinCatImp:r2(sinCatImp),base};
 }
 // Diezmo automático: un porcentaje de los ingresos del mes, pendiente hasta que se paga.
+// Frases que cuentan el mes: categoría que se dispara o se modera frente a tu media, ahorro frente al mes anterior y mayor gasto
+function frasesMes(m){
+  const st=stats(m);if(!st.ms.length)return [];
+  const out=[],hoyM=mesDe(hoy()),prev=mesesConDatos().filter(x=>x<m);
+  const dias=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();
+  const frac=m===hoyM?Math.min(1,+hoy().slice(8,10)/dias):1;
+  const ult=prev.slice(-3);
+  if(ult.length>=2&&frac>=0.25){
+    let up=null,down=null;
+    for(const c of CATS.filter(c=>c.g!=='AHORRO')){
+      const media=ult.reduce((a,p)=>a+(stats(p).by[c.id]||0),0)/ult.length,esp=media*frac,real=st.by[c.id]||0,d=real-esp;
+      if(media>=30&&real>=esp*1.3&&d>=25&&(!up||d>up.d))up={c,d,p:Math.round((real/esp-1)*100)};
+      if(media>=40&&frac>=0.6&&real<=esp*0.6&&-d>=25&&(!down||-d>down.d))down={c,d:-d};
+    }
+    if(up)out.push(`Llevas un <b>${up.p} % más</b> en ${esc(catN(up.c.id))} que tu media (${eur(up.d,0)} de más).`);
+    if(down)out.push(`En ${esc(catN(down.c.id))} vas <b>${eur(down.d,0)} por debajo</b> de tu media.`);
+  }
+  if(m<hoyM&&prev.length){const pm=prev[prev.length-1],sp=stats(pm);
+    if(sp.ingresos>0){const d=r2(st.ahorro-sp.ahorro);if(Math.abs(d)>=20)out.push(d>0?`Ahorraste <b>${eur(d,0)} más</b> que en ${nombreMes(pm)}.`:`Ahorraste <b>${eur(-d,0)} menos</b> que en ${nombreMes(pm)}.`)}}
+  if(st.consumo>0&&out.length<3){let top=null;for(const c of CATS.filter(c=>c.g!=='AHORRO')){const v=st.by[c.id]||0;if(v>0&&(!top||v>top.v))top={c,v}}
+    if(top&&top.v/st.consumo>=0.25)out.push(`Tu mayor gasto es ${esc(catN(top.c.id))}: <b>${Math.round(top.v/st.consumo*100)} %</b> (${eur(top.v,0)}).`)}
+  return out.slice(0,3);
+}
 // Suscripciones (categoría «Suscripciones»): avisa de las nuevas y de las que suben de precio en el mes m
 function avisosSuscripciones(m){
   if(!mesesConDatos().some(x=>x<m))return [];
