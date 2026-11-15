@@ -216,6 +216,13 @@ function rReglas(){
   });
 }
 $('#rBuscar').oninput=rReglas;
+// Reglas de comercios habituales (supermercados, gasolineras, cadenas, tiendas…): solo se añaden las que faltan; las tuyas no se tocan
+$('#rComunes').onclick=()=>{
+  const hay=new Set(S.reglas.map(r=>norm(r.t).trim()));
+  const nuevas=COMERCIOS_COMUNES.filter(([t])=>!hay.has(norm(t).trim()));
+  if(!nuevas.length){toast('Ya tienes todos los comercios habituales');return}
+  confirmar('Comercios habituales',`Se añadirán ${nuevas.length} reglas de comercios conocidos (Mercadona, Lidl, Repsol, Netflix, Ikea…). Tus reglas y tus movimientos no cambian: solo se usan para los extractos que importes desde ahora.`,'Añadirlas',()=>{
+    nuevas.forEach(([t,c])=>S.reglas.push({t,c,u:0}));save();rReglas();toast(nuevas.length+' reglas añadidas')})};
 $('#rAdd').onsubmit=e=>{e.preventDefault();const t=$('#rTexto').value.trim();if(!t)return;S.reglas.unshift({t,c:$('#rCat').value,u:1});$('#rTexto').value='';save();rReglas();toast('Regla añadida')};
 function exportar(){
   S.ultimaCopia=Date.now();S.app=VERSION;save();

@@ -14,6 +14,19 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'comercios habituales: reglas de serie en cuentas nuevas y botón para añadirlas sin tocar las del usuario'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const c = await p.evaluate(() => ({ ikea: autoCat('Compra Ikea Valencia Tarjeta', '', -50), moeve: autoCat('Moeve Estacion', '', -40), dia: autoCat('SUPERMERCADOS DIA 123', '', -9), bk: autoCat('BURGER KING VALENCIA', '', -9) }));
+      assert.deepEqual(c, { ikea: 'PERSONAL', moeve: 'TRANSPORTE', dia: 'SUPERMERCADO', bk: 'OCIO' });
+      // una cuenta que ya existía: le faltan y las añade; su regla propia (Ikea → Hogar/Otros) no se toca
+      await p.evaluate(() => { S.reglas = S.reglas.filter(r => !/IKEA|MOEVE|BURGER KING/.test(r.t)); S.reglas.unshift({ t: 'IKEA', c: 'OTROS', u: 1 }); save(); go('ajustes', { sub: 'reglas' }); });
+      await p.click('#rComunes'); await p.waitForSelector('#dlg[open]');
+      await p.click('#dlgF .pri'); await p.waitForTimeout(450);
+      const r = await p.evaluate(() => ({ ik: S.reglas.filter(r => r.t === 'IKEA').map(r => r.c), mo: S.reglas.some(r => r.t === 'MOEVE'), n: autoCat('Compra Ikea', '', -5) }));
+      assert.deepEqual(r.ik, ['OTROS']); assert.equal(r.mo, true); assert.equal(r.n, 'OTROS');
+    })();
+  },
   'reducir movimiento: sin desplazamientos pero con cambios suaves de color'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado, { reducedMotion: 'reduce' });
