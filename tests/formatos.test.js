@@ -12,6 +12,13 @@ async function dentro(browser, estado) {
 const filas = p => p.evaluate(() => ({ res: IMP.res.map(r => ({ banco: r.banco, n: r.movs.length, cuadra: r.cuadra, ini: r.saldoIni, fin: r.saldoFin, err: r.error })), filas: IMP.rows.map(x => ({ f: x.fecha, c: x.concepto, i: x.importe, cat: x.cat, nom: !!x.nomina })) }));
 
 module.exports = {
+  'Otras monedas: se detecta el importe original'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const r = await p.evaluate(() => [monedaDe('COMPRA TIENDA SYDNEY 12,50 AUD'), monedaDe('Compra USD 1.234,50 en tienda'), monedaDe('COMPRA TIENDA 5,00 EUR'), monedaDe('PAGO 2024 SUPER')]);
+      assert.deepEqual(r[0], { c: 'AUD', v: 12.5 }); assert.deepEqual(r[1], { c: 'USD', v: 1234.5 }); assert.equal(r[2], null); assert.equal(r[3], null);
+    })();
+  },
   'Tabla sin cabeceras reconocibles: se deduce por el contenido'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

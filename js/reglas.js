@@ -125,8 +125,9 @@ function avisosSuscripciones(m){
     const ahora=xs.filter(x=>x.mes===m);if(ahora.length!==1)continue; // varios cobros en el mes: no es una cuota fija clara
     const ant=xs.filter(x=>x.mes<m);const nom=ahora[0].concepto.replace(/\s*\d.*$/,'').replace(/^(Compra|Recibo|Pago)\s+/i,'').trim()||k;
     const a=-ahora[0].importe;
+    const ult=ant[ant.length-1],mismaMon=ahora[0].mon&&ult&&ult.mon&&ahora[0].mon.c===ult.mon.c; // si cobran en otra moneda, se compara el importe original (el cambio varía)
     if(!ant.length){const id=k+'|nueva|'+m;if(!vistas.has(id))out.push({id,t:`<b>Suscripción nueva:</b> ${esc(nom)} (${eur(a)})`})}
-    else{const p=-ant[ant.length-1].importe;if(a>=p+0.5&&a>p*1.02){const id=k+'|sube|'+m;if(!vistas.has(id))out.push({id,t:`<b>${esc(nom)}</b> ha subido de ${eur(p)} a ${eur(a)}`})}}
+    else{const p=-ult.importe,sube=mismaMon?ahora[0].mon.v>=ult.mon.v+0.5&&ahora[0].mon.v>ult.mon.v*1.02:a>=p+0.5&&a>p*1.02;if(sube){const id=k+'|sube|'+m;if(!vistas.has(id))out.push({id,t:`<b>${esc(nom)}</b> ha subido de ${eur(p)} a ${eur(a)}`})}}
   }
   return out;
 }

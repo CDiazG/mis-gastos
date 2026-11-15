@@ -54,7 +54,7 @@ function prepararRevision(res){
       const nomina=!m.cat&&!r.inversion&&esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
       const mes=mesPara({cat,nomina,fecha:m.fecha});
       const key=[r.cuenta,m.fecha,m.importe.toFixed(2),m.saldo!=null?m.saldo.toFixed(2):'',norm(m.concepto).trim().slice(0,24)].join('|');
-      rows.push({...m,concepto:ocultarNumeros(mejorConcepto(m.concepto,m.detalle)),detalle:ocultarNumeros(m.detalle||''),i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
+      rows.push({...m,concepto:ocultarNumeros(mejorConcepto(m.concepto,m.detalle)),detalle:ocultarNumeros(m.detalle||''),mon:monedaDe((m.concepto||'')+' '+(m.detalle||''))||undefined,i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
     });
   }
   const dobles=buscarDobles(rows);
@@ -238,7 +238,7 @@ function guardarImport(){
   S.mov=S.mov.filter(y=>!quitar.has(y.id));
   if(IMP.dobles&&IMP.dobles.on)IMP.dobles.lista.forEach(y=>{y.cat='TRASPASO'});
   let orden=0;
-  for(const x of sel)S.mov.push({id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++});
+  for(const x of sel)S.mov.push({id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++,...(x.mon?{mon:x.mon}:{})});
   for(const r of IMP.res)if(r.iban&&r.cuenta&&!r.error)(S.aj.ibanCuenta||(S.aj.ibanCuenta={}))[r.iban]=r.cuenta;
   for(const r of IMP.res){
     if(r.error||!r.movs.length||r.saldoFin==null)continue;

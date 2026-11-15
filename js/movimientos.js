@@ -101,6 +101,7 @@ function rMovs(){
   tb.innerHTML=list.length?list.map(x=>{
     const sep=x.fecha!==diaAnt?`<tr class="sepdia"><td colspan="6">${diaTxt(x.fecha)}</td></tr>`:'';diaAnt=x.fecha;
     const tags=[];
+    if(x.mon)tags.push(`<span class="tag" title="Importe original en otra moneda">${esc(fmt(x.mon.v))} ${esc(x.mon.c)}</span>`);
     if(x.metodo==='efectivo')tags.push('<span class="tag cash">efectivo</span>');else if(x.cuenta)tags.push(`<span class="tag">${esc(x.cuenta)}</span>`);
     if(x.mes!==mesDe(x.fecha))tags.push(`<span class="tag acc">cuenta en ${nombreMesC(x.mes)}</span>`);
     if(x.origen==='excel')tags.push('<span class="tag">Excel</span>');

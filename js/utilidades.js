@@ -63,6 +63,16 @@ function pintarSugTags(input,concepto){
   box.onclick=e=>{const b=e.target.closest('.tagchip');if(!b)return;const cur=parseTags(input.value);cur.push(b.dataset.t);input.value=cur.join(', ');input.dispatchEvent(new Event('input'));input.focus()}}
 /* ---- Conceptos del banco más legibles (sin tocar lo guardado) ---- */
 // Oculta números de tarjeta y de cuenta largos: deja solo las 4 últimas cifras
+// Importe original en otra moneda, si el banco lo escribe en el concepto («12,50 USD», «GBP 9.99»…)
+const MONEDAS='USD|GBP|AUD|CAD|CHF|SEK|NOK|DKK|PLN|CZK|HUF|JPY|CNY|MXN|BRL|ARS|TRY|INR|NZD|RON|BGN';
+function monedaDe(t){
+  t=String(t||'').toUpperCase();
+  let m=t.match(new RegExp('(?:^|[^0-9.,])(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{1,2}|\\d+)\\s?('+MONEDAS+')\\b'));
+  let v,c;
+  if(m){v=numFlexible(m[1]);c=m[2]}
+  else{m=t.match(new RegExp('\\b('+MONEDAS+')\\s?(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{1,2}|\\d+)(?![0-9])'));if(m){c=m[1];v=numFlexible(m[2])}}
+  return c&&isFinite(v)&&v>0?{c,v:r2(v)}:null;
+}
 const ocultarNumeros=s=>String(s||'').replace(/\b\d(?:[ -]?\d){11,18}\b/g,m=>'…'+m.replace(/\D/g,'').slice(-4));
 function conceptoCorto(c){
   let s=ocultarNumeros(c);const orig=s;
