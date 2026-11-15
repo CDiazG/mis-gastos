@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.41.0';
+const VERSION='2.41.1';
 const CAMBIOS=[
+ {v:'2.41.1',f:'2026-11-15',c:['Resumen: el aviso de efectivo sin justificar ahora dice «Añadir gasto en efectivo»']},
  {v:'2.41.0',f:'2026-11-15',c:['Categorizar: en la lista de categorías puedes escribir la primera letra para ir a ella (y repetirla para pasar a la siguiente)','Al cambiar una categoría, el aviso de deshacer dura más y dice qué movimiento era y de qué categoría a cuál']},
  {v:'2.40.7',f:'2026-11-15',c:['Importar: si el Excel o CSV no trae cabeceras reconocibles, la app deduce sola qué columna es la fecha, el concepto y el importe','Importar: se leen todas las hojas del Excel y se elige la tabla de movimientos']},
  {v:'2.40.6',f:'2026-11-15',c:['Importar: se leen los Excel del banco que traen varias tablas (por ejemplo, movimientos pendientes arriba y los movimientos debajo)']},
