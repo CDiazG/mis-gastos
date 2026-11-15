@@ -1491,3 +1491,7 @@ html.letragrande{zoom:1.15}
 
 /* Móvil: zonas táctiles de al menos 44 px */
 @media (pointer:coarse){.btn.sm,.btn.icon,.tab,.evseg button{min-height:44px;min-width:44px}}
+
+/* 2.52.1 · fichas del Resumen (grupos y .pleg): la animación la lleva el script; la antigua «despl» se reiniciaba al acabar la nueva y parpadeaba */
+.grupo:not(.plegado)>:not(.ghead),.pleg.abierta>:not(.ghead){animation:none}
+.faq[open]>p,.faq[open]>.faqir{animation:none}

@@ -14,6 +14,19 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'fichas del Resumen: al abrir y cerrar no queda ninguna animación repitiéndose'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-11-05', 'TIENDA UNO', -12, 'TRANSPORTE'], ['2026-11-06', 'NOMINA', 1500, 'INGRESO']], '2026-11');
+      await p.evaluate(() => { S.aj.primerosPasos = false; go('resumen'); });
+      await p.waitForSelector('#groups .grupo .gtog');
+      const anim = () => p.evaluate(() => [...document.querySelectorAll('#groups .grupo')[0].children].filter(c => !c.classList.contains('ghead')).reduce((a, c) => a + c.getAnimations().length, 0));
+      for (let i = 0; i < 2; i++) { // cerrar y abrir dos veces
+        await p.click('#groups .gtog >> nth=0'); await p.waitForTimeout(420);
+        assert.equal(await anim(), 0, 'animación tras cambiar la ficha (vuelta ' + i + ')');
+      }
+    })();
+  },
   'previsión de fin de mes: a este ritmo y frente al presupuesto'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
