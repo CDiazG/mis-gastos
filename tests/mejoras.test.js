@@ -14,6 +14,20 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'suscripciones: avisa de las nuevas y de las que suben de precio'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-09-05', 'Compra Servicio Uno, Madrid', -8.99, 'SUSCRIPCIONES'], ['2026-09-06', 'Compra Servicio Dos, Dublin', -5, 'SUSCRIPCIONES'],
+        ['2026-10-05', 'Compra Servicio Uno, Madrid', -10.99, 'SUSCRIPCIONES'], ['2026-10-06', 'Compra Servicio Dos, Dublin', -5, 'SUSCRIPCIONES'], ['2026-10-07', 'Compra Servicio Tres, Cork', -3.5, 'SUSCRIPCIONES']], '2026-10');
+      const r = await p.evaluate(() => avisosSuscripciones('2026-10').map(x => x.t.replace(/<[^>]+>/g, '')));
+      assert.equal(r.length, 2, JSON.stringify(r));
+      assert.ok(r.some(x => /Servicio Uno.*8,99.*10,99/.test(x.replace(/\u00a0/g, ' '))), JSON.stringify(r));
+      assert.ok(r.some(x => /nueva.*Servicio Tres/i.test(x)), JSON.stringify(r));
+      await p.evaluate(() => go('resumen')); await p.waitForSelector('#alerts [data-act="subok"]', { state: 'attached' });
+      await p.evaluate(() => document.querySelector('#alerts [data-act="subok"]').click()); await p.waitForTimeout(300);
+      assert.equal(await p.evaluate(() => avisosSuscripciones('2026-10').length), 0);
+    })();
+  },
   'menú del perfil: guardar copia de seguridad desde cualquier sitio'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

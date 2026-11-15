@@ -89,6 +89,24 @@ function stats(m){
   return {ms,by,ingresos:r2(ingresos),consumo:r2(consumo),ahorro:r2(ahorro),diezmo:r2(diezmo),sinCat,sinCatImp:r2(sinCatImp),base};
 }
 // Diezmo automático: un porcentaje de los ingresos del mes, pendiente hasta que se paga.
+// Suscripciones (categoría «Suscripciones»): avisa de las nuevas y de las que suben de precio en el mes m
+function avisosSuscripciones(m){
+  if(!mesesConDatos().some(x=>x<m))return [];
+  const g=new Map();
+  for(const x of S.mov){if(x.cat!=='SUSCRIPCIONES'||x.importe>=0)continue;
+    const k=norm(x.concepto).replace(/\d+/g,' ').split(' ').filter(w=>w&&!/^(COMPRA|RECIBO|PAGO|CARGO|TARJETA|COM|WWW|HTTPS?)$/.test(w)).slice(0,2).join(' ');if(!k)continue;
+    (g.get(k)||g.set(k,[]).get(k)).push(x)}
+  const vistas=new Set(S.aj.subVistas||[]),out=[];
+  for(const [k,xs] of g){
+    xs.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    const ahora=xs.filter(x=>x.mes===m);if(ahora.length!==1)continue; // varios cobros en el mes: no es una cuota fija clara
+    const ant=xs.filter(x=>x.mes<m);const nom=ahora[0].concepto.replace(/\s*\d.*$/,'').replace(/^(Compra|Recibo|Pago)\s+/i,'').trim()||k;
+    const a=-ahora[0].importe;
+    if(!ant.length){const id=k+'|nueva|'+m;if(!vistas.has(id))out.push({id,t:`<b>Suscripción nueva:</b> ${esc(nom)} (${eur(a)})`})}
+    else{const p=-ant[ant.length-1].importe;if(a>=p+0.5&&a>p*1.02){const id=k+'|sube|'+m;if(!vistas.has(id))out.push({id,t:`<b>${esc(nom)}</b> ha subido de ${eur(p)} a ${eur(a)}`})}}
+  }
+  return out;
+}
 function diezmoMes(m,st){st=st||stats(m);const pct=+S.aj.pct.DIEZMO||0;
   if(!diezmoOn()||!S.aj.diezmoAuto||!pct||(S.aj.diezmoDesde&&m<S.aj.diezmoDesde))return null;
   const debido=r2(st.ingresos*pct/100),pagado=r2(st.diezmo);return {pct,debido,pagado,pendiente:r2(Math.max(0,debido-pagado))}}

@@ -45,6 +45,7 @@ function rResumen(){
   {const fx=fijosDelMes(MES).filter(f=>f.estado==='falta'||f.estado==='cambia');
    if(fx.length)al.push(`<div class="alert"><span class="grow"><b>Gastos fijos:</b> ${fx.map(f=>f.estado==='falta'?`${esc(f.f.nombre)} no ha llegado`:`${esc(f.f.nombre)} ha cambiado (${eur(f.pagado)} en vez de ${eur(f.f.importe)})`).join(' · ')}</span></div>`)}
   {const e=efectivoMes(MES);if(e.ret>0&&e.resto>0.5&&!(S.aj.efeOk||{})[MES])al.push(`<div class="alert info"><span class="grow"><b>Efectivo sin justificar:</b> sacaste ${eur(e.ret,0)}${e.ent>0?` y te devolvieron ${eur(e.ent,0)} en efectivo`:''} y has apuntado ${eur(e.gas,0)}; quedan ${eur(e.resto,0)}.</span><button class="btn sm" data-act="efe">Añadir gasto en efectivo</button><button class="btn sm" data-act="efeok">Lo guardo</button></div>`)}
+  {const sb=avisosSuscripciones(MES);if(sb.length)al.push(`<div class="alert info"><span class="grow">${sb.map(x=>x.t).join(' · ')}</span><button class="btn sm" data-act="subver">Ver</button><button class="btn sm" data-act="subok" data-ids="${esc(JSON.stringify(sb.map(x=>x.id)))}">Entendido</button></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
   // Primeros pasos: solo cuentas nuevas; se quita solo al hacer lo básico (o con «Ocultar»)
   if(S.aj.primerosPasos===true){const n=S.mov.length,sin=S.mov.filter(sinCatX).length;
@@ -57,6 +58,8 @@ function rResumen(){
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
     if(a==='ana')go('efectivo');
+    if(a==='subver'){F.cat='SUSCRIPCIONES';F.sinCat=false;F.q='';F.tag='';F.todos=true;go('movs')}
+    if(a==='subok'){(S.aj.subVistas||(S.aj.subVistas=[])).push(...JSON.parse(b.dataset.ids));save();rResumen()}
     if(a==='ppok'){S.aj.primerosPasos=false;save();rResumen()}
     if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
     if(a==='copia')exportar();
