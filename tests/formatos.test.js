@@ -12,6 +12,21 @@ async function dentro(browser, estado) {
 const filas = p => p.evaluate(() => ({ res: IMP.res.map(r => ({ banco: r.banco, n: r.movs.length, cuadra: r.cuadra, ini: r.saldoIni, fin: r.saldoFin, err: r.error })), filas: IMP.rows.map(x => ({ f: x.fecha, c: x.concepto, i: x.importe, cat: x.cat, nom: !!x.nomina })) }));
 
 module.exports = {
+  'Excel con una tabla de pendientes arriba y los movimientos debajo, con otra cabecera'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const r = await p.evaluate(() => {
+        const filas = [['MOVIMIENTOS DE LA CUENTA'], [], ['MOVIMIENTOS PENDIENTES -40,00'], [], ['Fecha', 'Descripción', 'Importe', 'Divisa'], ['14/11/2026', 'CAFE ESTE', '-11', 'EUR'], ['12/11/2026', 'HOTEL X', '-29', 'EUR'], [],
+          ['MOVIMIENTOS'], ['Concepto', '-'], ['Fecha', '01/08/2026 - 15/11/2026'], [],
+          ['Fecha contable', 'Fecha valor', 'Descripción', 'Importe', 'Saldo', 'Divisa'],
+          ['16/11/2026', '16/11/2026', 'TIENDA UNO', -30.99, 1000.01, 'EUR'], ['14/11/2026', '14/11/2026', 'PAGO BIZUM DE ANA', 2.7, 1031, 'EUR'], ['13/11/2026', '12/11/2026', 'SUPER DOS', -17.5, 1028.3, 'EUR']];
+        const m = detectarColumnas(filas); const t = tablaAMovs(filas, m);
+        return { cab: m.cab, saldo: m.saldo, n: t.movs.length, f: t.movs.map(x => x.concepto) };
+      });
+      assert.equal(r.cab, 12, 'elige la cabecera con los movimientos de verdad'); assert.equal(r.saldo, 4);
+      assert.equal(r.n, 3, JSON.stringify(r));
+    })();
+  },
   'Norma 43'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado); const n = X.norma43();

@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.40.5';
+const VERSION='2.40.6';
 const CAMBIOS=[
+ {v:'2.40.6',f:'2026-11-15',c:['Importar: se leen los Excel del banco que traen varias tablas (por ejemplo, movimientos pendientes arriba y los movimientos debajo)']},
  {v:'2.40.5',f:'2026-11-15',c:['Histórico: la barra de botones (Evolución, Mes a mes…) se pega justo debajo de la cabecera, sin dejar hueco']},
  {v:'2.40.4',f:'2026-11-14',c:['Histórico: los botones de vistas (Evolución, Mes a mes…) quedan a la misma distancia por arriba y por abajo','Arreglada la animación de plegado de los tres grupos del Resumen y de las fichas','Al desplegar, las fichas de debajo bajan poco a poco, igual que al plegar','El enlace a Usuarios del menú del perfil vuelve a tener su icono','Los importes con € ya no se parten en dos líneas','Errores registrados (administrador): botones para copiar un error o todos y pegarlos en el chat']},
  {v:'2.40.3',f:'2026-11-14',c:['Todo lo que se pliega o se cierra (grupos, fichas, ventanas) ahora tiene animación','Histórico: los años van separados y con su etiqueta, y el ahorro en verde o rojo','Evolución del mes: la línea del gasto acumulado va en rojo','Más separación entre las fichas y los botones de vistas del Histórico']},

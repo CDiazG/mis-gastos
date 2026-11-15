@@ -187,7 +187,9 @@ const COLS={fecha:/^(FECHA( DE)?( LA)?( OPERACION| TRANSACCION| CONTABLE| MOVIMI
   concepto:/^(CONCEPTO|DESCRIPCION|DESCRIPCION DEL MOVIMIENTO|MOVIMIENTO|DETALLE|CONCEPTO COMUN|OBSERVACIONES|DESCRIPTION|BENEFICIARIO|COMERCIO)/,
   importe:/^(IMPORTE|CANTIDAD|IMPORTE EUR|IMPORTE \(EUR\)|IMPORTE EN EUROS|AMOUNT|MONTO)/,cargo:/^(CARGO|CARGOS|DEBE|SALIDA|DINERO SALIENTE|GASTOS?)$/,abono:/^(ABONO|ABONOS|HABER|ENTRADA|DINERO ENTRANTE|INGRESOS?)$/,saldo:/^(SALDO|SALDO DISPONIBLE|BALANCE)/};
 function detectarColumnas(filas){
-  for(let i=0;i<Math.min(filas.length,40);i++){
+  // Hay Excel con varias tablas (p. ej. «movimientos pendientes» arriba y los movimientos de verdad debajo): se elige la cabecera con más filas de datos seguidas
+  let mejor=null,mejorN=-1;
+  for(let i=0;i<filas.length;i++){
     const h=filas[i].map(x=>norm(x).trim());const m={};
     h.forEach((x,j)=>{if(!x)return;
       if(m.fecha==null&&COLS.fecha.test(x)&&!COLS.valor.test(x))m.fecha=j;
@@ -198,9 +200,11 @@ function detectarColumnas(filas){
       else if(m.saldo==null&&COLS.saldo.test(x))m.saldo=j;
       else if(m.detalle==null&&/CONCEPTO|DESCRIPCION|INFORMACION|^MAS DATOS|^MAS INFO|DATOS ADICIONALES|^REFERENCIA|^NOTAS?$/.test(x)&&m.concepto!=null)m.detalle=j;});
     if(m.fecha==null){const k=h.findIndex(x=>/^FECHA/.test(x));if(k>=0)m.fecha=k}
-    if(m.fecha!=null&&m.concepto!=null&&(m.importe!=null||m.cargo!=null||m.abono!=null))return {cab:i,...m};
+    if(m.fecha!=null&&m.concepto!=null&&(m.importe!=null||m.cargo!=null||m.abono!=null)){
+      let n=0;for(let k=i+1;k<filas.length&&fechaFlexible(filas[k][m.fecha]);k++)n++;
+      if(n>mejorN){mejorN=n;mejor={cab:i,...m}}}
   }
-  return null;
+  return mejor;
 }
 function tablaAMovs(filas,map){
   const movs=[];
