@@ -14,6 +14,15 @@ Carlos es el administrador. Se habla **siempre en español**, de tú, sin tecnic
 - Web publicada: https://cdiazg.github.io/mis-gastos/ (GitHub Pages, se despliega con GitHub Actions al subir a `main`).
 - Firebase: proyecto `mis-gastos-66394` (Authentication + Firestore). Correo del administrador: carlosdiazgui@gmail.com.
 
+## Escribir lo mínimo (estilo «ponytail»)
+
+- Antes de escribir código: ¿hace falta? Si no, no se escribe.
+- Reutilizar lo que ya existe en la app (funciones de `js/utilidades.js`, `reglas.js`, estilos ya hechos) antes de crear algo nuevo.
+- Después, lo que ofrezca el navegador por sí solo; solo al final, código propio, y el mínimo que funcione.
+- Leer antes la parte afectada: ser perezoso con la solución, no con entender el problema.
+- Nunca recortar validaciones, errores, seguridad ni accesibilidad.
+- Cuando se toque una zona, se puede proponer (sin hacerlo) qué CSS o código acumulado sobra.
+
 ## Publicar: solo cuando Carlos diga «publica»
 
 - Todo se trabaja y se sube en la rama **`siguiente-version`** (subirla no publica nada).
