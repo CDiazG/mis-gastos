@@ -96,6 +96,10 @@ function frasesMes(m){
   const dias=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate();
   const frac=m===hoyM?Math.min(1,+hoy().slice(8,10)/dias):1;
   const ult=prev.slice(-3);
+  if(m===hoyM&&frac>=0.2&&frac<0.97&&st.consumo>0){ // previsión de fin de mes a este ritmo
+    const prev_=Math.round(st.consumo/frac/10)*10;
+    out.push(st.base>0?(prev_>st.base*1.02?`A este ritmo cerrarás el mes en unos <b>${eur(prev_,0)}</b> de gasto, <b>${eur(prev_-st.base,0)} por encima</b> de tu presupuesto.`:`A este ritmo cerrarás el mes en unos <b>${eur(prev_,0)}</b> de gasto: te quedarías <b>${eur(st.base-prev_,0)} dentro</b> del presupuesto.`):`A este ritmo cerrarás el mes en unos <b>${eur(prev_,0)}</b> de gasto.`);
+  }
   if(ult.length>=2&&frac>=0.25){
     let up=null,down=null;
     for(const c of CATS.filter(c=>c.g!=='AHORRO')){

@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.51.0';
+const VERSION='2.52.0';
 const CAMBIOS=[
+ {v:'2.52.0',f:'2026-11-15',c:['El Resumen te dice cómo cerrarás el mes a este ritmo de gasto, frente a tu presupuesto']},
  {v:'2.51.0',f:'2026-11-15',c:['Lectura de PDF más flexible: importes con punto o coma, fechas con mes escrito o en formato año-mes-día, y columnas Cargo/Abono sin saldo','Si el extracto no indica si es cargo o abono, se adivina por el concepto (nómina, devolución, transferencia de…)']},
  {v:'2.50.1',f:'2026-11-15',c:['En una cuenta nueva, el Resumen ya no repite dos veces que importes un extracto']},
  {v:'2.50.0',f:'2026-11-15',c:['Si un mes no tiene movimientos, te ofrece importar un extracto o añadir a mano','En el móvil los botones pequeños son más fáciles de pulsar']},

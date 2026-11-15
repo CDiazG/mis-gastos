@@ -14,6 +14,16 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'previsión de fin de mes: a este ritmo y frente al presupuesto'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const mes = await p.evaluate(() => mesDe(hoy())); const dia = await p.evaluate(() => +hoy().slice(8, 10));
+      if (dia < 7 || dia > 28) return; // fuera de la franja en la que se muestra
+      await meter(p, [[mes + '-01', 'NOMINA', 2000, 'INGRESO'], [mes + '-02', 'CENA', -300, 'OCIO']], mes);
+      const f = await p.evaluate(m => frasesMes(m).map(t => t.replace(/<[^>]+>/g, '')), mes);
+      assert.ok(f.some(t => /A este ritmo cerrarás el mes en unos/.test(t)), JSON.stringify(f));
+    })();
+  },
   'mes sin movimientos: ofrece importar o añadir a mano'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
