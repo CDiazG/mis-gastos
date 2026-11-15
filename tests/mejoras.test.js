@@ -14,6 +14,17 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'quitar números de tarjeta de lo ya guardado'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'Compra Tienda, Tarjeta 4000123412341234 , Comision 0,00', -12, 'TRANSPORTE'], ['2026-10-06', 'Pan', -3, 'SUPERMERCADO']]);
+      await p.evaluate(() => { go('ajustes', { sub: 'copia' }); });
+      await p.click('#tarjLimpiar'); await p.waitForSelector('#dlg[open]');
+      await p.click('#dlgF .pri'); await p.waitForTimeout(450);
+      const c = await p.evaluate(() => S.mov.map(x => x.concepto).join('|'));
+      assert.ok(!/4000123412341234/.test(c) && /…1234/.test(c), c);
+    })();
+  },
   'fichas del histórico: al cerrar no queda ninguna transición pendiente que repita el plegado'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

@@ -225,6 +225,13 @@ function exportar(){
 }
 $('#bkExport').onclick=exportar;
 $('#bkImport').onclick=()=>$('#bkFile').click();
+// Números de tarjeta que ya estén guardados en los conceptos: se dejan solo las 4 últimas cifras
+$('#tarjLimpiar').onclick=()=>{
+  const cambia=x=>['concepto','detalle','nota'].some(k=>x[k]&&ocultarNumeros(x[k])!==x[k]);
+  const n=S.mov.filter(cambia).length;
+  if(!n){toast('No hay números de tarjeta en tus movimientos');return}
+  confirmar('Quitar números de tarjeta',`Hay ${n} movimiento${n>1?'s':''} con un número de tarjeta o cuenta completo en el texto. Se dejarán solo las 4 últimas cifras. Puedes deshacerlo unos segundos.`,'Quitarlos',()=>
+    conDeshacer(n+' movimientos limpiados',()=>{for(const x of S.mov)for(const k of ['concepto','detalle','nota'])if(x[k])x[k]=ocultarNumeros(x[k])},12000))};
 $('#bkFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.mov))throw new Error('no es una copia de este programa');
     confirmar('Restaurar copia',`La copia tiene ${d.mov.length} movimientos. Se sustituirá todo lo que hay ahora. ¿Seguir?`,'Restaurar',()=>{S=d;const df=defState();for(const k in df)if(S[k]===undefined)S[k]=df[k];save();render();toast('Copia restaurada')});

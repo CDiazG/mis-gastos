@@ -23,13 +23,15 @@ module.exports = {
       const html = `<p>TITULAR: PERSONA INVENTADA</p><p>CUENTA ONLINE: ES1500491736742010038936</p><p>Saldo: 300,00 EUR (a fecha 15/11/2026) Retenciones : 20,00 EUR</p>
         <p>Últimos movimientos de cuenta Ordenados por fecha</p>
         <table style="width:100%"><tr><td>Fecha operación</td><td>Operación</td><td>Importe</td><td>Saldo</td></tr>
-        ${fila('13/11/2026', 'Compra Tienda Uno, Madrid, Tarjeta', '-20,00', '320,00', '12/11/2026')}
+        ${fila('13/11/2026', 'Compra Tienda Uno, Madrid, Tarjeta 4000123412341234', '-20,00', '320,00', '12/11/2026')}
         ${fila('12/11/2026', 'Transferencia De Empresa Inventada Nomina', '1.000,00', '340,00', '12/11/2026')}
         ${fila('10/11/2026', 'Compra Super Dos, Valencia, Tarjeta', '-60,00', '-660,00', '09/11/2026')}</table>`;
       await subir(p, [{ name: 'santander.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, html) }]);
       const r = await p.evaluate(() => ({ n: IMP.res[0].movs.length, cuadra: IMP.res[0].cuadra, malos: IMP.res[0].malos, ini: IMP.res[0].saldoIni, m: IMP.res[0].movs.map(x => [x.fecha, x.importe]) }));
       assert.equal(r.n, 3, JSON.stringify(r)); assert.equal(r.malos, 0, JSON.stringify(r));
       assert.deepEqual(r.m, [['2026-11-10', -60], ['2026-11-12', 1000], ['2026-11-13', -20]]);
+      const c = await p.evaluate(() => IMP.rows.map(x => x.concepto + ' ' + x.detalle).join(' '));
+      assert.ok(!/4000123412341234/.test(c) && /…1234/.test(c), 'se quita el número de tarjeta: ' + c);
     })();
   },
   'lee un extracto tipo EVO y cuadra con el saldo'(browser, estado) {

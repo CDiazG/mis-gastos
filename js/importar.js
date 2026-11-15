@@ -54,7 +54,7 @@ function prepararRevision(res){
       const nomina=!m.cat&&!r.inversion&&esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
       const mes=mesPara({cat,nomina,fecha:m.fecha});
       const key=[r.cuenta,m.fecha,m.importe.toFixed(2),m.saldo!=null?m.saldo.toFixed(2):'',norm(m.concepto).trim().slice(0,24)].join('|');
-      rows.push({...m,concepto:mejorConcepto(m.concepto,m.detalle),i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
+      rows.push({...m,concepto:ocultarNumeros(mejorConcepto(m.concepto,m.detalle)),detalle:ocultarNumeros(m.detalle||''),i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
     });
   }
   const dobles=buscarDobles(rows);
