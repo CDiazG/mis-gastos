@@ -1,7 +1,7 @@
 // Fluvi · Pestañas Movimientos y Añadir
 "use strict";
 /* ============ Movimientos ============ */
-const F={q:'',cat:'',sinCat:false,todos:false,tag:''};
+const F={q:'',grupo:'',cat:'',sinCat:false,todos:false,tag:''};
 const SEL=new Set();
 function pagoOptions(sel){return S.cuentas.map(c=>`<option${c.n===sel?' selected':''}>${esc(c.n)}</option>`).join('')+`<option value="__efectivo"${sel==='__efectivo'?' selected':''}>Efectivo</option>`}
 // Separador por día: «Hoy», «Ayer» o «lunes 14 de noviembre» (con el año si no es este)
@@ -81,16 +81,18 @@ function preguntarOtra(x){
       if(!S.cuentas.some(c=>norm(c.n)===norm(nn)))S.cuentas.push({n:nn,v:null,f:null});x.otra=S.cuentas.find(c=>norm(c.n)===norm(nn)).n;save();$('#dlg').close();render();toast((sale?'Traspaso a ':'Traspaso desde ')+x.otra+'. Su saldo está en Patrimonio')};
     $('#otraOk').onclick=ok;$('#otraN').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ok()}};$('#otraN').focus()};
 }
-function irAlPar(x){const b=S.mov.find(y=>y.id===x.par);if(!b)return;MES=b.mes;F.q='';F.cat='';F.sinCat=false;F.tag='';F.todos=false;go('movs');
+function irAlPar(x){const b=S.mov.find(y=>y.id===x.par);if(!b)return;MES=b.mes;F.q='';F.grupo='';F.cat='';F.sinCat=false;F.tag='';F.todos=false;go('movs');
   setTimeout(()=>{const r=$(`#movTable tr[data-id="${b.id}"]`);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.classList.add('resalta');setTimeout(()=>r.classList.remove('resalta'),1600)}},80)}
 function cerrarPanelMov(){const d=$('#movPanel');if(d)d.remove()}
 function rMovs(){
+  $('#fGrp').innerHTML='<option value="">Todos los grupos</option>'+GROUPS.map(g=>`<option value="${g.id}"${F.grupo===g.id?' selected':''}>${esc(g.n)}</option>`).join('');
   $('#fCat').innerHTML=catOptions(F.cat,{blankText:'Todas las categorías'});
   $('#fSinCat').checked=F.sinCat;$('#fBuscar').value=F.q;
   pintarTagList();
   // al buscar se busca en todos los meses
   const qn=norm(F.q).trim(),buscaTodo=qn.length>=2&&!F.tag;
   let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):buscaTodo||F.todos&&F.cat?S.mov.slice():S.mov.filter(x=>x.mes===MES);
+  if(F.grupo){const ids=new Set(CATS.filter(c=>c.g===F.grupo).map(c=>c.id));if(F.grupo==='VARIABLES')ids.add('SINCAT');list=list.filter(x=>ids.has(x.cat)||KEEP.has(x.id))}
   if(F.cat)list=list.filter(x=>x.cat===F.cat||KEEP.has(x.id));
   if(F.sinCat)list=list.filter(x=>sinCatX(x)||KEEP.has(x.id));
   if(qn){list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')+' '+verConcepto(x)+' '+tagsDe(x).join(' ')).includes(qn))}
@@ -119,7 +121,7 @@ function rMovs(){
       <td><select class="cat">${catOptions(x.cat)}</select>${bs}</td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
-    :`<tr><td colspan="6" class="empty">${buscaTodo?`No encuentro «${esc(F.q)}» en ningún mes.`:`No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.`}${buscaTodo||F.cat||F.sinCat||F.q?'':'<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn sm pri" data-go="importar">Importar un extracto</button><button type="button" class="btn sm" data-go="efectivo">Añadir a mano</button></div>'}</td></tr>`;
+    :`<tr><td colspan="6" class="empty">${buscaTodo?`No encuentro «${esc(F.q)}» en ningún mes.`:`No hay movimientos${F.grupo||F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.`}${buscaTodo||F.cat||F.sinCat||F.q?'':'<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn sm pri" data-go="importar">Importar un extracto</button><button type="button" class="btn sm" data-go="efectivo">Añadir a mano</button></div>'}</td></tr>`;
   const tot=list.reduce((a,x)=>a+x.importe,0);
   const tb2=$('#tagBar');if(F.tag){const g=-list.reduce((a,x)=>a+(x.cat==='INGRESO'?0:x.importe),0);const fs=list.map(x=>x.fecha).sort();
     tb2.innerHTML=`<span class="tag tg">#${esc(F.tag)}</span><span class="small">${list.length} movimientos${fs.length?` · ${fFecha(fs[0])} – ${fFecha(fs[fs.length-1])}`:''} · <b>${eur(g)}</b> en total</span><span class="sp" style="flex:1"></span><button class="btn sm" type="button" id="tagQuitar">Quitar filtro</button>`;
@@ -133,7 +135,7 @@ function rMovs(){
       if(sig){const n=$(`#movTable tbody tr[data-id="${sig}"] .cat`);if(n)n.focus({preventScroll:false})}};
     $$('.sugbiz',tr).forEach(b=>b.onclick=e=>{e.stopPropagation();ponerCategoria(x,b.dataset.sug)});
     const tt=$('.tag.tras',tr);if(tt)tt.onclick=e=>{e.stopPropagation();if(x.par){irAlPar(x)}else preguntarOtra(x)};
-    $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.cat='';F.sinCat=false;rMovs()});
+    $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.grupo='';F.cat='';F.sinCat=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);
     // en el móvil, tocar la fila abre un panel para cambiar la categoría o editar
     tr.onclick=e=>{if(!esMovil()||e.target.closest('input,select,button,.tag.tg,a'))return;panelMov(x)};
@@ -155,6 +157,7 @@ $('#bulkTag').onclick=()=>{pintarTagList();dialog('Etiquetar '+SEL.size+' movimi
     conDeshacer(n+' movimientos con #'+t,()=>{for(const x of S.mov)if(SEL.has(x.id)&&!tagsDe(x).some(y=>norm(y)===norm(t)))x.tags=[...tagsDe(x),t];SEL.clear()})}}]);
   $$('#dlgB .chip[data-t]').forEach(b=>b.onclick=()=>{$('#btT').value=b.dataset.t})};
 $('#fBuscar').oninput=e=>{F.q=e.target.value;rMovs();$('#fBuscar').focus()};
+$('#fGrp').onchange=e=>{F.grupo=e.target.value;rMovs()};
 $('#fCat').onchange=e=>{F.cat=e.target.value;if(!F.cat)F.todos=false;rMovs()};
 $('#fSinCat').onchange=e=>{F.sinCat=e.target.checked;rMovs()};
 // Nómina: solo el ingreso de la nómina (no los Bizum ni otros ingresos) puede contar para el mes siguiente.

@@ -78,6 +78,9 @@ function rResumen(){
   const dz=diezmoMes(MES,st);
   const cmp=(id,v)=>{if(!hayAnt||!pref('comparar'))return '';const d=r2(v-(stAnt.by[id]||0));if(Math.abs(d)<1)return '';
     return ` · <span class="${d>0?'neg':'pos'}" title="Comparado con ${nombreMes(mAnt)}">${d>0?'▲':'▼'} ${eur(Math.abs(d),0)} vs ${MESES[+mAnt.slice(5)-1].slice(0,3)}</span>`};
+  {const rc=$('#recientes'),ult=st.ms.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)||(b.orden||0)-(a.orden||0)).slice(0,5);
+   rc.classList.toggle('hide',!ult.length);
+   rc.innerHTML=ult.length?`<div class="row" style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><b>Últimos movimientos</b><span style="flex:1"></span><button type="button" class="btn sm" data-go="movs">Ver todos</button></div>`+ult.map(x=>`<div class="crow" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)"><span class="grow" style="min-width:0"><span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(verConcepto(x))}</span><span class="small mut">${esc(fFecha(x.fecha))} · ${esc(x.cat==='SINCAT'||sinCatX(x)?'Sin categoría':catN(x.cat))}</span></span><span class="num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</span></div>`).join(''):''}
   $('#groups').innerHTML=GROUPS.map(g=>{
     const cs=CATS.filter(c=>c.g===g.id);
     const gp=cs.reduce((a,c)=>a+presupuestoCat(MES,c.id,st).p,0);

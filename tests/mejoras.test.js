@@ -14,6 +14,20 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'Movimientos por grupo y «Últimos movimientos» en el Resumen'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-11-02', 'ALQUILER', -600, 'VIVIENDA'], ['2026-11-03', 'CENA', -40, 'OCIO'], ['2026-11-04', 'NOMINA', 1500, 'INGRESO']], '2026-11');
+      await p.evaluate(() => { S.aj.primerosPasos = false; go('resumen'); });
+      await p.waitForSelector('#recientes:not(.hide) .crow');
+      assert.equal(await p.locator('#recientes .crow').count(), 3);
+      assert.match(await p.textContent('#recientes .crow >> nth=0'), /Nómina|NOMINA/i);
+      await p.evaluate(() => go('movs')); await p.waitForSelector('#fGrp');
+      await p.selectOption('#fGrp', 'FIJOS');
+      const filas = await p.evaluate(() => [...document.querySelectorAll('#movTable tr')].map(t => t.textContent));
+      assert.ok(filas.some(t => /ALQUILER/i.test(t)) && !filas.some(t => /CENA/i.test(t)), JSON.stringify(filas));
+    })();
+  },
   'fichas del Resumen: al abrir y cerrar no queda ninguna animación repitiéndose'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
