@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.50.0';
+const VERSION='2.50.1';
 const CAMBIOS=[
+ {v:'2.50.1',f:'2026-11-15',c:['En una cuenta nueva, el Resumen ya no repite dos veces que importes un extracto']},
  {v:'2.50.0',f:'2026-11-15',c:['Si un mes no tiene movimientos, te ofrece importar un extracto o añadir a mano','En el móvil los botones pequeños son más fáciles de pulsar']},
  {v:'2.49.1',f:'2026-11-15',c:['Se leen también las fechas con el mes escrito («16 nov 2026»)']},
  {v:'2.49.0',f:'2026-11-15',c:['Nuevo ajuste «Letra más grande» para leer mejor','Se ve claramente dónde está el cursor al moverte con el teclado','Los avisos los leen los lectores de pantalla']},
