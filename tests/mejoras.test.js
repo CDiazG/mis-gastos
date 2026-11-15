@@ -14,6 +14,14 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'reducir movimiento: sin desplazamientos pero con cambios suaves de color'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado, { reducedMotion: 'reduce' });
+      const r = await p.evaluate(() => { const b = document.querySelector('.btn'); const cs = getComputedStyle(b); return { tp: cs.transitionProperty, dur: cs.transitionDuration, anim: [...document.querySelectorAll('main section.on, .card')].slice(0, 5).map(e => getComputedStyle(e).animationName) }; });
+      assert.ok(!/transform|all/.test(r.tp), r.tp); assert.ok(/background-color/.test(r.tp), r.tp); assert.ok(parseFloat(r.dur) > 0, 'duración ' + r.dur);
+      assert.ok(r.anim.every(a => a === 'none'), JSON.stringify(r.anim));
+    })();
+  },
   'suscripciones: avisa de las nuevas y de las que suben de precio'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

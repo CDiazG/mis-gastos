@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.45.0';
+const VERSION='2.45.1';
 const CAMBIOS=[
+ {v:'2.45.1',f:'2026-11-15',c:['Si tienes activado «reducir movimiento» en tu dispositivo, la app quita los desplazamientos pero mantiene los cambios suaves de color y los fundidos']},
  {v:'2.45.0',f:'2026-11-15',c:['Resumen: aviso de suscripciones nuevas y de las que suben de precio (categoría Suscripciones)']},
  {v:'2.44.1',f:'2026-11-15',c:['Menú del perfil: «Guardar copia de seguridad» a un toque, desde cualquier pantalla']},
  {v:'2.44.0',f:'2026-11-15',c:['Privacidad: al importar un extracto se quitan los números de tarjeta de los conceptos (solo quedan las 4 últimas cifras)','Ajustes → Copias: botón «Quitar números de tarjeta» para limpiar lo que ya tenías guardado']},

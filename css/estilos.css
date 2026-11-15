@@ -383,7 +383,7 @@ main>section.on{animation:aparecer .22s ease-out}
 @keyframes fundido{from{opacity:0}to{opacity:1}}
 @keyframes llenar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes subir{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after,details::details-content{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after,details::details-content{animation:none!important}details::details-content{transition:none!important}}
 
 .legend i.lin{background:var(--ink);height:3px;border-radius:2px;width:16px;vertical-align:3px}
 #mHoy.oculto{visibility:hidden}
@@ -1476,3 +1476,9 @@ dialog.cerrando::backdrop{animation:fundidoOut .17s ease-out forwards}
 details.icard[open]>:not(summary),details.diacard[open]>:not(summary),details.faq[open]>:not(summary),details.masav[open]>:not(summary),details.cartera[open]>:not(summary),details.impmas[open]>:not(summary){animation:none}
 /* 2.43.6 · el plegado lo anima el script: se quita la transición nativa de <details>, que repetía el cierre (parpadeo) */
 details.icard::details-content,details.diacard::details-content,details.faq::details-content,details.masav::details-content,details.cartera::details-content,details.impmas::details-content{transition:none}
+/* 2.45 · «reducir movimiento»: se quita el movimiento, pero los cambios suaves de color y los fundidos se mantienen */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-property:color,background-color,border-color,opacity,box-shadow!important}
+  dialog[open]{animation:fundido .15s ease-out!important}
+  dialog[open]::backdrop{animation:fundido .15s ease-out!important}
+}
