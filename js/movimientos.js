@@ -38,11 +38,12 @@ function ofrecerMismos(x,c,lista,aplicar){
 const mismosSinCat=(x,lista)=>lista.filter(y=>y!==x&&sinCatX(y)&&!y.par&&norm(y.concepto)===norm(x.concepto)&&Math.sign(y.importe)===Math.sign(x.importe));
 // Efectivo: una retirada no es gasto hasta que se gasta. Se pregunta si ya se ha gastado y el Resumen avisa de lo que queda sin justificar.
 function efectivoMes(m){
-  let ret=0,gas=0;
-  for(const x of S.mov){if(x.mes!==m||x.importe>=0)continue;
+  let ret=0,gas=0,ent=0;
+  for(const x of S.mov){if(x.mes!==m)continue;
+    if(x.importe>0){if(x.metodo==='efectivo'&&x.cat==='PRESTAMO')ent+=x.importe;continue}
     if(x.cat==='EFECTIVO'&&x.metodo!=='efectivo')ret-=x.importe;
     else if(x.metodo==='efectivo'&&x.cat!=='EFECTIVO'&&x.cat!=='TRASPASO')gas-=x.importe}
-  return {ret:r2(ret),gas:r2(gas),resto:r2(ret-gas)}
+  return {ret:r2(ret),ent:r2(ent),gas:r2(gas),resto:r2(ret+ent-gas)}
 }
 function apuntarEfectivoGastado(max,fecha,titulo,intro){
   const def=ALLC.some(c=>c.id==='OTROS')?'OTROS':'';

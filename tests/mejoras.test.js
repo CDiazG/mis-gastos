@@ -92,7 +92,9 @@ module.exports = {
       await p.fill('#efImp', '40');
       await p.click('#dlgF .pri');
       const e = await p.evaluate(() => efectivoMes('2026-10'));
-      assert.deepEqual(e, { ret: 100, gas: 50, resto: 50 });
+      assert.deepEqual(e, { ret: 100, ent: 0, gas: 50, resto: 50 });
+      await p.evaluate(() => { S.mov.push({ id: 'pd1', fecha: '2026-10-06', mes: '2026-10', concepto: 'Devolución préstamo Ana', importe: 20, cat: 'PRESTAMO', persona: 'Ana', metodo: 'efectivo', cuenta: '', origen: 'manual' }); });
+      assert.deepEqual(await p.evaluate(() => efectivoMes('2026-10')), { ret: 100, ent: 20, gas: 50, resto: 70 });
       await p.evaluate(() => go('resumen'));
       assert.match(await p.textContent('#alerts'), /Efectivo sin justificar/);
     })();
