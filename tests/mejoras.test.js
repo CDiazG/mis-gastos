@@ -14,6 +14,19 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'categorizar con «solo sin categoría»: el movimiento se queda a la vista y el foco pasa al siguiente'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'TIENDA UNO', -12, ''], ['2026-10-04', 'TIENDA DOS', -8, '']]);
+      await p.evaluate(() => { F.sinCat = true; F.cat = ''; go('movs'); });
+      await p.waitForSelector('#movTable select.cat');
+      assert.equal(await p.locator('#movTable tbody tr[data-id]').count(), 2);
+      await p.selectOption('#movTable tbody tr[data-id] >> nth=0 >> select.cat', 'TRANSPORTE');
+      await p.waitForTimeout(300);
+      assert.equal(await p.locator('#movTable tbody tr[data-id]').count(), 2, 'sigue a la vista');
+      assert.ok(await p.evaluate(() => { const a = document.activeElement; return a && a.classList.contains('cat') && a.closest('tr') === document.querySelectorAll('#movTable tbody tr[data-id]')[1]; }), 'foco en el siguiente');
+    })();
+  },
   'Añadir: retirada de efectivo a mano (desde una cuenta) y pregunta si ya se gastó'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

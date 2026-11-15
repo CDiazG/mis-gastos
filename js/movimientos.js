@@ -56,7 +56,14 @@ function apuntarEfectivoGastado(max,fecha,titulo,intro){
       const c=$('#efCat').value;
       conDeshacer('Efectivo apuntado: '+eur(v),()=>{const x={id:uid(),fecha,mes:mesDe(fecha),concepto:'Efectivo gastado',importe:-v,cat:c,metodo:'efectivo',cuenta:'',origen:'manual'};S.mov.push(x)})}}]);
 }
+// Al categorizar con un filtro puesto, el movimiento se queda unos segundos a la vista (para ver qué has hecho y poder corregirlo)
+const KEEP=new Map();
+function mantener(id){clearTimeout(KEEP.get(id));
+  const t=()=>{const a=document.activeElement;if(a&&a.matches&&a.matches('#movTable select'))return KEEP.set(id,setTimeout(t,3000)); // sin quitarle la lista de las manos
+    KEEP.delete(id);rMovs()};
+  KEEP.set(id,setTimeout(t,6000))}
 function ponerCategoria(x,c){
+  if(F.cat||F.sinCat)mantener(x.id);
   const antes=sinCatX(x)?'sin categoría':catN(x.cat),cn=String(x.concepto||'').slice(0,26);
   conDeshacer('«'+cn+'»: '+antes+' → '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()},12000);
   if(c==='TRASPASO'&&!x.par&&x.otra===undefined)setTimeout(()=>preguntarOtra(x),60);
@@ -84,8 +91,8 @@ function rMovs(){
   // al buscar se busca en todos los meses
   const qn=norm(F.q).trim(),buscaTodo=qn.length>=2&&!F.tag;
   let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):buscaTodo||F.todos&&F.cat?S.mov.slice():S.mov.filter(x=>x.mes===MES);
-  if(F.cat)list=list.filter(x=>x.cat===F.cat);
-  if(F.sinCat)list=list.filter(sinCatX);
+  if(F.cat)list=list.filter(x=>x.cat===F.cat||KEEP.has(x.id));
+  if(F.sinCat)list=list.filter(x=>sinCatX(x)||KEEP.has(x.id));
   if(qn){list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')+' '+verConcepto(x)+' '+tagsDe(x).join(' ')).includes(qn))}
   list.sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.orden??0)-(b.orden??0));
   for(const id of [...SEL])if(!list.some(x=>x.id===id))SEL.delete(id);
@@ -120,7 +127,9 @@ function rMovs(){
   $('#s-movs').classList.toggle('buscando',buscaTodo);
   $$('#movTable tbody tr[data-id]').forEach(tr=>{
     const id=tr.dataset.id,x=S.mov.find(m=>m.id===id);
-    $('.cat',tr).onchange=e=>ponerCategoria(x,e.target.value);
+    $('.cat',tr).onchange=e=>{let sg=tr.nextElementSibling;while(sg&&!sg.dataset.id)sg=sg.nextElementSibling;const sig=sg&&sg.dataset.id;ponerCategoria(x,e.target.value);
+      // con el teclado: se pasa solo a la categoría del siguiente movimiento
+      if(sig){const n=$(`#movTable tbody tr[data-id="${sig}"] .cat`);if(n)n.focus({preventScroll:false})}};
     $$('.sugbiz',tr).forEach(b=>b.onclick=e=>{e.stopPropagation();ponerCategoria(x,b.dataset.sug)});
     const tt=$('.tag.tras',tr);if(tt)tt.onclick=e=>{e.stopPropagation();if(x.par){irAlPar(x)}else preguntarOtra(x)};
     $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.cat='';F.sinCat=false;rMovs()});

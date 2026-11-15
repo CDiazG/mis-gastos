@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.42.2';
+const VERSION='2.42.3';
 const CAMBIOS=[
+ {v:'2.42.3',f:'2026-11-15',c:['Categorizar: con un filtro puesto, el movimiento se queda a la vista unos segundos tras cambiarle la categoría','Categorizar con el teclado: al elegir la categoría, el cursor pasa solo al siguiente movimiento']},
  {v:'2.42.2',f:'2026-11-15',c:['Efectivo: lo que te devuelven de un préstamo en efectivo ya cuenta en el aviso de efectivo sin justificar']},
  {v:'2.42.1',f:'2026-11-15',c:['Importar PDF: se leen bien los extractos que traen lo más reciente arriba y una línea de saldo a fecha de hoy en la cabecera (Santander)']},
  {v:'2.42.0',f:'2026-11-15',c:['Préstamos: botón «Todo devuelto» para apuntar de una vez la devolución de varias personas']},
