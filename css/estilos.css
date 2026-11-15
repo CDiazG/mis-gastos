@@ -1488,3 +1488,6 @@ details.icard::details-content,details.diacard::details-content,details.faq::det
 /* Accesibilidad: letra grande opcional y foco visible con teclado */
 html.letragrande{zoom:1.15}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* Móvil: zonas táctiles de al menos 44 px */
+@media (pointer:coarse){.btn.sm,.btn.icon,.tab,.evseg button{min-height:44px;min-width:44px}}

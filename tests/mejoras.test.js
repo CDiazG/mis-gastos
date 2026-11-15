@@ -14,6 +14,14 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'mes sin movimientos: ofrece importar o añadir a mano'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => go('movs'));
+      await p.waitForSelector('#movTable [data-go="importar"]', { state: 'attached' });
+      assert.equal(await p.locator('#movTable [data-go="efectivo"]').count(), 1);
+    })();
+  },
   'letra más grande: opcional, apagada por defecto, y el foco con teclado se ve'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

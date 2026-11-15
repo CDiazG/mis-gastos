@@ -119,7 +119,7 @@ function rMovs(){
       <td><select class="cat">${catOptions(x.cat)}</select>${bs}</td>
       <td class="r num ${x.importe>0?'pos':''}">${x.importe>0?'+':''}${eur(x.importe)}</td>
       <td><button class="btn sm icon edit" title="Editar">✎</button></td></tr>`}).join('')
-    :`<tr><td colspan="6" class="empty">${buscaTodo?`No encuentro «${esc(F.q)}» en ningún mes.`:`No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.`}</td></tr>`;
+    :`<tr><td colspan="6" class="empty">${buscaTodo?`No encuentro «${esc(F.q)}» en ningún mes.`:`No hay movimientos${F.cat||F.sinCat||F.q?' con este filtro':' en '+nombreMes(MES)}.`}${buscaTodo||F.cat||F.sinCat||F.q?'':'<div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button type="button" class="btn sm pri" data-go="importar">Importar un extracto</button><button type="button" class="btn sm" data-go="efectivo">Añadir a mano</button></div>'}</td></tr>`;
   const tot=list.reduce((a,x)=>a+x.importe,0);
   const tb2=$('#tagBar');if(F.tag){const g=-list.reduce((a,x)=>a+(x.cat==='INGRESO'?0:x.importe),0);const fs=list.map(x=>x.fecha).sort();
     tb2.innerHTML=`<span class="tag tg">#${esc(F.tag)}</span><span class="small">${list.length} movimientos${fs.length?` · ${fFecha(fs[0])} – ${fFecha(fs[fs.length-1])}`:''} · <b>${eur(g)}</b> en total</span><span class="sp" style="flex:1"></span><button class="btn sm" type="button" id="tagQuitar">Quitar filtro</button>`;
