@@ -14,6 +14,18 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'fichas del histórico: al cerrar no queda ninguna transición pendiente que repita el plegado'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'TIENDA UNO', -12, 'TRANSPORTE'], ['2026-10-06', 'NOMINA', 1500, 'INGRESO']]);
+      await p.evaluate(() => go('hist')); await p.waitForSelector('#evoCards details.icard[open]');
+      await p.click('#evoCards details.icard >> nth=0 >> summary');
+      await p.waitForTimeout(290);
+      const r = await p.evaluate(() => { const d = document.querySelector('#evoCards details.icard'); return { abierta: d.open, tr: getComputedStyle(d, '::details-content').transitionDuration, anim: d.getAnimations({ subtree: true }).filter(a => a.playState === 'running').length }; });
+      assert.equal(r.abierta, false);
+      assert.match(r.tr, /^0s/, 'transición nativa: ' + r.tr);
+    })();
+  },
   'fichas del histórico: al abrir y cerrar no se repite la animación (sin parpadeo)'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

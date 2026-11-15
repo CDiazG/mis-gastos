@@ -1474,3 +1474,5 @@ dialog.cerrando::backdrop{animation:fundidoOut .17s ease-out forwards}
 @media (max-width:640px){header .top{gap:6px}header .monthnav{min-width:0;flex:1 1 auto}header .monthnav .m{min-width:0}}
 /* 2.43.3 · fichas desplegables: la animación de abrir/cerrar la lleva el script; la antigua de entrada se quita (si no, se repetía al acabar y parpadeaba) */
 details.icard[open]>:not(summary),details.diacard[open]>:not(summary),details.faq[open]>:not(summary),details.masav[open]>:not(summary),details.cartera[open]>:not(summary),details.impmas[open]>:not(summary){animation:none}
+/* 2.43.6 · el plegado lo anima el script: se quita la transición nativa de <details>, que repetía el cierre (parpadeo) */
+details.icard::details-content,details.diacard::details-content,details.faq::details-content,details.masav::details-content,details.cartera::details-content,details.impmas::details-content{transition:none}
