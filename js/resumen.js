@@ -46,9 +46,18 @@ function rResumen(){
    if(fx.length)al.push(`<div class="alert"><span class="grow"><b>Gastos fijos:</b> ${fx.map(f=>f.estado==='falta'?`${esc(f.f.nombre)} no ha llegado`:`${esc(f.f.nombre)} ha cambiado (${eur(f.pagado)} en vez de ${eur(f.f.importe)})`).join(' · ')}</span></div>`)}
   {const e=efectivoMes(MES);if(e.ret>0&&e.resto>0.5&&!(S.aj.efeOk||{})[MES])al.push(`<div class="alert info"><span class="grow"><b>Efectivo sin justificar:</b> sacaste ${eur(e.ret,0)}${e.ent>0?` y te devolvieron ${eur(e.ent,0)} en efectivo`:''} y has apuntado ${eur(e.gas,0)}; quedan ${eur(e.resto,0)}.</span><button class="btn sm" data-act="efe">Añadir gasto en efectivo</button><button class="btn sm" data-act="efeok">Lo guardo</button></div>`)}
   if(!st.ms.length)al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
+  // Primeros pasos: solo cuentas nuevas; se quita solo al hacer lo básico (o con «Ocultar»)
+  if(S.aj.primerosPasos===true){const n=S.mov.length,sin=S.mov.filter(sinCatX).length;
+    if(n&&!sin){S.aj.primerosPasos=false;save();toast('¡Listo! Ya tienes lo básico')}
+    else al.unshift(`<div class="alert info" id="pasos" style="display:block"><b>Primeros pasos</b><ol class="small" style="margin:6px 0 8px;padding-left:20px;line-height:1.6">
+      <li>${n?'✓ ':''}<b>Mete tus movimientos:</b> importa el extracto del banco o añade uno a mano. ${n?'':'<button class="btn sm pri" data-act="imp">Importar extracto</button> <button class="btn sm" data-act="ana">Añadir a mano</button>'}</li>
+      <li>${n&&!sin?'✓ ':''}<b>Ponles categoría:</b> la app sugiere casi todas; tú confirmas las que falten. ${n&&sin?`<button class="btn sm pri" data-act="sincat">Categorizar ${sin}</button>`:''}</li>
+      <li><b>Mira el Resumen:</b> aquí verás en qué se va tu dinero este mes.</li></ol><button class="btn sm" data-act="ppok">Ocultar esto</button></div>`)}
   $('#alerts').innerHTML=al.length>2?al.slice(0,1).join('')+`<details class="masav"><summary>${al.length-1} avisos más</summary><div class="alerts" style="margin-top:8px">${al.slice(1).join('')}</div></details>`:al.join('');
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
+    if(a==='ana')go('efectivo');
+    if(a==='ppok'){S.aj.primerosPasos=false;save();rResumen()}
     if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
     if(a==='copia')exportar();
     if(a==='imp')go('importar');

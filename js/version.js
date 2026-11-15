@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.43.0';
+const VERSION='2.43.1';
 const CAMBIOS=[
+ {v:'2.43.1',f:'2026-11-15',c:['Cuentas nuevas: en el Resumen sale una guía de «Primeros pasos» (meter movimientos, categorizarlos, mirar el Resumen) que se quita sola']},
  {v:'2.43.0',f:'2026-11-15',c:['Buscador: la lupa de arriba (o la tecla /) busca a la vez en tus movimientos, categorías, ajustes y preguntas frecuentes']},
  {v:'2.42.3',f:'2026-11-15',c:['Categorizar: con un filtro puesto, el movimiento se queda a la vista unos segundos tras cambiarle la categoría','Categorizar con el teclado: al elegir la categoría, el cursor pasa solo al siguiente movimiento']},
  {v:'2.42.2',f:'2026-11-15',c:['Efectivo: lo que te devuelven de un préstamo en efectivo ya cuenta en el aviso de efectivo sin justificar']},

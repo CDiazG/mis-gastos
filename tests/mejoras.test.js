@@ -14,6 +14,25 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'primeros pasos: salen en cuentas nuevas y se quitan solos al tener movimientos categorizados'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => go('resumen')); await p.waitForSelector('#pasos');
+      assert.match(await p.textContent('#pasos'), /Mete tus movimientos/);
+      await meter(p, [['2026-10-05', 'TIENDA UNO', -12, 'TRANSPORTE']]);
+      await p.evaluate(() => go('resumen')); await p.waitForTimeout(300);
+      assert.equal(await p.locator('#pasos').count(), 0);
+      assert.equal(await p.evaluate(() => S.aj.primerosPasos), false);
+    })();
+  },
+  'primeros pasos: una cuenta que ya existía no los ve'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => { delete S.aj.primerosPasos; const d = defState(); for (const k in d.aj) if (S.aj[k] === undefined && k !== 'diezmo' && k !== 'paleta' && k !== 'primerosPasos') S.aj[k] = d.aj[k]; save(); go('resumen'); });
+      await p.waitForTimeout(300);
+      assert.equal(await p.locator('#pasos').count(), 0);
+    })();
+  },
   'buscador único: movimientos, categorías y ajustes'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
