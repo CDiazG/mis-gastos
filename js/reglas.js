@@ -56,7 +56,7 @@ function sugerirBizum(x){
   const o=catDisponible('OCIO');return o?{c:o,por:'los Bizum suelen ser para ajustar una cena o una comida'}:null;
 }
 // Botón de la sugerencia (en Movimientos, en el panel del móvil y en Importar)
-const botonSug=s=>s?`<button type="button" class="btn sm sugbiz" data-sug="${s.c}" title="Sugerencia: ${esc(s.por)}">✓ ${esc(catN(s.c))}</button>`:'';
+const botonSug=s=>s?`<button type="button" class="btn sm sugbiz" data-sug="${s.c}" title="Sugerencia: ${esc(s.por)}">✓ ${catI(s.c)}${esc(catN(s.c))}</button>`:'';
 const STOP=new Set(['RECIB','TRANS','TRANSF','TRANSFERENCIA','COMPRA','TARJ','TARJETA','PAGO','CON','EN','DE','DEL','LA','EL','LOS','LAS','WWW','COM','ES','SL','SA','SP','Y','A']);
 function learnKey(desc){
   if(isBizum(desc)){const n=norm(desc).trim().replace(/^PAGO /,'');return n.split(' ').slice(0,5).join(' ')}
