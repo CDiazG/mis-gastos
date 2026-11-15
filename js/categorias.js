@@ -67,7 +67,7 @@ function refreshCats(){
   CATS=S.cats.filter(c=>c.id!=='DIEZMO'||diezmoOn()).map(c=>({...c}));ALLC=[...CATS,...SPECIAL];CONSUMO=CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id);
 }
 const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-const MABR={ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,sept:9,set:9,oct:10,nov:11,dic:12};
+const MABR={jan:1,apr:4,aug:8,dec:12,ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,sept:9,set:9,oct:10,nov:11,dic:12};
 
 // Comercios habituales en España (por categoría de serie). Solo entran en cuentas nuevas o al pulsar «Añadir comercios habituales» en Ajustes → Reglas; nunca pisan las reglas del usuario
 const COMERCIOS_COMUNES=[

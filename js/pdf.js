@@ -30,13 +30,19 @@ async function pdfLines(buf){
   return {lines,text:lines.map(l=>l.t.map(t=>t.s).join(' ')).join('\n')};
 }
 const RD=/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/;
-const RA=/^[-−+]?(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}(?:€|EUR)?-?$/;
+const RA=/^[-−+]?(?:\d{1,3}(?:[.,]\d{3})+|\d+)[.,]\d{2}(?:€|EUR)?-?$/;
 const isAmt=s=>RA.test(s);
-function amt(s){const neg=/^[-−]/.test(s)||/-$/.test(s);s=s.replace(/[-−+€]|EUR/g,'').replace(/\./g,'').replace(',','.');return (neg?-1:1)*parseFloat(s)}
+// Palabras que casi siempre indican dinero que entra
+const SUENA_ABONO=/ (NOMINA|INGRESO|ABONO|DEVOLUCION|TRANSFERENCIA (DE|RECIBIDA)|BIZUM (DE|RECIBIDO)|TRASPASO (DE|RECIBIDO)|INTERESES|REEMBOLSO|PENSION|PRESTACION) /;
+function amt(s){const neg=/^[-−]/.test(s)||/-$/.test(s);s=s.replace(/[-−+€]|EUR/g,'');
+  const d=s.length-3; // el separador antes de los 2 decimales es el decimal; los demás, de miles
+  s=s.slice(0,d).replace(/[.,]/g,'')+'.'+s.slice(d+1);return (neg?-1:1)*parseFloat(s)}
 function dateAt(t,i){
   const a=t[i]?.s;if(!a)return null;
   let m=a.match(RD);
   if(m){let y=+m[3];if(y<100)y+=2000;return {f:`${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`,n:1}}
+  if((m=a.match(/^(\d{4})-(\d{2})-(\d{2})$/)))return {f:a,n:1};
+  if((m=a.match(/^(\d{1,2})[-\/.]([A-Za-zÁÉÍÓÚáéíóú]{3,4})\.?[-\/.](\d{2,4})$/))){const mo=MABR[m[2].toLowerCase().replace('.','')];if(mo){let y=+m[3];if(y<100)y+=2000;return {f:`${y}-${String(mo).padStart(2,'0')}-${m[1].padStart(2,'0')}`,n:1}}}
   if(/^\d{1,2}$/.test(a)&&t[i+1]&&t[i+2]){
     const mo=MABR[t[i+1].s.toLowerCase().replace('.','')];const y=t[i+2].s;
     if(mo&&/^\d{4}$/.test(y))return {f:`${y}-${String(mo).padStart(2,'0')}-${a.padStart(2,'0')}`,n:3};
@@ -165,11 +171,11 @@ function parseStatementBase({lines,text}){
     const t=l.t;const txt=t.map(x=>x.s).join(' ');const nn=norm(txt);const compact=nn.replace(/ /g,'');
     const amts=t.filter(x=>isAmt(x.s));
     // cabecera de columnas
-    if(compact.includes('SALDO')&&/CARGO|DEBE|IMPORTE|SALIENTE|ENTRANTE|ABONO|HABER/.test(compact)&&!dateAt(t,0)&&!amts.length){
+    if((compact.includes('SALDO')||/(CARGO|DEBE|SALIDA).*(ABONO|HABER|ENTRADA)/.test(compact))&&/CARGO|DEBE|IMPORTE|SALIENTE|ENTRANTE|ABONO|HABER/.test(compact)&&!dateAt(t,0)&&!amts.length){
       const c={};
       for(const x of t){const u=norm(x.s).trim();
-        if(/^(CARGOS?|DEBE|SALIENTE|RETIRADAS?)$/.test(u))c.cargo=center(x);
-        else if(/^(ABONOS?|HABER|ENTRANTE|INGRESOS?)$/.test(u))c.abono=center(x);
+        if(/^(CARGOS?|DEBE|SALIENTE|RETIRADAS?)$/.test(u))c.cargo=[x.x,x.x+x.w];
+        else if(/^(ABONOS?|HABER|ENTRANTE|INGRESOS?)$/.test(u))c.abono=[x.x,x.x+x.w];
         else if(/^SALDO$/.test(u))c.saldo=center(x);
         else if(/^IMPORTE$/.test(u))c.importe=center(x);}
       if(c.cargo||c.abono||c.importe)cols=c;
@@ -197,12 +203,17 @@ function parseStatementBase({lines,text}){
       let imp=Math.abs(amt(impTok.s));let signed=null;
       if(/^[-−]|-$/.test(impTok.s))signed=-imp;
       if(signed==null&&cols){
-        const cx=center(impTok);const dc=cols.cargo!=null?Math.abs(cx-cols.cargo):1e9,da=cols.abono!=null?Math.abs(cx-cols.abono):1e9;
-        if(dc<1e9||da<1e9)signed=dc<=da?-imp:imp;
+        // columna más cercana (los importes suelen ir alineados a la derecha y las cabeceras a la izquierda, así que se mide el hueco entre tramos)
+        const gap=iv=>iv?Math.max(0,iv[0]-(impTok.x+impTok.w),impTok.x-iv[1]):1e9;
+        const dc=gap(cols.cargo),da=gap(cols.abono);
+        if(cols.cargo&&cols.abono){ // con las dos columnas: lo que acaba antes de que empiece la segunda es de la primera
+          const cargoIzq=cols.cargo[0]<cols.abono[0],R=cargoIzq?cols.abono:cols.cargo,enIzq=impTok.x+impTok.w<=R[0]+2;
+          signed=(enIzq===cargoIzq)?-imp:imp;
+        }else if(dc<1e9||da<1e9)signed=dc<=da?-imp:imp;
       }
       let chk=null;
       if(saldo!=null&&prev!=null){const diff=r2(saldo-prev);if(Math.abs(Math.abs(diff)-imp)<0.011){signed=diff<0?-imp:imp;chk=true}else chk=false}
-      if(signed==null)signed=-imp;
+      if(signed==null)signed=SUENA_ABONO.test(norm(desc))?imp:-imp; // sin signo, saldo ni columnas: se adivina por el concepto
       const m={fecha:d.f,concepto:desc.trim()||'(sin concepto)',detalle:'',importe:r2(signed),saldo,ref,chk};
       movs.push(m);last=m;lastY=l.y;cont=0;if(saldo!=null)prev=saldo;
       if(saldoIni==null&&saldo!=null)saldoIni=r2(saldo-signed);
