@@ -182,10 +182,12 @@ function numFlexible(s){
   const v=parseFloat(s);return isFinite(v)?(neg?-v:v):NaN;
 }
 // Fechas «31/10/2026», «31-10-26», «2026-10-31», o número de serie de Excel
+const MESES_TXT=['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
 function fechaFlexible(s){
   s=String(s||'').trim();let m;
   if((m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/))){let y=+m[3];if(y<100)y+=2000;return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`}
   if((m=s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})/)))return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  if((m=s.match(/^(\d{1,2})\s*(?:de\s+)?([a-záéíóú]{3,10})\.?\s*(?:de\s+)?(\d{2,4})/i))){const i=MESES_TXT.indexOf(norm(m[2]).trim().slice(0,3));if(i>=0){let y=+m[3];if(y<100)y+=2000;return `${y}-${String(i+1).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`}}
   if(/^\d{5}(\.\d+)?$/.test(s)){const n=+s;if(n>30000&&n<80000){const d=new Date(Date.UTC(1899,11,30)+Math.floor(n)*864e5);return d.toISOString().slice(0,10)}}
   return null;
 }

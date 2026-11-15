@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.49.0';
+const VERSION='2.49.1';
 const CAMBIOS=[
+ {v:'2.49.1',f:'2026-11-15',c:['Se leen también las fechas con el mes escrito («16 nov 2026»)']},
  {v:'2.49.0',f:'2026-11-15',c:['Nuevo ajuste «Letra más grande» para leer mejor','Se ve claramente dónde está el cursor al moverte con el teclado','Los avisos los leen los lectores de pantalla']},
  {v:'2.48.0',f:'2026-11-15',c:['Si el banco indica el importe en otra moneda (dólares, libras…), se muestra junto al movimiento','Las suscripciones en otra moneda ya no dan falsos avisos de subida']},
  {v:'2.47.1',f:'2026-11-15',c:['Movimientos: botón «A medias…» en un gasto. Tu parte se queda como gasto y la de la otra persona pasa a Préstamos, para ver quién te debe']},
