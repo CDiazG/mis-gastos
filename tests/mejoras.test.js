@@ -14,6 +14,18 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'fichas del histórico: al abrir y cerrar no se repite la animación (sin parpadeo)'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-10-05', 'TIENDA UNO', -12, 'TRANSPORTE'], ['2026-10-06', 'NOMINA', 1500, 'INGRESO']]);
+      await p.evaluate(() => { go('hist'); }); await p.waitForSelector('#evoCards details.icard');
+      await p.evaluate(() => { const d = document.querySelector('#evoCards details.icard'); d.open = false; });
+      await p.click('#evoCards details.icard >> nth=0 >> summary');
+      await p.waitForTimeout(380);
+      const n = await p.evaluate(() => document.querySelector('#evoCards details.icard').querySelectorAll(':scope > :not(summary)').length && [...document.querySelectorAll('#evoCards details.icard')[0].children].filter(c => c.tagName !== 'SUMMARY').reduce((a, c) => a + c.getAnimations().length, 0));
+      assert.equal(n, 0, 'sigue habiendo animación después de abrir: ' + n);
+    })();
+  },
   'primeros pasos: salen en cuentas nuevas y se quitan solos al tener movimientos categorizados'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
