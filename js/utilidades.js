@@ -105,4 +105,4 @@ document.addEventListener('click',e=>{
   if(!sm||e.target.closest('a,button,input,select'))return;
   const d=sm.parentNode,hs=[...d.children].filter(c=>c!==sm);
   if(d.open){if(!animOn())return;e.preventDefault();if(d._cierra)return;d._cierra=1;cerrarAnim(hs,()=>{d.open=false;d._cierra=0})}
-  else setTimeout(()=>abrirAnim(hs),0)});
+  else if(animOn()){e.preventDefault();d.open=true;abrirAnim(hs)}}); // se abre y se anima en el mismo instante: así no parpadea el contenido entero antes de empezar
