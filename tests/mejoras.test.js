@@ -14,6 +14,13 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'letra más grande: opcional, apagada por defecto, y el foco con teclado se ve'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const r = await p.evaluate(() => { const antes = document.documentElement.classList.contains('letragrande'); S.aj.letraGrande = true; aplicarTema(); const z = getComputedStyle(document.documentElement).zoom; S.aj.letraGrande = false; aplicarTema(); return { antes, z, hay: pref('letraGrande'), live: document.querySelector('#toast').getAttribute('aria-live') }; });
+      assert.equal(r.antes, false); assert.equal(r.z, '1.15'); assert.equal(r.hay, false); assert.equal(r.live, 'polite');
+    })();
+  },
   'gasto a medias: tu parte queda como gasto y la del otro como préstamo a su nombre'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
