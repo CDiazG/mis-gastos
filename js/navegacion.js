@@ -215,6 +215,7 @@ function pintarCuenta(){if(!USER)return;$('#uName').textContent=USER.nombre;$('#
 function cerrarCuenta(){$('#cuentaMenu').classList.add('hide');$('#uWho').setAttribute('aria-expanded','false')}
 $('#uWho').onclick=e=>{e.stopPropagation();const h=$('#cuentaMenu').classList.toggle('hide');$('#uWho').setAttribute('aria-expanded',!h)};
 $$('#cuentaMenu [data-cm]').forEach(b=>b.onclick=()=>{cerrarCuenta();go(b.dataset.cm)});
+$('#cmCopia').onclick=()=>{cerrarCuenta();exportar()};
 document.addEventListener('click',e=>{if(!e.target.closest('#userbox'))cerrarCuenta()});
 
 // Altura real de la cabecera (para que la barra de vistas se pegue justo debajo, sin hueco)

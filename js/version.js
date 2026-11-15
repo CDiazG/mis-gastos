@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.44.0';
+const VERSION='2.44.1';
 const CAMBIOS=[
+ {v:'2.44.1',f:'2026-11-15',c:['Menú del perfil: «Guardar copia de seguridad» a un toque, desde cualquier pantalla']},
  {v:'2.44.0',f:'2026-11-15',c:['Privacidad: al importar un extracto se quitan los números de tarjeta de los conceptos (solo quedan las 4 últimas cifras)','Ajustes → Copias: botón «Quitar números de tarjeta» para limpiar lo que ya tenías guardado']},
  {v:'2.43.6',f:'2026-11-15',c:['Fichas desplegables: al plegarlas ya no hay un segundo parpadeo']},
  {v:'2.43.5',f:'2026-11-15',c:['En el móvil y la tablet ya no se quedan «pegados» los efectos al pasar el dedo por botones y tarjetas']},

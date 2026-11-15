@@ -14,6 +14,15 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'menú del perfil: guardar copia de seguridad desde cualquier sitio'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.click('#uWho'); await p.waitForSelector('#cmCopia');
+      const [d] = await Promise.all([p.waitForEvent('download'), p.click('#cmCopia')]);
+      assert.match(d.suggestedFilename(), /^mis-gastos-copia-.*\.json$/);
+      assert.ok(await p.evaluate(() => !!S.ultimaCopia));
+    })();
+  },
   'quitar números de tarjeta de lo ya guardado'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
