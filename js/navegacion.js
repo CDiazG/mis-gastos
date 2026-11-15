@@ -7,21 +7,29 @@ $('#mPrev').onclick=()=>setMes(addMes(MES,-1));
 $('#mNext').onclick=()=>setMes(addMes(MES,1));
 $('#mHoy').onclick=()=>setMes(mesDe(hoy()));
 /* Calendario de meses: al tocar el nombre del mes, todos los meses por año (con un punto los que tienen datos) */
-function abrirMesPicker(){
-  if($('#mesPicker')){cerrarMesPicker();return}
-  const conDatos=new Set(S.mov.map(x=>x.mes)),act=mesDe(hoy());
-  const anios=[...new Set([...conDatos].map(m=>m.slice(0,4)).concat(act.slice(0,4)))].sort().reverse();
-  let y=MES.slice(0,4);
-  const d=document.createElement('div');d.id='mesPicker';d.setAttribute('role','dialog');d.setAttribute('aria-label','Elegir mes');
+function abrirMesPicker(o){
+  o=o||{};
+  if($('#mesPicker')){cerrarMesPicker();if(!o.alElegir)return}
+  const futuro=!!o.futuro,conDatos=new Set(S.mov.map(x=>x.mes)),act=mesDe(hoy()),sel=o.mes||MES,alElegir=o.alElegir||setMes;
+  const anios=futuro?Array.from({length:11},(_,k)=>String(+act.slice(0,4)+10-k)):[...new Set([...conDatos].map(m=>m.slice(0,4)).concat(act.slice(0,4)))].sort().reverse();
+  let y=sel.slice(0,4);if(!anios.includes(y))y=act.slice(0,4);
+  const d=document.createElement('div');d.id='mesPicker';d.setAttribute('role','dialog');d.setAttribute('aria-label','Elegir mes');d.setAttribute('popover','manual');
   const pintar=()=>{d.innerHTML=`<div class="mpfondo"></div><div class="mpcaja"><div class="mphead"><button type="button" class="btn sm icon" data-y="-1" ${y<=anios[anios.length-1]?'disabled':''} aria-label="Año anterior">‹</button><b>${y}</b><button type="button" class="btn sm icon" data-y="1" ${y>=anios[0]?'disabled':''} aria-label="Año siguiente">›</button></div>
-    <div class="mpgrid">${MESES.map((n,i)=>{const m=y+'-'+String(i+1).padStart(2,'0');return `<button type="button" class="mpm${m===MES?' on':''}${m===act?' hoy':''}" data-m="${m}">${n.slice(0,3)}${conDatos.has(m)?'<i></i>':''}</button>`}).join('')}</div>
-    <div class="mppie"><span class="small mut"><i class="mpdot"></i> con movimientos</span><button type="button" class="btn sm" data-m="${act}">Ir a hoy</button></div></div>`;
+    <div class="mpgrid">${MESES.map((n,i)=>{const m=y+'-'+String(i+1).padStart(2,'0');return `<button type="button" class="mpm${m===sel?' on':''}${m===act?' hoy':''}" data-m="${m}">${n.slice(0,3)}${!futuro&&conDatos.has(m)?'<i></i>':''}</button>`}).join('')}</div>
+    <div class="mppie">${futuro?(o.opcional&&o.mes?'<button type="button" class="btn sm" data-m="">Sin fecha</button>':'<span></span>'):'<span class="small mut"><i class="mpdot"></i> con movimientos</span>'}<button type="button" class="btn sm" data-m="${act}">${futuro?'Este mes':'Ir a hoy'}</button></div></div>`;
     $('.mpfondo',d).onclick=cerrarMesPicker;
     $$('[data-y]',d).forEach(b=>b.onclick=()=>{y=String(+y+ +b.dataset.y);pintar()});
-    $$('[data-m]',d).forEach(b=>b.onclick=()=>{cerrarMesPicker();setMes(b.dataset.m)});
-    const r=$('#monthnav').getBoundingClientRect(),c=$('.mpcaja',d);if(!esMovil()){c.style.left=Math.max(8,r.left+r.width/2-150)+'px';c.style.top=(r.bottom+6)+'px'}};
-  pintar();document.body.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'));
+    $$('[data-m]',d).forEach(b=>b.onclick=()=>{cerrarMesPicker();alElegir(b.dataset.m)});
+    const r=(o.ancla||$('#monthnav')).getBoundingClientRect(),c=$('.mpcaja',d);if(!esMovil()){c.style.left=Math.max(8,Math.min(innerWidth-308,r.left+r.width/2-150))+'px';c.style.top=Math.min(innerHeight-340,r.bottom+6)+'px'}};
+  pintar();
+  (document.querySelector('dialog[open]')||document.body).appendChild(d); // dentro de un cuadro abierto, para que se pueda pulsar
+  if(d.showPopover)try{d.showPopover()}catch(_){}
+  requestAnimationFrame(()=>d.classList.add('on'));
 }
+/* Campo «mes»: mismo calendario que el de arriba (sustituye al selector del navegador). Se usa con <input class="selmes" readonly data-v="2026-11"> */
+document.addEventListener('click',e=>{const el=e.target.closest('.selmes');if(!el)return;abrirMesPicker({mes:el.dataset.v||'',futuro:true,opcional:el.dataset.op!=='0',ancla:el,alElegir:m=>{el.dataset.v=m;el.value=m?nombreMesCap(m):'';el.dispatchEvent(new Event('change',{bubbles:true}))}})});
+document.addEventListener('keydown',e=>{if(e.target.classList&&e.target.classList.contains('selmes')&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.target.click()}});
+function campoMes(id,v,extra){return `<input type="text" readonly class="selmes" id="${id}" data-v="${v||''}" value="${v?esc(nombreMesCap(v)):''}" placeholder="Elegir mes" ${extra||''}>`}
 function cerrarMesPicker(){const d=$('#mesPicker');if(d)d.remove()}
 $('#mCal').onclick=e=>{e.stopPropagation();abrirMesPicker()};$('#mLabel').onclick=abrirMesPicker;$('#mLabel').setAttribute('role','button');$('#mLabel').tabIndex=0;$('#mLabel').title='Elegir mes';
 $('#mLabel').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirMesPicker()}};

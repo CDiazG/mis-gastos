@@ -271,19 +271,19 @@ function rObjetivos(){
   const el=$('#objetivos');const os=S.objetivos||[];
   el.innerHTML=`<div class="ghead"><span class="t">Objetivos de ahorro</span></div>`+
     (os.length?os.map(o=>objHtml(o,false)).join(''):'<div class="pad small mut">Aún no hay objetivos.</div>')+
-    `<form class="toolbar pad" id="objAdd" style="margin:0;border-top:1px solid var(--line)" autocomplete="off"><input type="text" id="oNom" placeholder="Objetivo (p. ej. Viaje en verano)" required style="flex:2;min-width:160px"><input type="text" id="oMeta" placeholder="Meta €" inputmode="decimal" required style="width:100px"><input type="month" id="oMes" title="¿Para cuándo? (opcional)"><button class="btn pri">Crear</button></form>
+    `<form class="toolbar pad" id="objAdd" style="margin:0;border-top:1px solid var(--line)" autocomplete="off"><input type="text" id="oNom" placeholder="Objetivo (p. ej. Viaje en verano)" required style="flex:2;min-width:160px"><input type="text" id="oMeta" placeholder="Meta €" inputmode="decimal" required style="width:100px">${campoMes('oMes','','title="¿Para cuándo? (opcional)" placeholder="¿Para cuándo?" style="width:150px"')}<button class="btn pri">Crear</button></form>
     <p class="small mut pad" style="margin:0;padding-top:0">Son «huchas»: cuando apartes dinero para un objetivo, pulsa «Aportar». No cambian tus movimientos ni el resumen del mes.</p>`;
   $('#objAdd').onsubmit=e=>{e.preventDefault();const meta=parseNum($('#oMeta').value);if(!isFinite(meta)||meta<=0){toast('Meta no válida',true);return}
-    (S.objetivos||(S.objetivos=[])).push({id:uid(),nombre:$('#oNom').value.trim(),meta:r2(meta),mesMeta:$('#oMes').value||'',aport:[]});save();rObjetivos();toast('Objetivo creado')};
+    (S.objetivos||(S.objetivos=[])).push({id:uid(),nombre:$('#oNom').value.trim(),meta:r2(meta),mesMeta:$('#oMes').dataset.v||'',aport:[]});save();rObjetivos();toast('Objetivo creado')};
   $$('#objetivos [data-o]').forEach(row=>{const o=os.find(x=>x.id===row.dataset.o);
     const mov=signo=>dialog((signo>0?'Aportar a «':'Retirar de «')+o.nombre+'»',`<div class="formgrid"><label>Importe</label><input type="text" id="oImp" inputmode="decimal"><label>Fecha</label><input type="date" id="oF" value="${hoy()}"></div>`,
       [{t:'Cancelar'},{t:signo>0?'Aportar':'Retirar',cls:'pri',fn:()=>{const v=parseNum($('#oImp').value);if(!isFinite(v)||v<=0){toast('Importe no válido',true);return false}
         const antes=infoObj(o).falta;(o.aport||(o.aport=[])).push({f:$('#oF').value,i:r2(v*signo)});save();rObjetivos();
         toast(antes>0&&infoObj(o).falta<=0?'🎉 ¡Objetivo «'+o.nombre+'» conseguido!':signo>0?'Aportado':'Retirado')}}]);
     $('.oa',row).onclick=()=>mov(1);$('.or',row).onclick=()=>mov(-1);
-    $('.oe',row).onclick=()=>dialog('Editar objetivo',`<div class="formgrid"><label>Nombre</label><input type="text" id="eoN" value="${esc(o.nombre)}"><label>Meta</label><input type="text" id="eoM" value="${fmt(o.meta)}" inputmode="decimal"><label>Para cuándo</label><input type="month" id="eoF" value="${o.mesMeta||''}"></div>
+    $('.oe',row).onclick=()=>dialog('Editar objetivo',`<div class="formgrid"><label>Nombre</label><input type="text" id="eoN" value="${esc(o.nombre)}"><label>Meta</label><input type="text" id="eoM" value="${fmt(o.meta)}" inputmode="decimal"><label>Para cuándo</label>${campoMes('eoF',o.mesMeta,'placeholder="Sin fecha"')}</div>
       ${(o.aport||[]).length?'<p class="small mut">Aportaciones: '+o.aport.slice(-6).map(a=>fFecha(a.f)+' '+(a.i>0?'+':'')+eur(a.i,0)).join(' · ')+'</p>':''}`,
-      [{t:'Cancelar'},{t:'Guardar',cls:'pri',fn:()=>{const m=parseNum($('#eoM').value);if(!isFinite(m)||m<=0){toast('Meta no válida',true);return false}o.nombre=$('#eoN').value.trim()||o.nombre;o.meta=r2(m);o.mesMeta=$('#eoF').value||'';save();rObjetivos()}}]);
+      [{t:'Cancelar'},{t:'Guardar',cls:'pri',fn:()=>{const m=parseNum($('#eoM').value);if(!isFinite(m)||m<=0){toast('Meta no válida',true);return false}o.nombre=$('#eoN').value.trim()||o.nombre;o.meta=r2(m);o.mesMeta=$('#eoF').dataset.v||'';save();rObjetivos()}}]);
     $('.od',row).onclick=()=>confirmar('Borrar objetivo','¿Borrar «'+o.nombre+'»? Sus aportaciones se olvidan (no afecta a tus movimientos).','Borrar',()=>{S.objetivos=os.filter(x=>x!==o);save();rObjetivos()});
   });
 }

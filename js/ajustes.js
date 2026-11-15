@@ -193,10 +193,10 @@ function rFijosAj(){
     <td data-l="Cada"><select data-k="cada">${[1,2,3,6,12].map(n=>`<option value="${n}"${n==(f.cada||1)?' selected':''}>${n===1?'mes':n+' meses'}</option>`).join('')}</select></td>
     <td data-l="Día"><input type="number" data-k="dia" min="1" max="31" value="${f.dia||''}" style="width:60px"></td>
     <td data-l="Categoría"><select data-k="cat">${catOptions(f.cat,{blankText:'—'})}</select></td>
-    <td data-l="Desde"><input type="month" data-k="desde" value="${f.desde||''}"></td>
+    <td data-l="Desde">${campoMes('',f.desde,'data-k="desde" placeholder="Desde siempre"').replace(' id=""','')}</td>
     <td class="fjx"><button class="btn sm icon dan fx" title="Quitar">✕</button></td></tr>`).join('')+'</tbody>':'<tbody><tr><td class="empty">Aún no hay gastos fijos. Pulsa «Detectar automáticamente» o «＋ Añadir».</td></tr></tbody>';
   $$('#fjTable tr[data-i]').forEach(tr=>{const f=fs[+tr.dataset.i];
-    $$('[data-k]',tr).forEach(el=>el.onchange=()=>{const k=el.dataset.k;let v=el.value;
+    $$('[data-k]',tr).forEach(el=>el.onchange=()=>{const k=el.dataset.k;let v=el.classList.contains('selmes')?el.dataset.v:el.value;
       if(k==='importe'){v=parseNum(v);if(!isFinite(v)||v<=0){toast('Importe no válido',true);el.value=fmt(f.importe);return}v=r2(v)}
       if(k==='cada'||k==='dia')v=+v||(k==='cada'?1:'');f[k]=v;save()});
     $('.fx',tr).onclick=()=>confirmar('Quitar gasto fijo','¿Dejar de vigilar «'+f.nombre+'»?','Quitar',()=>{fs.splice(+tr.dataset.i,1);save();rFijosAj()});

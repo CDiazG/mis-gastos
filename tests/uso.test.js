@@ -163,6 +163,22 @@ module.exports = {
     })();
   },
 
+  'objetivos: la fecha se elige con el mismo calendario de meses, también al editar'(browser, estado) {
+    return (async () => {
+      const { p } = await dentro(browser, estado);
+      await p.evaluate(() => go('patri'));
+      await p.fill('#oNom', 'Viaje'); await p.fill('#oMeta', '1200');
+      await p.click('#oMes'); await p.click('#mesPicker .mpm >> nth=11'); // diciembre del año actual
+      assert.equal(await p.locator('#mesPicker').count(), 0);
+      await p.click('#objAdd button');
+      const año = await p.evaluate(() => mesDe(hoy()).slice(0, 4));
+      assert.equal(await p.evaluate(() => S.objetivos[0].mesMeta), año + '-12');
+      await p.click('#objetivos .oe'); await p.click('#eoF'); await p.click('#mesPicker .mpm >> nth=5'); // se puede pulsar dentro del cuadro
+      await p.click('#dlgF >> text=Guardar'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => S.objetivos[0].mesMeta), año + '-06');
+    })();
+  },
+
   'exportar a Excel genera un .xlsx válido'(browser, estado) {
     return (async () => {
       const { p } = await dentro(browser, estado);
