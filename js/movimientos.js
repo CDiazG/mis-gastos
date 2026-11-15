@@ -203,7 +203,7 @@ function editar(x){
 
 /* ============ Añadir (gasto o ingreso a mano) ============ */
 let aTipo='gasto',cCat='',cCatManual=false,aPago='__efectivo',aHacia='';
-const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO'&&c.id!=='AHORRO').map(c=>c.id),'TRASPASO'];
+const catsGasto=()=>[...CATS.filter(c=>c.g!=='AHORRO').map(c=>c.id),'PRESTAMO',...CATS.filter(c=>c.g==='AHORRO'&&c.id!=='AHORRO').map(c=>c.id),'EFECTIVO','TRASPASO'];
 function rapidos(gasto){
   const g={};
   for(const x of S.mov){if(x.origen!=='manual'||!x.cat||(x.importe<0)!==gasto)continue;const c=String(x.concepto||'').trim();if(!c)continue;
@@ -221,7 +221,7 @@ function rEfectivo(){
   const chip=(id,txt)=>`<button type="button" class="chip${id===cCat?' on':''}" data-c="${id}">${esc(txt||catN(id))}</button>`;
   $('#cChips').innerHTML=g?catsGasto().map(id=>chip(id)).join('')
     :chip('INGRESO','Ingreso (sueldo, venta, regalo…)')+chip('PRESTAMO','Me devuelven un préstamo')+'<div class="chiplbl">o la devolución de algo que pagué en:</div>'+CATS.filter(c=>c.g!=='AHORRO').map(c=>chip(c.id)).join('');
-  $$('#cChips .chip').forEach(b=>b.onclick=()=>{cCat=b.dataset.c;cCatManual=true;rEfectivo()});
+  $$('#cChips .chip').forEach(b=>b.onclick=()=>{cCat=b.dataset.c;cCatManual=true;if(cCat==='EFECTIVO'&&aPago==='__efectivo'&&S.cuentas.length)aPago=S.cuentas[0].n;rEfectivo()});
   $('#aPagoL').textContent=g?'Pagado con':'Cobrado en';
   $('#aPerW').classList.toggle('hide',cCat!=='PRESTAMO');$('#aPerL').textContent=g?'¿A quién se lo prestas?':'¿Quién te lo devuelve?';
   $('#aPerList').innerHTML=prestamosPorPersona().map(p=>`<option value="${esc(p.persona)}">`).join('');
@@ -262,6 +262,7 @@ $('#cashForm').onsubmit=e=>{
   if(!isFinite(v)||v===0)faltan.push(['#cImp','Escribe el importe']);
   if(!$('#cCon').value.trim())faltan.push(['#cCon','Cuéntanos en qué fue']);
   if(!cCat)faltan.push(['#cChips','Elige una categoría']);
+  if(cCat==='EFECTIVO'&&aPago==='__efectivo')faltan.push(['#aPago','Elige la cuenta de la que has sacado el dinero']);
   if(!$('#cFecha').value)faltan.push(['#cFecha','Pon la fecha']);
   if(faltan.length){
     faltan.forEach(([s,t])=>{const w=$(s).closest('[data-paso],div');const d=w.closest('#cashForm>div')||w;d.classList.add('falta');const e=document.createElement('small');e.className='errtxt';e.textContent=t;d.appendChild(e)});
@@ -274,7 +275,8 @@ $('#cashForm').onsubmit=e=>{
   marcarNomina(x);S.mov.push(x);save();
   $('#cImp').value='';$('#cCon').value='';$('#aPer').value='';cCat='';cCatManual=false;pintarTagList();$('#cashForm').dataset.paso='1';
   if(x.mes!==MES)MES=x.mes;
-  render();$('#cImp').focus();toast('Apuntado: '+x.concepto+' '+(x.importe>0?'+':'')+eur(x.importe)+(ef?' (efectivo)':' ('+x.cuenta+')'));
+  render();$('#cImp').focus();if(x.cat==='EFECTIVO'&&x.importe<0)setTimeout(()=>apuntarEfectivoGastado(r2(-x.importe),x.fecha,'¿Has gastado ya ese efectivo?',`Has sacado <b>${eur(-x.importe)}</b>. Si ya lo has gastado, apúntalo para que cuente como gasto; si no, se queda como efectivo en tu bolsillo.`),400);
+  toast('Apuntado: '+x.concepto+' '+(x.importe>0?'+':'')+eur(x.importe)+(ef?' (efectivo)':' ('+x.cuenta+')'));
 };
 
 /* ---- Dividir un movimiento en varias categorías ---- */

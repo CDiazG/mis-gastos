@@ -14,6 +14,20 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'Añadir: retirada de efectivo a mano (desde una cuenta) y pregunta si ya se gastó'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => { S.cuentas.push({ n: 'Cuenta prueba', v: null, f: null }); save(); go('efectivo'); });
+      await p.fill('#cImp', '60'); await p.fill('#cCon', 'Cajero');
+      await p.click('#cChips .chip[data-c="EFECTIVO"]');
+      assert.equal(await p.evaluate(() => aPago), 'Cuenta prueba');
+      await p.click('#aGo');
+      await p.waitForSelector('#dlg[open]');
+      assert.match(await p.textContent('#dlgB'), /60/);
+      const m = await p.evaluate(() => S.mov.find(x => x.concepto === 'Cajero'));
+      assert.equal(m.cat, 'EFECTIVO'); assert.equal(m.metodo, 'banco'); assert.equal(m.importe, -60);
+    })();
+  },
   'selector de categoría: opciones que empiezan por letra (para teclear) y deshacer que dice qué cambió'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
