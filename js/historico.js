@@ -130,10 +130,20 @@ function rPrestamos(){
   const el=$('#prestamos');const ps=prestamosPorPersona();
   const tot=r2(ps.reduce((a,p)=>a+p.pendiente,0));
   el.innerHTML=`<div class="ghead"><span class="t">Préstamos</span>${ps.length?`<span class="r num">${tot>0?'Te deben '+eur(tot,0):tot<0?'Debes '+eur(-tot,0):'Todo devuelto'}</span>`:''}</div>`+
+    (ps.filter(p=>p.pendiente>0.5).length>1?'<div class="pad"><button class="btn sm" type="button" id="prTodo">Todo devuelto…</button></div>':'')+
     (ps.length?ps.map((p,i)=>`<div class="crow" data-i="${i}"><div class="a"><span>${esc(p.persona)} ${p.pendiente>0.5?'<span class="tag cash">pendiente</span>':p.pendiente<-0.5?'<span class="tag bad">le debes</span>':'<span class="tag good">devuelto</span>'}</span><span class="num"><b>${eur(Math.abs(p.pendiente))}</b></span></div>
       <div class="b"><span>Prestado ${eur(p.prestado,0)} · devuelto ${eur(p.devuelto,0)} · desde ${fFecha(p.movs.map(x=>x.fecha).sort()[0])}</span>${p.pendiente>0.5?`<button class="btn sm pdev" type="button">Me lo ha devuelto</button>`:''}</div>
       <div class="det hide pdet" style="margin-top:6px">${p.movs.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(x=>`${fFecha(x.fecha)} · ${esc(x.concepto)} · <span class="num">${x.importe>0?'+':''}${eur(x.importe)}</span>`).join('<br>')}</div></div>`).join('')
     :'<div class="pad small mut">Cuando prestes dinero, apúntalo con la categoría «Préstamo» y el nombre de la persona. Aquí verás quién te debe y cuánto.</div>');
+  const bt=$('#prTodo');if(bt)bt.onclick=()=>{const dev=ps.filter(p=>p.pendiente>0.5);
+    dialog('Todo devuelto',`<p class="small mut" style="margin-top:0">Se apunta una devolución por persona, con lo que te debe. Quita las que no quieras.</p>
+      ${dev.map((p,i)=>`<label class="pill" style="display:flex;margin:6px 0"><input type="checkbox" data-pd="${i}" checked> <span style="flex:1">${esc(p.persona)}</span><b class="num">${eur(p.pendiente)}</b></label>`).join('')}
+      <label class="small mut" for="pdPago" style="display:block;margin-top:8px">Cobrado en</label><select id="pdPago">${pagoOptions('__efectivo')}</select>`,
+      [{t:'Cancelar'},{t:'Apuntar devoluciones',cls:'pri',fn:()=>{
+        const el=dev.filter((p,i)=>$(`[data-pd="${i}"]`).checked);if(!el.length){toast('Marca al menos a una persona',true);return false}
+        const pg=$('#pdPago').value,ef=pg==='__efectivo',f=hoy();
+        conDeshacer(el.length+' devoluciones de préstamos apuntadas',()=>{for(const p of el)S.mov.push({id:uid(),fecha:f,mes:mesDe(f),concepto:'Devolución préstamo '+p.persona,importe:r2(p.pendiente),cat:'PRESTAMO',persona:p.persona,metodo:ef?'efectivo':'banco',cuenta:ef?'':pg,origen:'manual'})},12000)}}]);
+  };
   $$('#prestamos .crow').forEach(r=>{const p=ps[+r.dataset.i];
     r.onclick=e=>{if(e.target.closest('.pdev'))return;$('.pdet',r).classList.toggle('hide')};
     const b=$('.pdev',r);if(b)b.onclick=()=>{aTipo='ingreso';cCat='PRESTAMO';cCatManual=true;go('efectivo');$('#cImp').value=fmt(p.pendiente);pintarPaso();$('#cCon').value='Devolución préstamo '+p.persona;$('#aPer').value=p.persona;$('#aPerW').classList.remove('hide');$('#cImp').focus();toast('Elige cómo te lo devolvió y pulsa «Añadir ingreso»')};

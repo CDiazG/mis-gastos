@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.41.4';
+const VERSION='2.42.0';
 const CAMBIOS=[
+ {v:'2.42.0',f:'2026-11-15',c:['Préstamos: botón «Todo devuelto» para apuntar de una vez la devolución de varias personas']},
  {v:'2.41.4',f:'2026-11-15',c:['Histórico: las fichas desplegables ya no parpadean al abrirse']},
  {v:'2.41.3',f:'2026-11-15',c:['Las sugerencias de categoría muestran también el emoji de la categoría']},
  {v:'2.41.2',f:'2026-11-15',c:['Añadir: ahora puedes apuntar a mano una retirada de efectivo (elige la categoría «Retirada de efectivo» y la cuenta de la que sacaste el dinero)']},

@@ -10,6 +10,18 @@ async function dentro(browser, estado) {
 const mov = (p, o) => p.evaluate(o => { S.mov.push({ id: uid(), metodo: 'banco', cuenta: 'EVO', origen: 'manual', ...o, mes: o.mes || o.fecha.slice(0, 7) }); save(); render(); }, o);
 
 module.exports = {
+  'préstamos: «Todo devuelto» apunta una devolución por persona'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado); const m = await p.evaluate(() => MES);
+      await mov(p, { fecha: m + '-02', concepto: 'Prestado a Ana', importe: -50, cat: 'PRESTAMO', persona: 'Ana' });
+      await mov(p, { fecha: m + '-03', concepto: 'Prestado a Luis', importe: -30, cat: 'PRESTAMO', persona: 'Luis' });
+      await p.evaluate(() => go('patri'));
+      await p.click('#prTodo'); await p.waitForSelector('#dlg[open]');
+      await p.click('#dlgF .pri'); await L.esperar(450);
+      assert.equal(await p.evaluate(() => prestamosPendientes()), 0);
+      assert.equal(await p.evaluate(() => S.mov.filter(x => /^Devolución préstamo/.test(x.concepto)).length), 2);
+    })();
+  },
   'los movimientos sin categoría cuentan como «Sin categorizar»'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado); const m = await p.evaluate(() => MES);
