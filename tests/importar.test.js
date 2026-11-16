@@ -305,4 +305,44 @@ module.exports = {
       assert.match(t, /nunca se sube/); assert.match(t, /consola de Firebase/); assert.match(t, /github\.com|GitHub/);
     })();
   },
+  '«¿No se lee bien?»: intercambiar textos, quitar prefijos, cambiar columnas y recordarlo'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const mk = () => Buffer.from('Fecha;Concepto;Descripcion extra;Importe;Saldo\n03/11/2026;Compra con tarjeta en ZORRILLA BAR;Pago movil;-12,50;987,50\n02/11/2026;Compra con tarjeta en LIBRERIA PAZ;Pago movil;-20,00;1000,00\n01/11/2026;Ingreso;Ingreso;1020,00;1020,00\n', 'utf8');
+      const arch = { name: 'banco.csv', mimeType: 'text/csv', buffer: mk() };
+      await subir(p, [arch]);
+      const nombres = () => p.evaluate(() => IMP.rows.map(x => x.concepto).join(' | '));
+      assert.match(await nombres(), /Compra con tarjeta en/);
+      // quitar el principio
+      await p.click('[data-ajl]'); await p.fill('#alQ', 'Compra con tarjeta en');
+      assert.match(await p.textContent('#alV'), /ZORRILLA BAR/);
+      await p.click('#dlgF .pri'); await L.esperar(300);
+      let t = await nombres();
+      assert.ok(/ZORRILLA BAR/.test(t) && !/Compra con tarjeta en/.test(t), 'prefijo quitado: ' + t);
+      // cambiar columnas: el otro texto pasa a ser el concepto
+      await p.click('[data-ajl]'); await p.fill('#alQ', '');
+      await p.evaluate(() => { document.querySelector('#dlgB details').open = true; });
+      const col = await p.evaluate(() => [...document.querySelectorAll('#mcD option')].find(o => /Descripcion/i.test(o.textContent)).value);
+      await p.selectOption('#mcC', col);
+      await p.click('#dlgF .pri'); await L.esperar(300);
+      t = await nombres(); assert.ok(/Pago movil/.test(t) && !/ZORRILLA/.test(t), 'columna cambiada: ' + t);
+      // se recuerda al volver a subir el mismo formato
+      await p.evaluate(() => { IMP = null; rImport(); });
+      await subir(p, [{ ...arch, buffer: mk() }]);
+      t = await nombres(); assert.ok(/Pago movil/.test(t), 'recordado: ' + t);
+    })();
+  },
+  '«¿No se lee bien?» también en PDF: quitar texto del principio y no ofrecer columnas'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await subir(p, [{ name: 'x.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, htmlEvo().html) }]);
+      const antes = await p.evaluate(() => IMP.rows[0].concepto);
+      const w = antes.split(' ')[0];
+      await p.click('[data-ajl]');
+      assert.equal(await p.locator('#dlgB details').count(), 0, 'un PDF no tiene columnas');
+      await p.fill('#alQ', w); await p.click('#dlgF .pri'); await L.esperar(300);
+      const despues = await p.evaluate(() => IMP.rows[0].concepto);
+      assert.ok(despues.length < antes.length && !despues.toLowerCase().startsWith(w.toLowerCase()), antes + ' → ' + despues);
+    })();
+  },
 };

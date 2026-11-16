@@ -269,22 +269,36 @@ function tablaAMovs(filas,map){
   const r=resumenCuadre(movs,saldoIni,null,'');r.malos=malos;
   return r;
 }
+// Formulario de columnas (lo usa pedirColumnas y el ajuste «¿No se lee bien?»)
+function htmlColumnas(filas,ini){
+  ini=ini||{};
+  const ancho=Math.max(...filas.slice(0,30).map(f=>f.length));
+  const opts=sel=>`<option value="">—</option>`+[...Array(ancho).keys()].map(j=>`<option value="${j}"${j===sel?' selected':''}>Columna ${j+1}: ${esc((filas.find(f=>f[j])||[])[j]||'').slice(0,24)}</option>`).join('');
+  const vista=filas.slice(0,6).map(f=>`<tr>${f.map(x=>`<td style="white-space:nowrap">${esc(String(x).slice(0,20))}</td>`).join('')}</tr>`).join('');
+  return `<div class="tablewrap" style="max-height:150px;border:1px solid var(--line);border-radius:8px;margin-bottom:10px"><table class="small">${vista}</table></div>
+    <div class="formgrid"><label for="mcF">Fecha</label><select id="mcF">${opts(ini.fecha)}</select><label for="mcC">Concepto (el texto principal)</label><select id="mcC">${opts(ini.concepto)}</select>
+    <label for="mcD">Otro texto (opcional)</label><select id="mcD">${opts(ini.detalle)}</select>
+    <label for="mcI">Importe (con signo)</label><select id="mcI">${opts(ini.importe)}</select><label for="mcG">o Cargo</label><select id="mcG">${opts(ini.cargo)}</select><label for="mcA">y Abono</label><select id="mcA">${opts(ini.abono)}</select><label for="mcS">Saldo (opcional)</label><select id="mcS">${opts(ini.saldo)}</select>
+    <label for="mcR">Los datos empiezan en la fila</label><input type="number" id="mcR" min="1" value="${(ini.cab!=null?ini.cab:0)+2}" style="width:80px"></div>`;
+}
+// Lee el formulario de columnas; null (con aviso) si falta algo
+function leerColumnas(){
+  const v=id=>$(id).value===''?null:+$(id).value;
+  const m={cab:Math.max(-1,(+$('#mcR').value||2)-2),fecha:v('#mcF'),concepto:v('#mcC'),detalle:v('#mcD'),importe:v('#mcI'),cargo:v('#mcG'),abono:v('#mcA'),saldo:v('#mcS')};
+  if(m.fecha==null||m.concepto==null||(m.importe==null&&m.cargo==null&&m.abono==null)){toast('Faltan la fecha, el concepto o el importe',true);return null}
+  return m;
+}
 // Pide al usuario qué columna es cada cosa cuando no se reconocen solas
 function pedirColumnas(filas,nombre){
   return new Promise(res=>{
-    const ancho=Math.max(...filas.slice(0,30).map(f=>f.length));
-    const opts=sel=>`<option value="">—</option>`+[...Array(ancho).keys()].map(j=>`<option value="${j}"${j===sel?' selected':''}>Columna ${j+1}: ${esc((filas.find(f=>f[j])||[])[j]||'').slice(0,24)}</option>`).join('');
-    const vista=filas.slice(0,6).map(f=>`<tr>${f.map(x=>`<td style="white-space:nowrap">${esc(String(x).slice(0,20))}</td>`).join('')}</tr>`).join('');
-    dialog('¿Qué es cada columna?',`<p class="small mut" style="margin-top:0">No reconozco las columnas de <b>${esc(nombre)}</b>. Indica cuál es cada una (solo hace falta una vez por banco).</p>
-      <div class="tablewrap" style="max-height:150px;border:1px solid var(--line);border-radius:8px;margin-bottom:10px"><table class="small">${vista}</table></div>
-      <div class="formgrid"><label>Fecha</label><select id="mcF">${opts()}</select><label>Concepto</label><select id="mcC">${opts()}</select>
-      <label>Importe (con signo)</label><select id="mcI">${opts()}</select><label>o Cargo</label><select id="mcG">${opts()}</select><label>y Abono</label><select id="mcA">${opts()}</select><label>Saldo (opcional)</label><select id="mcS">${opts()}</select>
-      <label>Los datos empiezan en la fila</label><input type="number" id="mcR" min="1" value="2" style="width:80px"></div>`,
-      [{t:'Cancelar',fn:()=>res(null)},{t:'Leer',cls:'pri',fn:()=>{const v=id=>$(id).value===''?null:+$(id).value;
-        const m={cab:Math.max(0,(+$('#mcR').value||2)-2),fecha:v('#mcF'),concepto:v('#mcC'),importe:v('#mcI'),cargo:v('#mcG'),abono:v('#mcA'),saldo:v('#mcS')};
-        if(m.fecha==null||m.concepto==null||(m.importe==null&&m.cargo==null&&m.abono==null)){toast('Faltan la fecha, el concepto o el importe',true);return false}
-        res(m)}}]);
+    dialog('¿Qué es cada columna?',`<p class="small mut" style="margin-top:0">No reconozco las columnas de <b>${esc(nombre)}</b>. Indica cuál es cada una (solo hace falta una vez por banco).</p>${htmlColumnas(filas)}`,
+      [{t:'Cancelar',fn:()=>res(null)},{t:'Leer',cls:'pri',fn:()=>{const m=leerColumnas();if(!m)return false;res(m)}}]);
   });
+}
+// Guarda cómo leer las columnas de este banco (se reutiliza la próxima vez y manda sobre el reconocimiento automático)
+function guardarMapeo(filas,map){
+  const cab=filas[map.cab];if(!cab)return;const firma=firmaCab(cab);
+  S.mapeos=(S.mapeos||[]).filter(x=>x.firma!==firma);S.mapeos.push({firma,map,u:1});save();
 }
 const firmaCab=f=>norm(f.join('|')).trim().slice(0,120);
 // Banco del extracto: por el IBAN (código de entidad) o por el nombre que aparece en la cabecera
@@ -298,16 +312,18 @@ function detectarBanco(texto){
   return {banco,iban:iban?iban.slice(-4):''};
 }
 async function leerTabla(filas,nombre){
-  let map=detectarColumnas(filas);
+  const buscar=u=>(S.mapeos||[]).find(x=>!!x.u===u&&filas.slice(0,40).some((f,i)=>firmaCab(f)===x.firma&&(x.cab=i,true)));
+  const usu=buscar(true);
+  let map=usu?{...usu.map,cab:usu.cab}:detectarColumnas(filas);
   if(!map){
-    const guardado=(S.mapeos||[]).find(x=>filas.slice(0,40).some((f,i)=>firmaCab(f)===x.firma&&(x.cab=i,true)));
+    const guardado=buscar(false);
     if(guardado)map={...guardado.map,cab:guardado.cab};
     else{map=await pedirColumnas(filas,nombre);if(!map)return null;
       const cab=filas[map.cab];if(cab){(S.mapeos||(S.mapeos=[])).push({firma:firmaCab(cab),map});save()}}
   }
   const r=tablaAMovs(filas,map);
   const info=detectarBanco(filas.slice(0,Math.max(1,map.cab)).map(f=>f.join(' ')).join(' ')+' '+nombre);
-  r.banco=r.banco||info.banco;r.iban=r.iban||info.iban;return r;
+  r.banco=r.banco||info.banco;r.iban=r.iban||info.iban;r.filas=filas;r.map=map;return r;
 }
 
 // Lee cualquier archivo de extracto y devuelve una lista de resultados (uno por cuenta)

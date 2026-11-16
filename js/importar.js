@@ -37,6 +37,45 @@ async function leerArchivos(files){
   }
   prepararRevision(res);
 }
+// Cómo se lee el texto de los movimientos de cada banco (lo decide la persona, solo para ese banco)
+const claveLectura=r=>r.banco||'general';
+function ajusteLectura(r,m,L){
+  L=L||(S.aj.lectura||{})[claveLectura(r)];
+  let c=String(m.concepto||''),d=String(m.detalle||'');
+  if(!L)return {concepto:c,detalle:d};
+  if(L.swap&&d.trim())[c,d]=[d,c];
+  const cut=(t,q,antes)=>{const i=t.toLowerCase().indexOf(q.toLowerCase());if(i<0)return t;
+    const x=(antes?t.slice(i+q.length):t.slice(0,i)).replace(/^[\s·,;:\-.]+|[\s·,;:\-.]+$/g,'');return x||t};
+  for(const q of L.quitar||[])if(q.trim())c=cut(c,q.trim(),true);
+  for(const q of L.cortar||[])if(q.trim())c=cut(c,q.trim(),false);
+  return {concepto:c,detalle:d};
+}
+function abrirAjusteLectura(r){
+  const k=claveLectura(r),L0=(S.aj.lectura||{})[k]||{};
+  const hayDet=r.movs.some(m=>String(m.detalle||'').trim());
+  const lin=a=>(a||[]).join('\n');
+  const muestra=r.movs.slice(0,60).filter((m,i,a)=>a.findIndex(y=>y.concepto===m.concepto)===i).slice(0,5);
+  const Ldlg=()=>({swap:!!($('#alSw')&&$('#alSw').checked),quitar:$('#alQ').value.split('\n'),cortar:$('#alC').value.split('\n')});
+  const pinta=()=>{const L=Ldlg();$('#alV').innerHTML=muestra.map(m=>{const a=ajusteLectura(r,m,L);return `<tr><td class="mut">${esc(String(m.concepto).slice(0,40))}</td><td>→</td><td><b>${esc(mejorConcepto(a.concepto,a.detalle).slice(0,40))}</b></td></tr>`}).join('')};
+  dialog('¿No se lee bien?',`<p class="small mut" style="margin-top:0">Aquí decides qué texto se usa como nombre de cada movimiento en <b>${esc(r.banco||'este banco')}</b>. Se recuerda para los próximos extractos de este banco.</p>
+    <div class="tablewrap" style="margin-bottom:10px"><table class="small" id="alV"></table></div>
+    ${hayDet?`<label class="pill"><input type="checkbox" id="alSw"${L0.swap?' checked':''}> Usar el otro texto del movimiento como nombre (intercambiarlos)</label>`:''}
+    <div class="formgrid"><label for="alQ">Quitar del principio (uno por línea)</label><textarea id="alQ" rows="2" placeholder="Compra con tarjeta en">${esc(lin(L0.quitar))}</textarea>
+    <label for="alC">Quitar desde aquí hasta el final (uno por línea)</label><textarea id="alC" rows="2" placeholder="Tarjeta *">${esc(lin(L0.cortar))}</textarea></div>
+    <p class="small mut">Si el texto escrito aparece en el movimiento, se queda solo lo que viene después (o antes, en el segundo caso).</p>
+    ${r.filas?`<details style="margin-top:10px"><summary>Cambiar qué es cada columna</summary>${htmlColumnas(r.filas,r.map)}</details>`:''}`,
+    [{t:'Cancelar'},{t:'Aplicar',cls:'pri',fn:()=>{
+      const L=Ldlg();L.quitar=L.quitar.map(x=>x.trim()).filter(Boolean);L.cortar=L.cortar.map(x=>x.trim()).filter(Boolean);
+      let cols=false;
+      if(r.filas){const map=leerColumnas();if(!map)return false;
+        if(JSON.stringify(map)!==JSON.stringify(r.map)){const n=tablaAMovs(r.filas,map);
+          if(!n.movs.length){toast('Con esas columnas no sale ningún movimiento',true);return false}
+          const {banco,iban,archivo,filas}=r;Object.assign(r,n,{banco,iban,archivo,filas,map});guardarMapeo(r.filas,map);cols=true}}
+      (S.aj.lectura||(S.aj.lectura={}))[k]=L;save();
+      prepararRevision(IMP.res);toast(cols?'Columnas y texto actualizados':'Texto actualizado');
+    }}]);
+  ['#alQ','#alC','#alSw'].forEach(id=>{const e=$(id);if(e)e.oninput=e.onchange=pinta});pinta();
+}
 function prepararRevision(res){
   const rows=[];
   for(const r of res){
@@ -49,11 +88,12 @@ function prepararRevision(res){
     if(r.banco&&!porBanco&&!recordada)S.cuentas.push({n:r.banco,v:null,f:null,banco:1});
     r.cuenta=recordada&&S.cuentas.some(c=>c.n===recordada)?recordada:porBanco?porBanco.n:(r.banco||'');
     if(r.inversion){const c=S.cuentas.find(c=>c.n===r.cuenta);if(c)c.inversion=1}
-    r.movs.forEach((m,i)=>{
+    r.movs.forEach((m0,i)=>{
+      const m={...m0,...ajusteLectura(r,m0)};
       const ac=m.cat?{c:m.cat,r:{t:m.regla||r.banco,u:false}}:autoCatR(m.concepto,m.detalle,m.importe);let cat=ac.c;
       const nomina=!m.cat&&!r.inversion&&esNomina(m.concepto,m.importe,m.fecha);if(nomina)cat='INGRESO';
       const mes=mesPara({cat,nomina,fecha:m.fecha});
-      const key=[r.cuenta,m.fecha,m.importe.toFixed(2),m.saldo!=null?m.saldo.toFixed(2):'',norm(m.concepto).trim().slice(0,24)].join('|');
+      const key=[r.cuenta,m.fecha,m.importe.toFixed(2),m.saldo!=null?m.saldo.toFixed(2):'',norm(m0.concepto).trim().slice(0,24)].join('|');
       rows.push({...m,concepto:ocultarNumeros(mejorConcepto(m.concepto,m.detalle)),detalle:ocultarNumeros(m.detalle||''),mon:monedaDe((m.concepto||'')+' '+(m.detalle||''))||undefined,i,cuenta:r.cuenta,cat,nomina,mes,key,src:r,sel:true,estado:'nuevo',auto:!!cat,regla:ac.r?ac.r.t:'',reglaU:ac.r?!!ac.r.u:false});
     });
   }
@@ -179,6 +219,7 @@ function rImport(){
       <div class="it"><div class="l">Cuenta${r.iban?` <span class="mut">(…${esc(r.iban)})</span>`:''}</div><div class="v">${r.demo?'<span class="mut">Ejemplo</span>':`<select data-cuenta="${IMP.res.indexOf(r)}" class="${r.cuenta?'':'falta'}">${r.cuenta?'':'<option value="" selected>— Elige la cuenta —</option>'}${S.cuentas.map(c=>`<option${c.n===r.cuenta?' selected':''}>${esc(c.n)}</option>`).join('')}<option value="__nueva">＋ Otra cuenta…</option></select>`}</div></div>
       <div class="it"><div class="l">Movimientos</div><div class="v">${r.movs.length} · ${fFecha(f[0])} – ${fFecha(f[f.length-1])}</div></div>
       <div class="it"><div class="l">Saldo inicial → final</div><div class="v num">${r.saldoIni!=null?eur(r.saldoIni):'?'} → ${r.saldoFin!=null?eur(r.saldoFin):'?'}</div></div>
+      ${r.demo?'':`<div class="it"><div class="l">¿Algo no está bien?</div><div class="v"><button class="btn sm" type="button" data-ajl="${IMP.res.indexOf(r)}">¿No se lee bien?</button></div></div>`}
       <div class="it"><div class="l">Comprobación</div><div class="v">${r.cuadra===true?'<span class="ok">✓ Cuadra con el saldo del banco</span>':r.cuadra===false?`<span class="ko">✗ No cuadra (calculado ${eur(r.finCalc)})</span>`:'<span class="mut">Sin saldo para comprobar</span>'}</div></div>
     </div>${r.inversion?`<p class="small mut" style="margin:8px 0 0">Cuenta de inversión: las compras de fondos cuentan como <b>Inversión</b> el día que se hacen, las ventas la reducen y el dinero que llega desde tus otras cuentas es un <b>traspaso</b>. El saldo es el dinero sin invertir, no el valor de los fondos.</p>`:''}${r.malos?`<p class="small ko" style="margin:8px 0 0">${r.malos} líneas no encajan con el saldo; revisa sus importes.</p>`:''}</div>`;
   }
@@ -216,6 +257,7 @@ function rImport(){
     <p class="small mut">Las etiquetas «auto» indican qué palabra del concepto ha decidido la categoría; revísalas antes de guardar. Al cambiar una categoría, el programa aprende la regla (con las palabras del nombre del comercio) y la aplica a los movimientos con ese mismo nombre. Los Bizum que te mandan suelen ser devoluciones: ponles la categoría del gasto que pagaste (por ejemplo, Restaurantes y ocio) y se restan de ese gasto.</p>`;
   }
   o.innerHTML=h;
+  $$('[data-ajl]',o).forEach(b=>b.onclick=()=>abrirAjusteLectura(IMP.res[+b.dataset.ajl]));
   const mv=$('#impMover');if(mv)mv.onclick=()=>moverDeCuenta();
   const df=$('#impDemoFin');if(df)df.onclick=()=>{IMP=null;rImport()};
   $$('[data-cuenta]',o).forEach(s=>s.onchange=()=>{const r=IMP.res[+s.dataset.cuenta];
