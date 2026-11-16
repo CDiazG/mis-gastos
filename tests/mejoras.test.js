@@ -14,6 +14,18 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  '¿Qué pasaría si…?: simulador con la media de los últimos meses'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => { const h = mesDe(hoy()); for (let k = 1; k <= 3; k++) { const m = addMes(h, -k); S.mov.push({ id: 'i' + k, fecha: m + '-02', mes: m, concepto: 'NOMINA', importe: 2000, cat: 'INGRESO', metodo: 'banco', nomina: true }, { id: 'o' + k, fecha: m + '-10', mes: m, concepto: 'CINE', importe: -200, cat: 'OCIO', metodo: 'banco' }); } save(); });
+      const r = await p.evaluate(() => simular({ cat: 'OCIO', pct: 20, gasto: 50, ingreso: 0 }));
+      assert.equal(Math.round(r.catMedia), 200); assert.equal(Math.round(r.delta), -10); assert.equal(Math.round(r.anual), -120);
+      await p.evaluate(() => { go('hist'); abrirSimulador(); });
+      await p.fill('#smP', '50'); await p.selectOption('#smC', 'OCIO');
+      assert.match(await p.textContent('#smOut'), /En un año/);
+      const antes = await p.evaluate(() => S.mov.length); assert.equal(antes, 6, 'no cambia datos');
+    })();
+  },
   'informe anual: sección para la renta con donativos y etiquetas'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

@@ -201,3 +201,31 @@ function presupuestoCat(m,id,st){
   let carry=0;for(let k=desde;k<m;k=addMes(k,1)){const s=stats(k);carry=Math.max(0,carry+presFijo(id,s.base)-(s.by[id]||0))}
   carry=r2(carry);return {p:r2(base+carry),base,extra:carry};
 }
+
+// ---- «¿Qué pasaría si…?»: simulador sobre la media de los últimos meses (no toca ningún dato) ----
+function mediasUltimos(){
+  const hoyM=mesDe(hoy());let ms=[];
+  for(let k=1;k<=6&&ms.length<3;k++){const st=stats(addMes(hoyM,-k));if(st.ms.length)ms.push(st)}
+  if(!ms.length){const st=stats(hoyM);if(st.ms.length)ms=[st]}
+  if(!ms.length)return null;
+  const med=f=>ms.reduce((a,st)=>a+f(st),0)/ms.length,by={};CATS.forEach(c=>by[c.id]=med(st=>st.by[c.id]||0));
+  return {n:ms.length,ing:med(st=>st.ingresos),cons:med(st=>st.consumo),dz:med(st=>st.diezmo),by};
+}
+function simular({cat,pct,gasto,ingreso}){
+  const b=mediasUltimos();if(!b)return null;
+  const cm=cat?b.by[cat]||0:0,delta=cm*(pct||0)/100-(gasto||0)+(ingreso||0),antes=b.ing-b.cons-b.dz;
+  return {n:b.n,antes,despues:antes+delta,delta,anual:delta*12,catMedia:cm};
+}
+function abrirSimulador(){
+  const b=mediasUltimos();
+  if(!b){dialog('¿Qué pasaría si…?','<p>Aún no tengo suficientes movimientos para calcular tu media. Importa un extracto o apunta unos gastos y vuelve a probar.</p>',[{t:'Entendido',cls:'pri'}]);return}
+  dialog('¿Qué pasaría si…?',`<p class="small mut" style="margin-top:0">Se calcula con tu media de los últimos ${b.n} ${b.n===1?'mes':'meses'}. No cambia ningún dato.</p>
+    <div class="formgrid"><label for="smC">Gasto que quieres cambiar</label><select id="smC"><option value="">Ninguno</option>${CATS.filter(c=>c.g!=='AHORRO').map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join('')}</select>
+    <label for="smP">Gastar menos (%)</label><input type="text" id="smP" inputmode="decimal" placeholder="20">
+    <label for="smG">Gasto nuevo al mes (€)</label><input type="text" id="smG" inputmode="decimal" placeholder="0">
+    <label for="smI">Ingreso extra al mes (€)</label><input type="text" id="smI" inputmode="decimal" placeholder="0"></div>
+    <div id="smOut" class="alert info" style="margin-top:12px" aria-live="polite"></div>`,[{t:'Cerrar',cls:'pri'}]);
+  const pintar=()=>{const n=x=>{const v=parseNum($(x).value);return isFinite(v)?v:0},r=simular({cat:$('#smC').value,pct:n('#smP'),gasto:n('#smG'),ingreso:n('#smI')});
+    $('#smOut').innerHTML=`Ahorro medio al mes: <b>${eur(r.antes,0)}</b> → <b>${eur(r.despues,0)}</b>${Math.abs(r.delta)>=1?` (<span class="${r.delta>0?'pos':'neg'}">${r.delta>0?'+':'−'}${eur(Math.abs(r.delta),0)}</span>)`:''}<br>En un año: <b class="${r.anual>0?'pos':r.anual<0?'neg':''}">${r.anual>0?'+':r.anual<0?'−':''}${eur(Math.abs(r.anual),0)}</b>`};
+  $$('#smC,#smP,#smG,#smI').forEach(e=>e.oninput=pintar);pintar();
+}

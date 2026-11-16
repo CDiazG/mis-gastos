@@ -199,3 +199,5 @@ function rTagsCard(){
     rows.map(r=>`<div class="crow" data-tag="${esc(r.t)}"><div class="a"><span><span class="tag tg">#${esc(r.t)}</span></span><span class="num"><b>${eur(r.g)}</b></span></div><div class="b"><span>${r.n} movimiento${r.n>1?'s':''} · ${fFecha(r.d)}${r.d!==r.h?' – '+fFecha(r.h):''}</span></div></div>`).join('');
   $$('#tagsCard [data-tag]').forEach(r=>r.onclick=()=>{F.tag=r.dataset.tag;F.q='';F.cat='';F.sinCat=false;F.dud=false;go('movs')});
 }
+
+$('#simAbrir').onclick=abrirSimulador;
