@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.54.0';
+const VERSION='2.54.1';
 const CAMBIOS=[
+ {v:'2.54.1',f:'2026-11-16',c:['El Resumen te propone solo los gastos que se repiten cada mes para añadirlos a tus gastos fijos']},
  {v:'2.54.0',f:'2026-11-16',c:['Puedes deshacer una importación entera desde «Importaciones recientes»']},
  {v:'2.53.1',f:'2026-11-15',c:['Los objetivos de ahorro (y los gastos fijos de Ajustes) usan el mismo calendario de meses que el resto de la app']},
  {v:'2.53.0',f:'2026-11-15',c:['Movimientos: nuevo filtro por grupo (Necesidades, Ocio, Ahorro)','El Resumen muestra tus últimos movimientos']},

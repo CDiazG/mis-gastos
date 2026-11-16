@@ -14,6 +14,24 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'gastos fijos: el Resumen propone solo lo que se repite cada mes'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => {
+        S.aj.primerosPasos = false; const h = mesDe(hoy());
+        for (let k = 1; k <= 4; k++) { const m = addMes(h, -k); S.mov.push({ id: 'g' + k, fecha: m + '-05', mes: m, concepto: 'GIMNASIO UNO CUOTA', importe: -30, cat: 'ACTIVIDADES', metodo: 'banco' }); }
+        for (let k = 0; k < 14; k++) S.mov.push({ id: 'r' + k, fecha: addMes(h, -1) + '-1' + (k % 9), mes: addMes(h, -1), concepto: 'COMPRA SUELTA ' + k * 7, importe: -(3 + k * 1.37), cat: 'OCIO', metodo: 'banco' });
+        save(); go('resumen');
+      });
+      await p.waitForSelector('[data-act="fijver"]', { state: 'attached' });
+      await p.evaluate(() => document.querySelector('[data-act="fijver"]').click());
+      await p.waitForSelector('#dlgB [data-sg]', { state: 'attached' });
+      assert.match(await p.textContent('#dlgB'), /GIMNASIO/i);
+      await p.click('#dlgF >> text=Cancelar');
+      await p.evaluate(() => document.querySelector('[data-act="fijno"]').click());
+      assert.equal(await p.locator('[data-act="fijver"]').count(), 0, 'tras «No, gracias» no vuelve a salir');
+    })();
+  },
   'Movimientos por grupo y «Últimos movimientos» en el Resumen'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

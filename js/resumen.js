@@ -45,6 +45,7 @@ function rResumen(){
   {const fx=fijosDelMes(MES).filter(f=>f.estado==='falta'||f.estado==='cambia');
    if(fx.length)al.push(`<div class="alert"><span class="grow"><b>Gastos fijos:</b> ${fx.map(f=>f.estado==='falta'?`${esc(f.f.nombre)} no ha llegado`:`${esc(f.f.nombre)} ha cambiado (${eur(f.pagado)} en vez de ${eur(f.f.importe)})`).join(' · ')}</span></div>`)}
   {const e=efectivoMes(MES);if(e.ret>0&&e.resto>0.5&&!(S.aj.efeOk||{})[MES])al.push(`<div class="alert info"><span class="grow"><b>Efectivo sin justificar:</b> sacaste ${eur(e.ret,0)}${e.ent>0?` y te devolvieron ${eur(e.ent,0)} en efectivo`:''} y has apuntado ${eur(e.gas,0)}; quedan ${eur(e.resto,0)}.</span><button class="btn sm" data-act="efe">Añadir gasto en efectivo</button><button class="btn sm" data-act="efeok">Lo guardo</button></div>`)}
+  {const cf=candidatosFijos().filter(g=>!(S.aj.fijosVistos||[]).includes(norm(g.texto)));if(cf.length&&S.mov.length>=15)al.push(`<div class="alert info"><span class="grow">He visto <b>${cf.length} ${cf.length===1?'gasto que se repite':'gastos que se repiten'}</b> cada mes con el mismo importe. ¿Los añado a tus gastos fijos?</span><button class="btn sm" data-act="fijver">Ver</button><button class="btn sm" data-act="fijno" data-ids="${esc(JSON.stringify(cf.map(g=>norm(g.texto))))}">No, gracias</button></div>`)}
   {const sb=avisosSuscripciones(MES);if(sb.length)al.push(`<div class="alert info"><span class="grow">${sb.map(x=>x.t).join(' · ')}</span><button class="btn sm" data-act="subver">Ver</button><button class="btn sm" data-act="subok" data-ids="${esc(JSON.stringify(sb.map(x=>x.id)))}">Entendido</button></div>`)}
   if(!st.ms.length&&!(S.aj.primerosPasos===true&&!S.mov.length))al.push(`<div class="alert info"><span class="grow">No hay movimientos en ${nombreMes(MES)}. Importa un extracto o añade gastos a mano.</span><button class="btn sm" data-act="imp">Importar extracto</button></div>`);
   // Primeros pasos: solo cuentas nuevas; se quita solo al hacer lo básico (o con «Ocultar»)
@@ -59,6 +60,8 @@ function rResumen(){
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
     if(a==='ana')go('efectivo');
+    if(a==='fijver')detectarFijos();
+    if(a==='fijno'){(S.aj.fijosVistos||(S.aj.fijosVistos=[])).push(...JSON.parse(b.dataset.ids));save();rResumen()}
     if(a==='subver'){F.cat='SUSCRIPCIONES';F.sinCat=false;F.q='';F.tag='';F.todos=true;go('movs')}
     if(a==='subok'){(S.aj.subVistas||(S.aj.subVistas=[])).push(...JSON.parse(b.dataset.ids));save();rResumen()}
     if(a==='ppok'){S.aj.primerosPasos=false;save();rResumen()}
@@ -226,7 +229,7 @@ function rFijosCard(){
     :'<div class="pad small mut">Este mes no toca ninguno.</div>')+`<div class="pad small" style="padding-top:8px"><button class="link" id="fjAj2">Editar gastos fijos</button></div>`;
   $('#fjAj2').onclick=()=>{go('ajustes',{sub:'fijos'})};
 }
-function detectarFijos(){
+function candidatosFijos(){
   const hoyM=mesDe(hoy());const desde=addMes(hoyM,-6);
   const excl=new Set(['TRASPASO','EFECTIVO','AHORRO','INVERSION','DIEZMO','PRESTAMO','AJUSTE','INGRESO','']);
   const grupos={};
@@ -243,6 +246,10 @@ function detectarFijos(){
     const cats={};xs.forEach(x=>cats[x.cat]=(cats[x.cat]||0)+1);const cat=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0][0];
     sug.push({id:uid(),nombre:xs[xs.length-1].concepto.slice(0,40),texto:k,importe:r2(med),cada,dia,cat,desde:meses[meses.length-1]});
   }
+  return sug;
+}
+function detectarFijos(){
+  const sug=candidatosFijos();
   if(!sug.length){dialog('Detectar gastos fijos','<p>No he encontrado gastos que se repitan con el mismo importe en los últimos meses. Puedes añadirlos a mano en Ajustes.</p>',[{t:'Entendido',cls:'pri'}]);return}
   sug.sort((a,b)=>b.importe-a.importe);
   dialog('Gastos fijos encontrados',`<p class="small mut" style="margin-top:0">Se repiten con importe parecido en los últimos meses. Marca los que quieras vigilar:</p>`+
