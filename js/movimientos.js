@@ -1,7 +1,7 @@
 // Fluvi · Pestañas Movimientos y Añadir
 "use strict";
 /* ============ Movimientos ============ */
-const F={q:'',grupo:'',cat:'',sinCat:false,todos:false,tag:''};
+const F={q:'',grupo:'',cat:'',sinCat:false,dud:false,todos:false,tag:''};
 const SEL=new Set();
 function pagoOptions(sel){return S.cuentas.map(c=>`<option${c.n===sel?' selected':''}>${esc(c.n)}</option>`).join('')+`<option value="__efectivo"${sel==='__efectivo'?' selected':''}>Efectivo</option>`}
 // Separador por día: «Hoy», «Ayer» o «lunes 14 de noviembre» (con el año si no es este)
@@ -63,7 +63,7 @@ function mantener(id){clearTimeout(KEEP.get(id));
     KEEP.delete(id);rMovs()};
   KEEP.set(id,setTimeout(t,6000))}
 function ponerCategoria(x,c){
-  if(F.cat||F.sinCat)mantener(x.id);
+  if(F.cat||F.sinCat||F.dud)mantener(x.id);delete x.dud;
   const antes=sinCatX(x)?'sin categoría':catN(x.cat),cn=String(x.concepto||'').slice(0,26);
   conDeshacer('«'+cn+'»: '+antes+' → '+(c?catN(c):'sin categoría'),()=>{if(x.cat==='TRASPASO'&&c!=='TRASPASO')desemparejar(x);x.cat=c;if(x.origen==='extracto'&&x.cat)learn(x.concepto,x.cat);if(x.origen!=='excel')marcarNomina(x);if(c==='TRASPASO')emparejarTraspasos()},12000);
   if(c==='TRASPASO'&&!x.par&&x.otra===undefined)setTimeout(()=>preguntarOtra(x),60);
@@ -81,20 +81,21 @@ function preguntarOtra(x){
       if(!S.cuentas.some(c=>norm(c.n)===norm(nn)))S.cuentas.push({n:nn,v:null,f:null});x.otra=S.cuentas.find(c=>norm(c.n)===norm(nn)).n;save();$('#dlg').close();render();toast((sale?'Traspaso a ':'Traspaso desde ')+x.otra+'. Su saldo está en Patrimonio')};
     $('#otraOk').onclick=ok;$('#otraN').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ok()}};$('#otraN').focus()};
 }
-function irAlPar(x){const b=S.mov.find(y=>y.id===x.par);if(!b)return;MES=b.mes;F.q='';F.grupo='';F.cat='';F.sinCat=false;F.tag='';F.todos=false;go('movs');
+function irAlPar(x){const b=S.mov.find(y=>y.id===x.par);if(!b)return;MES=b.mes;F.q='';F.grupo='';F.cat='';F.sinCat=false;F.dud=false;F.tag='';F.todos=false;go('movs');
   setTimeout(()=>{const r=$(`#movTable tr[data-id="${b.id}"]`);if(r){r.scrollIntoView({block:'center',behavior:'smooth'});r.classList.add('resalta');setTimeout(()=>r.classList.remove('resalta'),1600)}},80)}
 function cerrarPanelMov(){const d=$('#movPanel');if(d)d.remove()}
 function rMovs(){
   $('#fGrp').innerHTML='<option value="">Todos los grupos</option>'+GROUPS.map(g=>`<option value="${g.id}"${F.grupo===g.id?' selected':''}>${esc(g.n)}</option>`).join('');
   $('#fCat').innerHTML=catOptions(F.cat,{blankText:'Todas las categorías'});
-  $('#fSinCat').checked=F.sinCat;$('#fBuscar').value=F.q;
+  $('#fSinCat').checked=F.sinCat;{const nd=S.mov.filter(x=>x.dud).length,fd=$('#fDud');fd.checked=F.dud;fd.parentElement.classList.toggle('hide',!nd&&!F.dud);$('#fDudN').textContent=nd}$('#fBuscar').value=F.q;
   pintarTagList();
   // al buscar se busca en todos los meses
   const qn=norm(F.q).trim(),buscaTodo=qn.length>=2&&!F.tag;
-  let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):buscaTodo||F.todos&&F.cat?S.mov.slice():S.mov.filter(x=>x.mes===MES);
+  let list=F.tag?S.mov.filter(x=>tagsDe(x).some(t=>norm(t)===norm(F.tag))):buscaTodo||F.dud||F.todos&&F.cat?S.mov.slice():S.mov.filter(x=>x.mes===MES);
   if(F.grupo){const ids=new Set(CATS.filter(c=>c.g===F.grupo).map(c=>c.id));if(F.grupo==='VARIABLES')ids.add('SINCAT');list=list.filter(x=>ids.has(x.cat)||KEEP.has(x.id))}
   if(F.cat)list=list.filter(x=>x.cat===F.cat||KEEP.has(x.id));
   if(F.sinCat)list=list.filter(x=>sinCatX(x)||KEEP.has(x.id));
+  if(F.dud)list=list.filter(x=>x.dud||KEEP.has(x.id));
   if(qn){list=list.filter(x=>norm(x.concepto+' '+(x.detalle||'')+' '+(x.nota||'')+' '+verConcepto(x)+' '+tagsDe(x).join(' ')).includes(qn))}
   list.sort((a,b)=>b.fecha.localeCompare(a.fecha)||(a.orden??0)-(b.orden??0));
   for(const id of [...SEL])if(!list.some(x=>x.id===id))SEL.delete(id);
@@ -103,6 +104,7 @@ function rMovs(){
   tb.innerHTML=list.length?list.map(x=>{
     const sep=x.fecha!==diaAnt?`<tr class="sepdia"><td colspan="6">${diaTxt(x.fecha)}</td></tr>`:'';diaAnt=x.fecha;
     const tags=[];
+    if(x.dud)tags.push('<button type="button" class="tag okdud" title="La categoría es correcta">✓ Está bien</button>');
     if(x.mon)tags.push(`<span class="tag" title="Importe original en otra moneda">${esc(fmt(x.mon.v))} ${esc(x.mon.c)}</span>`);
     if(x.metodo==='efectivo')tags.push('<span class="tag cash">efectivo</span>');else if(x.cuenta)tags.push(`<span class="tag">${esc(x.cuenta)}</span>`);
     if(x.mes!==mesDe(x.fecha))tags.push(`<span class="tag acc">cuenta en ${nombreMesC(x.mes)}</span>`);
@@ -135,7 +137,8 @@ function rMovs(){
       if(sig){const n=$(`#movTable tbody tr[data-id="${sig}"] .cat`);if(n)n.focus({preventScroll:false})}};
     $$('.sugbiz',tr).forEach(b=>b.onclick=e=>{e.stopPropagation();ponerCategoria(x,b.dataset.sug)});
     const tt=$('.tag.tras',tr);if(tt)tt.onclick=e=>{e.stopPropagation();if(x.par){irAlPar(x)}else preguntarOtra(x)};
-    $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.grupo='';F.cat='';F.sinCat=false;rMovs()});
+    $$('.tag.okdud',tr).forEach(t=>t.onclick=e=>{e.stopPropagation();delete x.dud;save();rMovs()});
+    $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.grupo='';F.cat='';F.sinCat=false;F.dud=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);
     // en el móvil, tocar la fila abre un panel para cambiar la categoría o editar
     tr.onclick=e=>{if(!esMovil()||e.target.closest('input,select,button,.tag.tg,a'))return;panelMov(x)};
@@ -160,6 +163,7 @@ $('#fBuscar').oninput=e=>{F.q=e.target.value;rMovs();$('#fBuscar').focus()};
 $('#fGrp').onchange=e=>{F.grupo=e.target.value;rMovs()};
 $('#fCat').onchange=e=>{F.cat=e.target.value;if(!F.cat)F.todos=false;rMovs()};
 $('#fSinCat').onchange=e=>{F.sinCat=e.target.checked;rMovs()};
+$('#fDud').onchange=e=>{F.dud=e.target.checked;rMovs()};
 // Nómina: solo el ingreso de la nómina (no los Bizum ni otros ingresos) puede contar para el mes siguiente.
 const finDeMes=fecha=>+fecha.slice(8,10)>=(+S.aj.diaNomina||25);
 // Pagadores de nómina aprendidos: el concepto del banco sin números ni fechas (p. ej. «TRANSFERENCIA DE EMPRESA X»)

@@ -16,6 +16,22 @@ async function subir(p, archivos) {
 }
 
 module.exports = {
+  'Revisar lo dudoso: importe alto con categoría automática, y «Está bien» lo quita'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const fila = (f, c, i, sd) => `<tr><td>${f}</td><td>${c}</td><td style="text-align:right">${i} EUR</td><td style="text-align:right">${sd} EUR</td></tr>`;
+      const html = `<p>CUENTA ONLINE: ES1500491736742010038936</p><p>Saldo: 300,00 EUR (a fecha 15/11/2026)</p><table style="width:100%"><tr><td>Fecha operación</td><td>Operación</td><td>Importe</td><td>Saldo</td></tr>${fila('13/11/2026', 'Compra Zara Valencia', '-200,00', '320,00')}${fila('10/11/2026', 'Compra Zara Valencia', '-12,00', '520,00')}</table>`;
+      await subir(p, [{ name: 'x.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, html) }]);
+      await p.click('#impGo'); await L.esperar(400);
+      assert.equal(await p.evaluate(() => S.mov.filter(x => x.dud).length), 1, 'solo el de importe alto');
+      await p.evaluate(() => { F.dud = false; go('movs'); });
+      await p.waitForSelector('#fDud', { state: 'attached' });
+      await p.evaluate(() => { document.querySelector('#fDud').click(); });
+      await p.waitForSelector('.tag.okdud');
+      await p.click('.tag.okdud'); await L.esperar(150);
+      assert.equal(await p.evaluate(() => S.mov.filter(x => x.dud).length), 0);
+    })();
+  },
   'Deshacer una importación entera'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

@@ -23,9 +23,9 @@ function abrirBuscador(){
     const add=f=>{acc.push(f);return acc.length-1};
     const H=[
       sec('Pantallas y ajustes',[...r.pant.map(x=>fila(add(()=>go(x.tab)),esc(x.t),esc(x.d))),...r.aps.map(x=>fila(add(()=>irApartado(x.tab,x.sub)),esc(x.t),esc(x.d)))]),
-      sec('Categorías',r.cats.map(c=>fila(add(()=>{F.cat=c.id;F.sinCat=false;F.q='';F.tag='';F.todos=true;go('movs')}),catI(c.id)+esc(c.n),'Ver sus movimientos'))),
-      sec(`Movimientos (${r.movs.length})`,[...r.movs.slice(0,6).map(x=>fila(add(()=>{MES=x.mes;F.q=inp.value.trim();F.cat='';F.sinCat=false;F.tag='';go('movs')}),esc(verConcepto(x)),fFecha(x.fecha)+(sinCatX(x)?'':' · '+esc(catN(x.cat))),eur(x.importe))),
-        r.movs.length>6?fila(add(()=>{F.q=inp.value.trim();F.cat='';F.sinCat=false;F.tag='';go('movs')}),'Ver los '+r.movs.length+' en Movimientos','',''):'']),
+      sec('Categorías',r.cats.map(c=>fila(add(()=>{F.cat=c.id;F.sinCat=false;F.dud=false;F.q='';F.tag='';F.todos=true;go('movs')}),catI(c.id)+esc(c.n),'Ver sus movimientos'))),
+      sec(`Movimientos (${r.movs.length})`,[...r.movs.slice(0,6).map(x=>fila(add(()=>{MES=x.mes;F.q=inp.value.trim();F.cat='';F.sinCat=false;F.dud=false;F.tag='';go('movs')}),esc(verConcepto(x)),fFecha(x.fecha)+(sinCatX(x)?'':' · '+esc(catN(x.cat))),eur(x.importe))),
+        r.movs.length>6?fila(add(()=>{F.q=inp.value.trim();F.cat='';F.sinCat=false;F.dud=false;F.tag='';go('movs')}),'Ver los '+r.movs.length+' en Movimientos','',''):'']),
       sec('Preguntas frecuentes',r.faq.map(f=>fila(add(()=>{irApartado('ayuda','faq');setTimeout(()=>{const b=$('#faqBuscar');if(b){b.value=f.p;b.oninput({target:b})}},60)}),esc(f.p),'')))
     ].join('');
     res.innerHTML=H||'<p class="mut">No he encontrado nada con «'+esc(inp.value)+'».</p>';

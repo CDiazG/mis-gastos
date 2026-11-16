@@ -100,7 +100,7 @@ function rInicio(){
   qi('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   qi('[data-mes]').forEach(b=>b.onclick=()=>{MES=b.dataset.mes;go('resumen')});
   // el reparto es del año: al tocar una categoría se ven todos sus movimientos (no solo los de este mes)
-  qi('.gbar[data-cat],.rseg[data-cat]').forEach(r=>r.onclick=()=>{const c=r.dataset.cat;if(!c)return;F.q='';F.tag='';if(c==='SINCAT'){F.cat='';F.sinCat=true;F.todos=false;MES=hoyM}else{F.cat=c;F.sinCat=false;F.todos=true}go('movs');scrollTo(0,0)});
+  qi('.gbar[data-cat],.rseg[data-cat]').forEach(r=>r.onclick=()=>{const c=r.dataset.cat;if(!c)return;F.q='';F.tag='';if(c==='SINCAT'){F.cat='';F.sinCat=true;F.todos=false;MES=hoyM}else{F.cat=c;F.sinCat=false;F.dud=false;F.todos=true}go('movs');scrollTo(0,0)});
 }
 
 /* ---- Bocadillo con la cifra al pasar el ratón o tocar una columna ---- */

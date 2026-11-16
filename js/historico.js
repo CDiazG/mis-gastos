@@ -197,5 +197,5 @@ function rTagsCard(){
     return {t,n:xs.length,g:r2(-xs.reduce((a,x)=>a+(x.cat==='INGRESO'?0:x.importe),0)),d:fs[0],h:fs[fs.length-1]}}).sort((a,b)=>b.h.localeCompare(a.h));
   el.innerHTML=`<h3>Etiquetas</h3><p class="small mut" style="margin:4px 0 8px">Lo que ha costado cada evento, sumando todas sus categorías. Pulsa una para ver sus movimientos.</p>`+
     rows.map(r=>`<div class="crow" data-tag="${esc(r.t)}"><div class="a"><span><span class="tag tg">#${esc(r.t)}</span></span><span class="num"><b>${eur(r.g)}</b></span></div><div class="b"><span>${r.n} movimiento${r.n>1?'s':''} · ${fFecha(r.d)}${r.d!==r.h?' – '+fFecha(r.h):''}</span></div></div>`).join('');
-  $$('#tagsCard [data-tag]').forEach(r=>r.onclick=()=>{F.tag=r.dataset.tag;F.q='';F.cat='';F.sinCat=false;go('movs')});
+  $$('#tagsCard [data-tag]').forEach(r=>r.onclick=()=>{F.tag=r.dataset.tag;F.q='';F.cat='';F.sinCat=false;F.dud=false;go('movs')});
 }

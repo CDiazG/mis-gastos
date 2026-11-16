@@ -249,6 +249,8 @@ function rImport(){
   const cg=$('#impCancel');if(cg)cg.onclick=()=>{IMP=null;rImport()};
   const gb=$('#impGo');if(gb)gb.onclick=guardarImport;
 }
+// Categoría puesta sola en un importe alto (150 € o más) sin una regla del propio usuario: merece una segunda mirada
+function esDudoso(x){return !!x.cat&&x.auto&&!x.reglaU&&!['TRASPASO','INGRESO','EFECTIVO','INVERSION'].includes(x.cat)&&Math.abs(x.importe)>=150}
 function guardarImport(){
   const sel=IMP.rows.filter(x=>x.sel&&x.estado!=='ya');
   const quitar=new Set();
@@ -257,7 +259,7 @@ function guardarImport(){
   S.mov=S.mov.filter(y=>!quitar.has(y.id));
   if(IMP.dobles&&IMP.dobles.on)IMP.dobles.lista.forEach(y=>{y.cat='TRASPASO'});
   let orden=0;const lote=uid(),prevSaldos=S.cuentas.map(c=>({n:c.n,v:c.v,f:c.f,banco:c.banco}));
-  for(const x of sel)S.mov.push({lote,id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++,...(x.mon?{mon:x.mon}:{})});
+  for(const x of sel)S.mov.push({lote,id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++,...(x.mon?{mon:x.mon}:{}),...(esDudoso(x)?{dud:1}:{})});
   for(const r of IMP.res)if(r.iban&&r.cuenta&&!r.error)(S.aj.ibanCuenta||(S.aj.ibanCuenta={}))[r.iban]=r.cuenta;
   for(const r of IMP.res){
     if(r.error||!r.movs.length||r.saldoFin==null)continue;

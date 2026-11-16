@@ -62,7 +62,7 @@ function rResumen(){
     if(a==='ana')go('efectivo');
     if(a==='fijver')detectarFijos();
     if(a==='fijno'){(S.aj.fijosVistos||(S.aj.fijosVistos=[])).push(...JSON.parse(b.dataset.ids));save();rResumen()}
-    if(a==='subver'){F.cat='SUSCRIPCIONES';F.sinCat=false;F.q='';F.tag='';F.todos=true;go('movs')}
+    if(a==='subver'){F.cat='SUSCRIPCIONES';F.sinCat=false;F.dud=false;F.q='';F.tag='';F.todos=true;go('movs')}
     if(a==='subok'){(S.aj.subVistas||(S.aj.subVistas=[])).push(...JSON.parse(b.dataset.ids));save();rResumen()}
     if(a==='ppok'){S.aj.primerosPasos=false;save();rResumen()}
     if(a==='prest'){go('patri');setTimeout(()=>$('#prestamos').scrollIntoView({behavior:'smooth'}),50)}
@@ -71,7 +71,7 @@ function rResumen(){
     if(a==='efe'){const e=efectivoMes(MES),h=hoy();apuntarEfectivoGastado(e.resto,mesDe(h)===MES?h:MES+'-28','Efectivo gastado',`De lo que sacaste en ${nombreMes(MES)}, quedan <b>${eur(e.resto)}</b> sin apuntar.`)}
     if(a==='efeok'){(S.aj.efeOk||(S.aj.efeOk={}))[MES]=true;save();rResumen();toast('Vale, lo dejo como efectivo guardado')}
     if(a==='sug'){ACOR_ABRIR='sugCard';irApartado('ajustes','presupuesto')}else if(a==='aj')go('ajustes');
-    if(a==='prestrev'){F.cat='PRESTAMO';F.sinCat=false;F.todos=true;F.q='';F.tag='';go('movs');return}if(a==='prestok'){S.aj.revisarPrestamos=false;save();rResumen();toast('Vale, no te lo vuelvo a decir');return}if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
+    if(a==='prestrev'){F.cat='PRESTAMO';F.sinCat=false;F.dud=false;F.todos=true;F.q='';F.tag='';go('movs');return}if(a==='prestok'){S.aj.revisarPrestamos=false;save();rResumen();toast('Vale, no te lo vuelvo a decir');return}if(a==='sugno'){S.aj.sugOculta=mesDe(hoy());save();rResumen();toast('Vale, te lo recuerdo el mes que viene')}
     if(a==='usu')go('usuarios');
     if(a==='bz'){go('usuarios');setTimeout(()=>$('#bzAdmin').scrollIntoView({behavior:'smooth'}),80)}
     if(a==='dz'){MES=b.dataset.m;render()}
