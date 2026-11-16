@@ -9,6 +9,24 @@ function diaTxt(f){const h=hoy(),ay=new Date(h+'T12:00');ay.setDate(ay.getDate()
   if(f===h)return 'Hoy';if(f===ayer)return 'Ayer';const d=new Date(f+'T12:00');
   const t=d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',...(f.slice(0,4)!==h.slice(0,4)?{year:'numeric'}:{})});return t.charAt(0).toUpperCase()+t.slice(1)}
 // Panel del móvil al tocar un movimiento: categorías de un toque, editar o etiquetar
+/* ---- Foto del ticket: se guarda solo en este dispositivo (IndexedDB), nunca en la nube ---- */
+const TK={
+  bd(){return new Promise((ok,ko)=>{try{const r=indexedDB.open('fluvi-tickets',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)}catch(e){ko(e)}})},
+  async op(modo,fn){const d=await this.bd();return new Promise((ok,ko)=>{const t=d.transaction('f',modo),r=fn(t.objectStore('f'));t.oncomplete=()=>ok(r&&r.result);t.onerror=()=>ko(t.error)})},
+  poner(id,blob){return this.op('readwrite',s=>s.put(blob,id))},dar(id){return this.op('readonly',s=>s.get(id))},quitar(id){return this.op('readwrite',s=>s.delete(id))},
+  // reduce la foto (máx. 1280 px, JPEG) para que ocupe poco
+  reducir(file){return new Promise((ok,ko)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?ok(b):ko(new Error('foto')),'image/jpeg',.72)};im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('foto'))};im.src=u})}
+};
+async function pintarTicket(x){
+  const box=$('#eTk');if(!box)return;
+  let blob=null;if(x.tk){try{blob=await TK.dar(x.id)}catch(_){}}
+  const url=blob?URL.createObjectURL(blob):'';
+  box.innerHTML=(blob?`<img src="${url}" alt="Foto del ticket" style="max-width:100%;max-height:180px;border-radius:10px;display:block;margin-bottom:6px"><button type="button" class="btn sm" id="eTkQ">Quitar foto</button>`
+    :x.tk?'<span class="small mut">Hay una foto, pero está en otro dispositivo (las fotos no se suben a internet).</span>':'')+
+    `<label class="btn sm" style="display:inline-block;margin-top:6px">${blob?'Cambiar foto':'Añadir foto del ticket'}<input type="file" id="eTkF" accept="image/*" hidden></label>`;
+  const f=$('#eTkF');if(f)f.onchange=async()=>{if(!f.files[0])return;try{await TK.poner(x.id,await TK.reducir(f.files[0]));x.tk=1;save();toast('Foto guardada en este dispositivo');pintarTicket(x)}catch(e){toast('No he podido guardar la foto')}};
+  const q=$('#eTkQ');if(q)q.onclick=async()=>{try{await TK.quitar(x.id)}catch(_){}delete x.tk;save();pintarTicket(x)};
+}
 function panelMov(x){
   cerrarPanelMov();
   let cats=[...CATS.map(c=>({id:c.id,n:c.n})),...SPECIAL.filter(s=>s.id!=='AJUSTE').map(s=>({id:s.id,n:s.n}))];
@@ -104,6 +122,7 @@ function rMovs(){
   tb.innerHTML=list.length?list.map(x=>{
     const sep=x.fecha!==diaAnt?`<tr class="sepdia"><td colspan="6">${diaTxt(x.fecha)}</td></tr>`:'';diaAnt=x.fecha;
     const tags=[];
+    if(x.tk)tags.push('<span class="tag" title="Tiene foto del ticket">📎</span>');
     if(x.dud)tags.push('<button type="button" class="tag okdud" title="La categoría es correcta">✓ Está bien</button>');
     if(x.mon)tags.push(`<span class="tag" title="Importe original en otra moneda">${esc(fmt(x.mon.v))} ${esc(x.mon.c)}</span>`);
     if(x.metodo==='efectivo')tags.push('<span class="tag cash">efectivo</span>');else if(x.cuenta)tags.push(`<span class="tag">${esc(x.cuenta)}</span>`);
@@ -195,6 +214,7 @@ function editar(x){
     <label>Pagado con</label><select id="eP">${pagoOptions(x.metodo==='efectivo'?'__efectivo':x.cuenta)}</select>
     <label class="eOtraL">Traspaso: la otra cuenta</label><select id="eOtra" class="eOtraL" ${x.par?'disabled title="Unido con el movimiento de la otra cuenta"':''}><option value="">Sin especificar</option>${[...S.cuentas.map(c=>c.n),'Efectivo'].map(n=>`<option${norm(n)===norm(x.otra||'')?' selected':''}>${esc(n)}</option>`).join('')}</select>
     <label>Nota</label><input type="text" id="eN" value="${esc(x.nota||'')}">
+    <label>Ticket</label><div id="eTk"></div>
     <label>Persona (préstamos)</label><input type="text" id="ePer" value="${esc(x.persona||'')}" placeholder="${esc(x.cat==='PRESTAMO'?personaDe(x):'')}">
     <label>Etiquetas</label><input type="text" id="eT" value="${esc(tagsDe(x).join(', '))}" placeholder="p. ej. Viaje a Roma (separa varias con comas)">
     </div><p class="small mut" style="margin:10px 0 0">Importe en negativo = salida; en positivo = entrada (ingresos, devoluciones, Bizum que te mandan).${x.detalle?'<br>Banco: '+esc(x.detalle):''}</p>`,
@@ -217,7 +237,7 @@ function editar(x){
       if(vals.t.length)x.tags=vals.t;else delete x.tags;
       const p=vals.p;x.metodo=p==='__efectivo'?'efectivo':'banco';x.cuenta=p==='__efectivo'?'':p;x.nota=vals.n;if(x.cat==='TRASPASO')emparejarTraspasos()})}}]);
   const vOtra=()=>$$('.eOtraL').forEach(e=>e.classList.toggle('hide',$('#eK').value!=='TRASPASO'));$('#eK').addEventListener('change',vOtra);vOtra();
-  pintarTagList();
+  pintarTagList();pintarTicket(x);
 }
 
 /* ============ Añadir (gasto o ingreso a mano) ============ */

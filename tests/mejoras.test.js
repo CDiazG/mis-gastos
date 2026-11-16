@@ -14,6 +14,21 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'foto del ticket: se guarda en el dispositivo y se puede quitar'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.evaluate(() => { S.mov.push({ id: 'tk1', fecha: hoy(), mes: mesDe(hoy()), concepto: 'CAFE', importe: -3, cat: 'OCIO', metodo: 'banco' }); save(); editar(S.mov.find(x => x.id === 'tk1')); });
+      const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+      await p.setInputFiles('#eTkF', { name: 'ticket.png', mimeType: 'image/png', buffer: png });
+      await p.waitForSelector('#eTk img');
+      assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 'tk1').tk), 1);
+      assert.equal(await p.evaluate(() => TK.dar('tk1').then(b => !!b && b.size > 0)), true);
+      assert.ok(!JSON.stringify(await p.evaluate(() => S)).includes('data:image'), 'la foto no va dentro de los datos que se suben');
+      await p.click('#eTkQ'); await L.esperar(200);
+      assert.equal(await p.evaluate(() => S.mov.find(x => x.id === 'tk1').tk), undefined);
+      assert.equal(await p.evaluate(() => TK.dar('tk1').then(b => !!b)), false);
+    })();
+  },
   '¿Qué pasaría si…?: simulador con la media de los últimos meses'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

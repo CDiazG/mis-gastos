@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.56.0';
+const VERSION='2.57.0';
 const CAMBIOS=[
+ {v:'2.57.0',f:'2026-11-16',c:['Puedes añadir una foto del ticket a un movimiento; se guarda solo en tu dispositivo, nunca en internet']},
  {v:'2.56.0',f:'2026-11-16',c:['Nuevo «¿Qué pasaría si…?» en Evolución → Comparar: prueba a gastar menos, un gasto nuevo o un ingreso extra y mira cuánto ahorrarías al año']},
  {v:'2.55.1',f:'2026-11-16',c:['El informe del año incluye una sección para la declaración de la renta (donativos y movimientos marcados)']},
  {v:'2.55.0',f:'2026-11-16',c:['Nueva opción «Revisar lo dudoso» en Movimientos: importes altos que la app ha categorizado sola, con botón «Está bien»']},
