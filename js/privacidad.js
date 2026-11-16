@@ -4,6 +4,7 @@ const REPO='https://github.com/CDiazG/mis-gastos';
 function privacidadHtml(){return `
   <p><b>🔒 Tus extractos no salen de tu dispositivo.</b> El PDF o el Excel se lee en tu propio móvil u ordenador. El archivo nunca se sube a ningún servidor.</p>
   <p><b>Qué se guarda:</b> los movimientos que confirmas (fecha, concepto, importe, categoría y saldo), tus ajustes, tu nombre, tu correo y, si la pones, tu foto. Se guarda en tu cuenta, en la base de datos de Firebase (de Google), para que te salga igual en el móvil y en el ordenador. La conexión va cifrada. En tu dispositivo queda una copia para que funcione rápido, y se borra al pulsar «Salir».</p>
+  <p><b>Fotos de tickets:</b> si añades alguna a un movimiento, se queda solo en ese dispositivo. No se sube a ninguna parte (en otro móvil verás que hay una foto, pero no la imagen).</p>
   <p><b>Quién lo ve:</b> solo tú. La app no deja que nadie vea las cuentas de otra persona, tampoco el administrador. Por honestidad: como dueño de la base de datos, el administrador podría técnicamente verlas desde la consola de Firebase. Se compromete a no hacerlo.</p>
   <p><b>Lo que ven los demás usuarios:</b> tu nombre y tu foto solo en el foro, si escribes en él. Nada de tus cuentas.</p>
   <p><b>Lo que no se hace:</b> no hay anuncios, no se venden ni se comparten datos y no se registra cómo usas la app. Si algo falla al leer un extracto, se anota el error (el nombre y el formato del archivo, nunca su contenido) para poder arreglarlo.</p>
