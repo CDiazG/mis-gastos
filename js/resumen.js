@@ -57,7 +57,9 @@ function rResumen(){
       <li>${n&&!sin?'✓ ':''}<b>Ponles categoría:</b> la app sugiere casi todas; tú confirmas las que falten. ${n&&sin?`<button class="btn sm pri" data-act="sincat">Categorizar ${sin}</button>`:''}</li>
       <li><b>Mira el Resumen:</b> aquí verás en qué se va tu dinero este mes.</li></ol><button class="btn sm" data-act="ppok">Ocultar esto</button></div>`)}
   $('#alerts').innerHTML=al.length>2?al.slice(0,1).join('')+`<details class="masav"><summary>${al.length-1} avisos más</summary><div class="alerts" style="margin-top:8px">${al.slice(1).join('')}</div></details>`:al.join('');
-  $('#frases').innerHTML=pref('frases')?frasesMes(MES).map(t=>`<div class="frase">${t}</div>`).join(''):'';
+  const fr=pref('frases')?frasesMes(MES):[],li=a=>a.map(t=>`<li class="frase">${t}</li>`).join('');
+  $('#frases').className=fr.length?'card pad frasesC':'';
+  $('#frases').innerHTML=fr.length?`<h3>Este mes</h3><ul>${li(fr.slice(0,3))}</ul>${fr.length>3?`<details><summary>${fr.length-3} más</summary><ul>${li(fr.slice(3))}</ul></details>`:''}`:'';
   $$('#alerts [data-act]').forEach(b=>b.onclick=()=>{const a=b.dataset.act;
     if(a==='sincat'){F.sinCat=true;F.cat='';go('movs')}
     if(a==='ana')go('efectivo');

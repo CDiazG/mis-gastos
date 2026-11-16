@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.59.0';
+const VERSION='2.60.0';
 const CAMBIOS=[
+ {v:'2.60.0',f:'2026-11-16',c:['El Resumen ahora es un mosaico: gráfica y frases del mes lado a lado, y objetivos, gastos fijos y últimos movimientos en tres tarjetas','Las frases del mes son puntos cortos (las 3 más importantes y «ver más»)']},
  {v:'2.59.0',f:'2026-11-16',c:['Si un extracto se lee mal, botón «¿No se lee bien?»: cambia qué texto usar como nombre, quita partes como «Compra con tarjeta en» y, en Excel/CSV, elige las columnas','Se recuerda para los próximos extractos de ese banco']},
  {v:'2.58.0',f:'2026-11-16',c:['Los errores ahora se explican en lenguaje llano y dicen qué hacer','Confeti al conseguir un objetivo de ahorro','En el móvil puedes deslizar un movimiento: a la izquierda lo borra, a la derecha le cambia la categoría','Cuenta nueva más simple: el Resumen solo muestra lo necesario hasta que añades datos','Mejor uso con teclado y lector de pantalla: foco visible y todos los botones con nombre']},
  {v:'2.57.0',f:'2026-11-16',c:['Puedes añadir una foto del ticket a un movimiento; se guarda solo en tu dispositivo, nunca en internet']},

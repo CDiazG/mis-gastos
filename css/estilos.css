@@ -1484,7 +1484,6 @@ details.icard::details-content,details.diacard::details-content,details.faq::det
   dialog[open]::backdrop{animation:fundido .15s ease-out!important}
 }
 /* 2.47 · frases del mes */
-#frases .frase{padding:9px 14px;margin:6px 0;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:.92em;line-height:1.4}
 
 /* Accesibilidad: letra grande opcional y foco visible con teclado */
 html.letragrande{zoom:1.15}
@@ -1509,3 +1508,22 @@ html.letragrande{zoom:1.15}
 #undo:not(.on){visibility:hidden;transition:opacity .2s,transform .2s,visibility 0s .2s}
 button.who:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .cbars .col:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+
+/* Resumen en mosaico (ordenador): gráfica + frases, grupos, y tres tarjetas iguales; en pantallas estrechas, una columna */
+.mos{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px;align-items:start}
+.mos>*{margin:0!important;grid-column:1/-1;min-width:0}
+.mos>#grafCard{grid-column:span 4}
+.mos>#frases{grid-column:span 2}
+.mos:has(#frases:empty)>#grafCard{grid-column:1/-1}
+.mos>#objCard,.mos>#fijosCard,.mos>#recientes{grid-column:span 2}
+.mos>#frases:empty{display:none}
+#frases.frasesC h3{margin:0 0 6px;font-size:1em}
+#frases ul{margin:0;padding-left:18px}
+#frases li{margin:5px 0;font-size:.92em;line-height:1.4}
+#frases summary{cursor:pointer;color:var(--muted);font-size:.88em;margin-top:4px}
+@media (max-width:1000px){
+  .mos{grid-template-columns:minmax(0,1fr)}
+  .mos>*{grid-column:1/-1!important}
+  .mos>#frases{order:-1}.mos>#kpis,.mos>#alerts{order:-2}
+  .mos>#objCard{order:1}.mos>#grafCard{order:2}.mos>#recientes{order:3}.mos>#fijosCard{order:4}.mos>#diaCard{order:5}.mos>#especiales{order:6}
+}
