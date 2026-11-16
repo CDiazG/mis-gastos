@@ -1527,3 +1527,13 @@ button.who:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .mos>#frases{order:-1}.mos>#kpis,.mos>#alerts{order:-2}
   .mos>#objCard{order:1}.mos>#grafCard{order:2}.mos>#recientes{order:3}.mos>#fijosCard{order:4}.mos>#diaCard{order:5}.mos>#especiales{order:6}
 }
+
+/* 2.61 · movimiento: curvas con nombre, avisos que entran con ease-out y salen antes con ease-in (sin «transition» genérico) */
+:root{--ease-in:cubic-bezier(.55,0,1,.45);--ease-io:cubic-bezier(.77,0,.175,1)}
+#toast{transition:opacity .15s var(--ease-in),transform .15s var(--ease-in)}
+#toast.on{transition:opacity .22s var(--ease),transform .22s var(--ease)}
+#undo.on{transition:opacity .25s var(--ease),transform .25s var(--ease)}
+#undo:not(.on){transition:opacity .15s var(--ease-in),transform .15s var(--ease-in),visibility 0s .15s}
+.sw i,.sw i::after{transition-property:background-color,transform,left;transition-duration:.15s;transition-timing-function:var(--ease)}
+/* cambiar de mes se hace muchas veces: movimiento casi imperceptible */
+#mLabel.entra{animation-duration:.18s}
