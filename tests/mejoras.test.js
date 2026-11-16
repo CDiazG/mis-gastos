@@ -426,7 +426,7 @@ module.exports = {
       await p.evaluate(() => go('movs'));
       await p.click('#movAll'); await p.click('#bulkDel');
       assert.equal(await p.evaluate(() => S.mov.filter(x => x.mes === '2026-10').length), 0);
-      assert.ok(await p.isVisible('#undo.on'));
+      await p.waitForSelector('#undo.on', { state: 'visible', timeout: 5000 });
       await p.click('#undoBtn');
       assert.equal(await p.evaluate(() => S.mov.filter(x => x.mes === '2026-10').length), 3, 'vuelven los 3');
       // cambiar la categoría de uno y deshacer
