@@ -37,6 +37,16 @@ function catOptions(sel,{blank=true,blankText='— Sin categoría —'}={}){
 
 /* ---- Deshacer: guarda los movimientos antes de un cambio y deja volver atrás unos segundos ---- */
 let UNDO=null;
+// Errores de Firebase / red en lenguaje llano, diciendo qué hacer
+function errHumano(e){
+  const c=String((e&&e.code)||'').replace(/^(auth|firestore)\//,''),m=String((e&&e.message)||e||'');
+  if(!navigator.onLine||/unavailable|network|offline/i.test(c+' '+m))return 'no hay conexión. Inténtalo de nuevo cuando vuelva internet';
+  if(/permission-denied/.test(c))return 'no tienes permiso para hacer esto. Si crees que es un error, díselo al administrador';
+  if(/unauthenticated|requires-recent-login|id-token/.test(c))return 'tu sesión ha caducado. Sal y vuelve a entrar';
+  if(/quota|resource-exhausted|too-many/.test(c))return 'se ha llegado al límite de uso. Prueba de nuevo más tarde';
+  if(/QuotaExceeded/i.test(m))return 'el navegador no tiene espacio. Haz una copia de seguridad y libera espacio';
+  return m||c||'error desconocido';
+}
 function conDeshacer(msg,fn,ms){
   const antes=JSON.stringify(S.mov);fn();save();render();
   const u=$('#undo');$('#undoTxt').textContent=msg;u.classList.add('on');clearTimeout(u._h);UNDO=antes;
@@ -101,6 +111,13 @@ function mejorConcepto(c,d){
 const verConcepto=x=>conceptoCorto(x&&x.concepto!==undefined?x.concepto:x);
 
 /* ===== Animación de plegado y desplegado (respeta «Animaciones» y prefers-reduced-motion) ===== */
+// Pequeña lluvia de confeti (solo con animaciones activadas y sin «reducir movimiento»)
+function celebrar(){
+  if(!animOn())return;
+  const d=document.createElement('div');d.className='confeti';d.setAttribute('aria-hidden','true');
+  d.innerHTML=Array.from({length:18},(_,i)=>`<i style="left:${5+i*5.2}%;animation-delay:${(i%6)*70}ms;background:hsl(${(i*47)%360} 80% 60%)"></i>`).join('');
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1900);
+}
 const animOn=()=>!document.documentElement.classList.contains('sinanim')&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
 function cerrarAnim(hs,fin){
   hs=hs.filter(Boolean);

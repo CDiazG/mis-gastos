@@ -1496,3 +1496,16 @@ html.letragrande{zoom:1.15}
 /* 2.52.1 · fichas del Resumen (grupos y .pleg): la animación la lleva el script; la antigua «despl» se reiniciaba al acabar la nueva y parpadeaba */
 .grupo:not(.plegado)>:not(.ghead),.pleg.abierta>:not(.ghead){animation:none}
 .faq[open]>p,.faq[open]>.faqir{animation:none}
+
+/* Cuenta nueva: una sola acción principal (los «Primeros pasos»); el resto aparece cuando hay datos */
+#s-resumen.vacio #kpis,#s-resumen.vacio #groups,#s-resumen.vacio #grafCard,#s-resumen.vacio #diaCard,#s-resumen.vacio #recientes,#s-resumen.vacio #frases{display:none}
+
+/* Confeti al conseguir un objetivo */
+.confeti{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
+.confeti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:confeti 1.6s cubic-bezier(.23,1,.32,1) both}
+@keyframes confeti{to{transform:translateY(105vh) rotate(540deg);opacity:0}}
+
+/* Teclado: el aviso de «Deshacer» no se puede enfocar mientras está oculto, y el círculo del menú muestra el foco */
+#undo:not(.on){visibility:hidden;transition:opacity .2s,transform .2s,visibility 0s .2s}
+button.who:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.cbars .col:focus-visible{outline:2px solid var(--acc);outline-offset:1px}

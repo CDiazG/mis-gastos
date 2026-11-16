@@ -51,7 +51,7 @@ async function chEnviarAdmin(texto,uidDestino){
   const admin=USER.admin&&uidDestino;
   const m={uid:admin?uidDestino:USER.uid,nombre:admin?((CH_MSGS.find(x=>x.uid===uidDestino)||{}).nombre||''):USER.nombre,de:admin?'admin':'usuario',texto,fecha:Date.now(),leido:false};
   try{const r=await fb.fsM.addDoc(fb.fsM.collection(fb.db,'mensajes'),m);if(!CH_MSGS.some(x=>x.id===r.id))CH_MSGS.push({id:r.id,...m});rChat();return true}
-  catch(e){toast('No se ha podido enviar: '+(e.code||e.message)+(e.code==='permission-denied'?' (¿están publicadas las reglas nuevas?)':''),true);return false}
+  catch(e){toast('No se ha podido enviar: '+errHumano(e)+(e.code==='permission-denied'?' (¿están publicadas las reglas nuevas?)':''),true);return false}
 }
 /* ============ Pintar ============ */
 function rChatBtn(){

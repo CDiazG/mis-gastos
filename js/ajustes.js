@@ -242,13 +242,13 @@ $('#tarjLimpiar').onclick=()=>{
 $('#bkFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.mov))throw new Error('no es una copia de este programa');
     confirmar('Restaurar copia',`La copia tiene ${d.mov.length} movimientos. Se sustituirá todo lo que hay ahora. ¿Seguir?`,'Restaurar',()=>{S=d;const df=defState();for(const k in df)if(S[k]===undefined)S[k]=df[k];save();render();toast('Copia restaurada')});
-  }catch(err){toast('No se ha podido leer: '+err.message,true)}};
+  }catch(err){toast('No se ha podido leer: '+errHumano(err)+'. Prueba con otra copia o archivo',true)}};
 $('#wipe').onclick=()=>confirmar('Borrar todo','Se borrarán todos tus movimientos, reglas y ajustes. ¿Seguro?','Borrar todo',()=>{S=defState();S.histOfrecido=true;save();render();toast('Datos borrados')});
 $('#histLoad').onclick=()=>$('#histFile').click();
 $('#histFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const H=JSON.parse(await f.text());if(!H||H.tipo!=='historial-mis-gastos'||!Array.isArray(H.mov))throw new Error('no es un archivo de historial');
     confirmar('Cargar historial',`El archivo trae ${H.mov.length} apuntes de ${nombreMes(H.desde)} a ${nombreMes(H.hasta)}. ¿Cargarlos?`,'Cargar',()=>{cargarHist(H);render();toast('Historial cargado')});
-  }catch(err){toast('No se ha podido leer: '+err.message,true)}};
+  }catch(err){toast('No se ha podido leer: '+errHumano(err)+'. Prueba con otra copia o archivo',true)}};
 $('#histDel').onclick=()=>confirmar('Quitar historial','¿Quitar todos los apuntes que vienen del Excel? Lo importado de extractos y lo añadido a mano se queda.','Quitar',()=>{S.mov=S.mov.filter(x=>x.origen!=='excel');S.histCargado=false;save();render()});
 
 function cargarHist(H){

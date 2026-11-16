@@ -27,7 +27,7 @@ $('#buzonF').onsubmit=async e=>{
   $('#bzGo').disabled=true;
   try{await fb.fsM.addDoc(fb.fsM.collection(fb.db,'sugerencias'),{uid:USER.uid,nombre:USER.nombre,email:USER.email,tipo:bzTipo,texto,version:VERSION,dispositivo:dispositivo(),fecha:Date.now(),estado:'nueva'});
     $('#bzTxt').value='';toast('¡Gracias! Le ha llegado al administrador');await cargarMias()}
-  catch(err){toast('No se ha podido enviar: '+(err.code||err.message),true)}
+  catch(err){toast('No se ha podido enviar: '+errHumano(err),true)}
   finally{$('#bzGo').disabled=false;rBuzon()}
 };
 // Administrador: escuchar todas las sugerencias
@@ -53,7 +53,7 @@ function rBuzonAdmin(){
       <div class="det" style="margin-top:4px">${esc(x.email||'')} · versión ${esc(x.version||'?')} · ${esc(x.dispositivo||'')}</div></div>`).join('')
     :'<div class="pad small mut">Todavía no ha llegado ninguna.</div>');
   $$('#bzAdmin [data-b]').forEach(r=>{const x=xs.find(y=>y.id===r.dataset.b);
-    $('.bzE',r).onchange=async e=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'sugerencias',x.id),{estado:e.target.value});x.estado=e.target.value;badgeUsuarios();rBuzonAdmin();toast('Marcada como '+e.target.value)}catch(err){toast('Error: '+(err.code||err.message),true)}};
-    $('.bzX',r).onclick=()=>confirmar('Borrar sugerencia','¿Borrar esta sugerencia de '+(x.nombre||'')+'?','Borrar',async()=>{try{await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'sugerencias',x.id));BZ_TODAS=BZ_TODAS.filter(y=>y!==x);badgeUsuarios();rBuzonAdmin()}catch(err){toast('Error: '+(err.code||err.message),true)}});
+    $('.bzE',r).onchange=async e=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'sugerencias',x.id),{estado:e.target.value});x.estado=e.target.value;badgeUsuarios();rBuzonAdmin();toast('Marcada como '+e.target.value)}catch(err){toast('Error: '+errHumano(err),true)}};
+    $('.bzX',r).onclick=()=>confirmar('Borrar sugerencia','¿Borrar esta sugerencia de '+(x.nombre||'')+'?','Borrar',async()=>{try{await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'sugerencias',x.id));BZ_TODAS=BZ_TODAS.filter(y=>y!==x);badgeUsuarios();rBuzonAdmin()}catch(err){toast('Error: '+errHumano(err),true)}});
   });
 }

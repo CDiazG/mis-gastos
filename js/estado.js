@@ -86,7 +86,7 @@ function setSync(st,msg){const el=$('#sync');if(!el)return;el.className='sync'+(
   el.textContent=st==='guardando'?'Guardando…':st==='ok'?'Guardado ✓':st==='offline'?'Sin conexión: se guardará al volver':st==='error'?'Error al guardar':'';
   el.title=msg||''}
 function save(){
-  if(!NUBE){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No se ha podido guardar: '+e.message,true)}return}
+  if(!NUBE){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No se ha podido guardar: '+errHumano(e),true)}return}
   if(!USER)return;
   pendiente=true;setSync(navigator.onLine?'guardando':'offline');clearTimeout(tSave);tSave=setTimeout(flush,600);
 }
@@ -106,7 +106,7 @@ async function flush(){
   try{
     for(let i=0;i<ops.length;i+=400){const b=writeBatch(fb.db);for(const o of ops.slice(i,i+400))o[0]==='set'?b.set(o[1],o[2]):b.delete(o[1]);await b.commit()}
     if(!pendiente)setSync('ok');
-  }catch(e){console.error(e);LAST=prev;setSync('error',e.message);toast('No se ha podido guardar en la nube: '+(e.code||e.message),true)}
+  }catch(e){console.error(e);LAST=prev;setSync('error',e.message);toast('No se ha podido guardar en la nube: '+errHumano(e),true)}
 }
 async function fbInit(){
   const [appM,authM,fsM]=await Promise.all([import(FBV+'firebase-app.js'),import(FBV+'firebase-auth.js'),import(FBV+'firebase-firestore.js')]);

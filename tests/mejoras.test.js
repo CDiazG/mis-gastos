@@ -14,6 +14,36 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'errores en lenguaje llano, cuenta nueva sin tarjetas vacías y confeti respetando «sin animaciones»'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const r = await p.evaluate(() => ({ a: errHumano({ code: 'permission-denied' }), b: errHumano({ code: 'firestore/unavailable' }), c: errHumano({ message: 'algo raro' }) }));
+      assert.match(r.a, /no tienes permiso/); assert.match(r.b, /conexión/); assert.equal(r.c, 'algo raro');
+      await p.evaluate(() => go('resumen'));
+      assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('#groups')).display), 'none', 'cuenta nueva: sin tarjetas vacías');
+      assert.equal(await p.locator('#pasos').count() > 0, true, 'se ve «Primeros pasos»');
+      await p.evaluate(() => celebrar()); assert.equal(await p.locator('.confeti').count(), 1);
+      await p.evaluate(() => { document.querySelector('.confeti').remove(); document.documentElement.classList.add('sinanim'); celebrar(); });
+      assert.equal(await p.locator('.confeti').count(), 0, 'con animaciones apagadas no hay confeti');
+    })();
+  },
+  'móvil: deslizar una fila a la izquierda la borra (con deshacer) y a la derecha pregunta la categoría'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado, { viewport: { width: 390, height: 800 }, hasTouch: true });
+      await meter(p, [['2026-10-05', 'CAFE UNO', -3, 'OCIO'], ['2026-10-06', 'CAFE DOS', -4, 'OCIO']], '2026-10');
+      await p.evaluate(() => { S.aj.primerosPasos = false; go('movs'); });
+      await p.waitForSelector('#movTable tr[data-id]');
+      const desliza = (i, dx) => p.evaluate(([i, dx]) => { const tr = document.querySelectorAll('#movTable tr[data-id]')[i], mk = x => new Touch({ identifier: 1, target: tr, clientX: x, clientY: 200 });
+        tr.dispatchEvent(new TouchEvent('touchstart', { touches: [mk(200)], bubbles: true })); tr.dispatchEvent(new TouchEvent('touchend', { changedTouches: [mk(200 + dx)], bubbles: true })); }, [i, dx]);
+      await desliza(0, 150); await p.waitForSelector('#swC');
+      assert.equal(await p.evaluate(() => S.mov.length), 2, 'a la derecha no borra');
+      await p.click('#dlgF >> text=Cancelar');
+      await desliza(0, -150); await L.esperar(200);
+      assert.equal(await p.evaluate(() => S.mov.length), 1);
+      await p.click('#undoBtn'); await L.esperar(100);
+      assert.equal(await p.evaluate(() => S.mov.length), 2, 'se puede deshacer');
+    })();
+  },
   'foto del ticket: se guarda en el dispositivo y se puede quitar'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

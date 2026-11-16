@@ -160,6 +160,12 @@ function rMovs(){
     $$('.tag.tg',tr).forEach(t=>t.onclick=()=>{F.tag=t.dataset.tag;F.q='';F.grupo='';F.cat='';F.sinCat=false;F.dud=false;rMovs()});
     $('.edit',tr).onclick=()=>editar(x);
     // en el móvil, tocar la fila abre un panel para cambiar la categoría o editar
+    if(esMovil()){let x0=null,y0=0,t0=0; // deslizar la fila: a la izquierda borra (con deshacer), a la derecha cambia la categoría
+      tr.addEventListener('touchstart',e=>{if(e.touches.length!==1||e.target.closest('input,select,button,a')){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
+      tr.addEventListener('touchend',e=>{if(x0==null)return;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;x0=null;
+        if(Date.now()-t0>600||Math.abs(dx)<90||Math.abs(dy)>30)return;
+        if(dx<0)conDeshacer('Borrado «'+String(x.concepto).slice(0,26)+'»',()=>{S.mov=S.mov.filter(m=>m!==x)},8000);
+        else dialog('Categoría de «'+String(x.concepto).slice(0,30)+'»',`<select id="swC" style="width:100%">${catOptions(x.cat)}</select>`,[{t:'Cancelar'},{t:'Poner',cls:'pri',fn:()=>{const c=$('#swC').value;if(c!==x.cat)ponerCategoria(x,c)}}])},{passive:true})}
     tr.onclick=e=>{if(!esMovil()||e.target.closest('input,select,button,.tag.tg,a'))return;panelMov(x)};
     $('.sel',tr).onchange=e=>{e.target.checked?SEL.add(id):SEL.delete(id);selUI()};
   });

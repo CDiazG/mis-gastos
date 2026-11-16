@@ -2,7 +2,7 @@
 "use strict";
 /* ============ Acceso ============ */
 const ERR_AUTH={'auth/invalid-credential':'Correo o contraseña incorrectos.','auth/wrong-password':'Correo o contraseña incorrectos.','auth/user-not-found':'Correo o contraseña incorrectos.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos o recupera la contraseña.','auth/invalid-email':'El correo no es válido.','auth/network-request-failed':'Sin conexión a internet.','auth/weak-password':'La contraseña tiene que tener al menos 6 caracteres.','auth/email-already-in-use':'Ya existe una cuenta con ese correo: entra con tu contraseña.','auth/password-does-not-meet-requirements':'La contraseña no cumple los requisitos: mínimo 8 caracteres, con minúsculas y números.'};
-const errAuth=e=>ERR_AUTH[e.code]||('Error: '+(e.code||e.message));
+const errAuth=e=>ERR_AUTH[e.code]||('Error: '+errHumano(e));
 function lMsg(t,err){$('#lMsg').innerHTML=t?`<div class="msg${err?' err':''}">${t}</div>`:''}
 function modoContinuar(on){$('#lCont').classList.toggle('hide',!on);$('#lForm').classList.toggle('hide',on);$$('#login .links').forEach(l=>l.classList.toggle('hide',on));$('#lSub').classList.toggle('hide',on)}
 let usuarioGuardado=null;
@@ -75,7 +75,7 @@ async function salir(forzar){
 }
 $('#logout').onclick=()=>salir(false);
 $('#miNombreF').onsubmit=async e=>{e.preventDefault();const n=$('#miNombre').value.trim();if(!n||!USER)return;
-  try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',USER.uid),{nombre:n});USER.nombre=n;fb.fsM.setDoc(fb.fsM.doc(fb.db,'perfiles',USER.uid),{nombre:n,foto:USER.foto||''}).catch(()=>{});pintarCuenta();$('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(n)+'</b> ('+esc(USER.email)+').';toast('Nombre guardado')}catch(err){toast('Error: '+(err.code||err.message),true)}};
+  try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',USER.uid),{nombre:n});USER.nombre=n;fb.fsM.setDoc(fb.fsM.doc(fb.db,'perfiles',USER.uid),{nombre:n,foto:USER.foto||''}).catch(()=>{});pintarCuenta();$('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(n)+'</b> ('+esc(USER.email)+').';toast('Nombre guardado')}catch(err){toast('Error: '+errHumano(err),true)}};
 $('#cambiarPass').onclick=async()=>{if(!NUBE||!USER)return;try{await fb.authM.sendPasswordResetEmail(fb.auth,USER.email);toast('Te he enviado un correo para cambiar la contraseña')}catch(e){toast(errAuth(e),true)}};
 async function entrar(u){
   const {doc,getDoc,setDoc}=fb.fsM;
@@ -94,7 +94,7 @@ async function entrar(u){
   try{fb.fsM.updateDoc(doc(fb.db,'users',u.uid),{ultimoAcceso:Date.now()}).catch(e=>console.warn('último acceso',e.code||e))}catch(_){}
   try{sessionStorage.setItem('mg-sesion',u.uid)}catch(_){}
   if(admin){try{localStorage.setItem('mg-admin-ok','1')}catch(_){}$('#lAlta').classList.add('hide')}
-  try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+(e.code||e.message),true);return}
+  try{await cargarNube()}catch(e){console.error(e);mostrarLogin('No se han podido cargar tus datos: '+errHumano(e),true);return}
   $('#login').classList.add('hide');$('#userbox').classList.remove('hide');pintarCuenta();setSync('ok');
   $('#tabUsuarios').classList.toggle('hide',!admin);$('#cmUsuarios').classList.toggle('hide',!admin);
   $('#cuentaTxt').innerHTML='Has entrado como <b>'+esc(USER.nombre)+'</b> ('+esc(USER.email)+').'+'';

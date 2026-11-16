@@ -217,10 +217,10 @@ function rFotoAj(){
   if(!NUBE||!USER){el.innerHTML='';return}
   el.innerHTML=`${avatarHtml(USER.uid,USER.nombre,USER.foto||'',56)}<div style="display:flex;flex-direction:column;gap:6px"><span class="small mut">Foto de perfil (la ven los demás en el foro)</span><span class="toolbar" style="margin:0"><button class="btn sm" type="button" id="fotoCam">${USER.foto?'Cambiar foto':'Poner foto'}</button>${USER.foto?'<button class="btn sm" type="button" id="fotoQuitar">Quitar</button>':''}</span></div>`;
   $('#fotoCam').onclick=()=>$('#fotoFile').click();
-  const q=$('#fotoQuitar');if(q)q.onclick=async()=>{try{await guardarFoto('');toast('Foto quitada')}catch(e){toast('No se ha podido: '+(e.code||e.message),true)}};
+  const q=$('#fotoQuitar');if(q)q.onclick=async()=>{try{await guardarFoto('');toast('Foto quitada')}catch(e){toast('No se ha podido: '+errHumano(e),true)}};
 }
 $('#fotoFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{const foto=await fotoReducida(f);await guardarFoto(foto);toast('Foto guardada')}catch(err){toast('No se ha podido guardar la foto: '+(err.code||err.message),true)}};
+  try{const foto=await fotoReducida(f);await guardarFoto(foto);toast('Foto guardada')}catch(err){toast('No se ha podido guardar la foto: '+errHumano(err),true)}};
 
 /* ============ Foro entre usuarios ============ */
 let FORO=[],FORO_VIVO=false,foroAbiertos=new Set();
@@ -250,12 +250,12 @@ function rForo(){
   $$('#foroList .pX').forEach(b=>b.onclick=()=>{const id=b.closest('[data-p]').dataset.p;const x=FORO.find(y=>y.id===id);if(!x)return;
     confirmar('Borrar mensaje','¿Borrar este mensaje'+(x.hilo?'':' y sus respuestas')+'?','Borrar',async()=>{try{
       const ids=[id,...(x.hilo?[]:FORO.filter(y=>y.hilo===id&&(y.uid===USER.uid||USER.admin)).map(y=>y.id))];
-      for(const i of ids)await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'foro',i));FORO=FORO.filter(y=>!ids.includes(y.id));rForo();toast('Borrado')}catch(err){toast('No se ha podido borrar: '+(err.code||err.message),true)}})});
+      for(const i of ids)await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'foro',i));FORO=FORO.filter(y=>!ids.includes(y.id));rForo();toast('Borrado')}catch(err){toast('No se ha podido borrar: '+errHumano(err),true)}})});
 }
 async function publicarForo({titulo='',texto,hilo=''}){
   try{await fb.fsM.addDoc(fb.fsM.collection(fb.db,'foro'),{uid:USER.uid,nombre:USER.nombre,titulo,texto,hilo,fecha:Date.now()});
     if(hilo)foroAbiertos.add(hilo);await recargarForo();toast(hilo?'Respuesta publicada':'Pregunta publicada');return true}
-  catch(err){toast('No se ha podido publicar: '+(err.code||err.message),true);return false}
+  catch(err){toast('No se ha podido publicar: '+errHumano(err),true);return false}
 }
 $('#foroF').onsubmit=async e=>{e.preventDefault();const texto=$('#foroTxt').value.trim();if(!texto||!NUBE||!USER)return;
   $('#foroGo').disabled=true;if(await publicarForo({titulo:$('#foroTit').value.trim(),texto})){$('#foroTxt').value='';$('#foroTit').value=''}$('#foroGo').disabled=false};

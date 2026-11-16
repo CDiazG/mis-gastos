@@ -33,6 +33,6 @@ function rErroresAdmin(){
     :'<div class="pad small mut">No hay errores. Si un extracto no se puede leer o algo falla, aparecerá aquí.</div>');
   $$('#errAdmin [data-e]').forEach(r=>{$('.erC',r).onclick=()=>errCopiar(errTexto(xs.find(x=>x.id===r.dataset.e)))});
   const bc=$('#errCopiar');if(bc)bc.onclick=()=>errCopiar(xs.slice(0,100).map(errTexto).join('\n\n---\n\n'));
-  $$('#errAdmin [data-e]').forEach(r=>$('.erX',r).onclick=async()=>{try{await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'errores',r.dataset.e));ERR_TODOS=ERR_TODOS.filter(x=>x.id!==r.dataset.e);badgeUsuarios();rErroresAdmin()}catch(e){toast('No se ha podido: '+(e.code||e.message),true)}});
-  const bt=$('#errBorrarTodo');if(bt)bt.onclick=()=>confirmar('Borrar errores','¿Borrar los '+xs.length+' errores registrados?','Borrar',async()=>{try{for(const x of xs)await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'errores',x.id));ERR_TODOS=[];badgeUsuarios();rErroresAdmin();toast('Borrados')}catch(e){toast('No se ha podido: '+(e.code||e.message),true)}});
+  $$('#errAdmin [data-e]').forEach(r=>$('.erX',r).onclick=async()=>{try{await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'errores',r.dataset.e));ERR_TODOS=ERR_TODOS.filter(x=>x.id!==r.dataset.e);badgeUsuarios();rErroresAdmin()}catch(e){toast('No se ha podido: '+errHumano(e),true)}});
+  const bt=$('#errBorrarTodo');if(bt)bt.onclick=()=>confirmar('Borrar errores','¿Borrar los '+xs.length+' errores registrados?','Borrar',async()=>{try{for(const x of xs)await fb.fsM.deleteDoc(fb.fsM.doc(fb.db,'errores',x.id));ERR_TODOS=[];badgeUsuarios();rErroresAdmin();toast('Borrados')}catch(e){toast('No se ha podido: '+errHumano(e),true)}});
 }

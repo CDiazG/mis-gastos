@@ -13,7 +13,7 @@ async function rUsuarios(){
   if(!USERS_VIVO){
     const {collection,getDocs}=fb.fsM;
     $('#uTable').innerHTML='<tbody><tr><td class="empty">Cargando…</td></tr></tbody>';
-    const us=[];try{(await getDocs(collection(fb.db,'users'))).forEach(d=>us.push({id:d.id,...d.data()}))}catch(e){$('#uTable').innerHTML=`<tbody><tr><td class="empty">No se han podido leer los usuarios (${esc(e.code||e.message)}).</td></tr></tbody>`;return}
+    const us=[];try{(await getDocs(collection(fb.db,'users'))).forEach(d=>us.push({id:d.id,...d.data()}))}catch(e){$('#uTable').innerHTML=`<tbody><tr><td class="empty">No se han podido leer los usuarios (${escerrHumano(e)}).</td></tr></tbody>`;return}
     USERS=us;badgeUsuarios();
   }
   const us=USERS;
@@ -27,13 +27,13 @@ async function rUsuarios(){
     <td class="r" style="white-space:nowrap"><button class="btn sm ur" title="Enviar correo para poner o cambiar la contraseña">Correo de contraseña</button>${u.id===USER.uid?'':` <button class="btn sm ua">${u.activo?'Desactivar':'Activar'}</button> <button class="btn sm dan ux" title="Eliminar usuario y todos sus datos">Eliminar</button>`}</td></tr>`).join('')+
     (bajas.length?`<tr><td colspan="2" class="small mut" style="padding-top:14px"><b>Eliminados</b> · sin datos ni acceso</td></tr>`+bajas.map(u=>`<tr data-u="${u.id}" class="off"><td><div class="uinfo" style="padding-left:46px"><div class="un">${esc(u.nombre||'')} <span class="tag">eliminado</span></div><div class="det">${esc(u.email||'')}</div><div class="det">eliminado el ${u.eliminadoEn?new Date(u.eliminadoEn).toLocaleDateString('es-ES'):''}</div></div></td><td class="r"><button class="btn sm urev">Dar de alta de nuevo</button></td></tr>`).join(''):'')+'</tbody>';
   $$('#uTable tr[data-u]').forEach(tr=>{const u=us.find(x=>x.id===tr.dataset.u);
-    const ur=$('.ur',tr);if(ur)ur.onclick=async()=>{try{await fb.authM.sendPasswordResetEmail(fb.auth,u.email);toast('Correo enviado a '+u.email)}catch(e){toast('Error: '+(e.code||e.message),true)}};
+    const ur=$('.ur',tr);if(ur)ur.onclick=async()=>{try{await fb.authM.sendPasswordResetEmail(fb.auth,u.email);toast('Correo enviado a '+u.email)}catch(e){toast('Error: '+errHumano(e),true)}};
     const ua=$('.ua',tr);if(ua)ua.onclick=()=>confirmar(u.activo?'Desactivar usuario':'Activar usuario',u.activo?`${u.nombre} no podrá entrar. Sus datos se conservan.`:`${u.nombre} podrá volver a entrar.`,u.activo?'Desactivar':'Activar',async()=>{
-      try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:!u.activo});toast('Hecho');parcheLocal(u.id,{activo:!u.activo});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
+      try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:!u.activo});toast('Hecho');parcheLocal(u.id,{activo:!u.activo});rUsuarios()}catch(e){toast('Error: '+errHumano(e),true)}});
     const ux=$('.ux',tr);if(ux)ux.onclick=()=>eliminarUsuario(u);
     const urev=$('.urev',tr);if(urev)urev.onclick=()=>reactivarUsuario(u,u.nombre);
-    const uok=$('.uok',tr);if(uok)uok.onclick=async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:true,estado:'activo',aprobado:Date.now()});toast(u.nombre+' ya puede entrar');parcheLocal(u.id,{activo:true,estado:'activo'});rUsuarios();setTimeout(()=>avisarAprobado(u),250)}catch(e){toast('Error: '+(e.code||e.message),true)}};
-    const uno=$('.uno',tr);if(uno)uno.onclick=()=>confirmar('Rechazar solicitud',`${u.nombre} (${u.email}) no podrá entrar.`,'Rechazar',async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});toast('Solicitud rechazada');parcheLocal(u.id,{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});rUsuarios()}catch(e){toast('Error: '+(e.code||e.message),true)}});
+    const uok=$('.uok',tr);if(uok)uok.onclick=async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:true,estado:'activo',aprobado:Date.now()});toast(u.nombre+' ya puede entrar');parcheLocal(u.id,{activo:true,estado:'activo'});rUsuarios();setTimeout(()=>avisarAprobado(u),250)}catch(e){toast('Error: '+errHumano(e),true)}};
+    const uno=$('.uno',tr);if(uno)uno.onclick=()=>confirmar('Rechazar solicitud',`${u.nombre} (${u.email}) no podrá entrar.`,'Rechazar',async()=>{try{await fb.fsM.updateDoc(fb.fsM.doc(fb.db,'users',u.id),{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});toast('Solicitud rechazada');parcheLocal(u.id,{activo:false,estado:'rechazada',eliminado:true,eliminadoEn:Date.now()});rUsuarios()}catch(e){toast('Error: '+errHumano(e),true)}});
   });
 }
 function eliminarUsuario(u){
@@ -58,7 +58,7 @@ async function borrarDatosUsuario(u){
     try{await fb.fsM.deleteDoc(doc(fb.db,'perfiles',u.id))}catch(_){}
     await updateDoc(doc(fb.db,'users',u.id),{activo:false,eliminado:true,eliminadoEn:Date.now()});
     dialog('Usuario eliminado',`<p>Se han borrado los datos de <b>${esc(u.nombre)}</b> y ya no puede entrar.</p><p class="small mut">Su correo sigue registrado en Firebase por si algún día quieres darle de alta de nuevo (empezaría sin datos). Si quieres borrarlo también de ahí: consola de Firebase → Authentication → Usuarios → ⋮ junto a ${esc(u.email)} → Eliminar cuenta.</p>`,[{t:'Entendido',cls:'pri'}]);
-  }catch(e){console.error(e);toast('No se ha podido eliminar: '+(e.code||e.message)+(e.code==='permission-denied'?' (¿están publicadas las reglas nuevas?)':''),true)}
+  }catch(e){console.error(e);toast('No se ha podido eliminar: '+errHumano(e)+(e.code==='permission-denied'?' (¿están publicadas las reglas nuevas?)':''),true)}
   USERS_VIVO=false;rUsuarios();
 }
 async function reactivarUsuario(u,nombre){
@@ -66,7 +66,7 @@ async function reactivarUsuario(u,nombre){
     await fb.fsM.setDoc(fb.fsM.doc(fb.db,'users',u.id),{nombre:nombre||u.nombre,email:u.email,activo:true,rol:'usuario',creado:Date.now()});
     await fb.authM.sendPasswordResetEmail(fb.auth,u.email);
     dialog('Alta de nuevo',`<p><b>${esc(nombre||u.nombre)}</b> vuelve a tener cuenta (empieza sin datos). Le ha llegado un correo a <b>${esc(u.email)}</b> para poner su contraseña.</p>`,[{t:'Entendido',cls:'pri'}]);
-  }catch(e){toast('Error: '+(e.code||e.message),true)}
+  }catch(e){toast('Error: '+errHumano(e),true)}
   USERS_VIVO=false;rUsuarios();
 }
 $('#uAdd').onsubmit=async e=>{
@@ -87,7 +87,7 @@ $('#uAdd').onsubmit=async e=>{
     $('#uNom').value='';$('#uMail').value='';
     dialog('Usuario creado',`<p><b>${esc(nombre)}</b> ya tiene cuenta. Le ha llegado un correo a <b>${esc(email)}</b> para poner su contraseña. Después solo tiene que abrir el programa y entrar.</p>`,[{t:'Entendido',cls:'pri'}]);
     USERS_VIVO=false;rUsuarios();
-  }catch(err){toast(err.code==='auth/email-already-in-use'?'Ya existe una cuenta con ese correo':'No se ha podido crear: '+(err.code||err.message),true)}
+  }catch(err){toast(err.code==='auth/email-already-in-use'?'Ya existe una cuenta con ese correo':'No se ha podido crear: '+errHumano(err),true)}
   finally{btn.disabled=false}
 };
 // Al aprobar una solicitud no se manda nada solo: se ofrece avisar a la persona con un correo o un WhatsApp ya escritos

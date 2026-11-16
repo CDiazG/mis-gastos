@@ -9,6 +9,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('#groups .gtog');
   try{localStorage.setItem('mg-grupos-plegados',JSON.stringify([...GR_PLEG]))}catch(_){}});
 /* ============ Resumen ============ */
 function rResumen(){
+  $('#s-resumen').classList.toggle('vacio',!S.mov.length&&S.aj.primerosPasos===true); // cuenta nueva: solo «Primeros pasos», sin tarjetas vacías
   const h=$('#hola');h.innerHTML=NUBE&&USER?`${avatarHtml(USER.uid,USER.nombre,USER.foto||'',26)}<span>Estás viendo las cuentas de <b>${esc(USER.nombre)}</b><span class="hmail"> · ${esc(USER.email)}</span></span>`:'';
   const st=stats(MES);
   const libre=st.ahorro;
@@ -286,6 +287,7 @@ function rObjetivos(){
     const mov=signo=>dialog((signo>0?'Aportar a «':'Retirar de «')+o.nombre+'»',`<div class="formgrid"><label>Importe</label><input type="text" id="oImp" inputmode="decimal"><label>Fecha</label><input type="date" id="oF" value="${hoy()}"></div>`,
       [{t:'Cancelar'},{t:signo>0?'Aportar':'Retirar',cls:'pri',fn:()=>{const v=parseNum($('#oImp').value);if(!isFinite(v)||v<=0){toast('Importe no válido',true);return false}
         const antes=infoObj(o).falta;(o.aport||(o.aport=[])).push({f:$('#oF').value,i:r2(v*signo)});save();rObjetivos();
+        if(antes>0&&infoObj(o).falta<=0)celebrar();
         toast(antes>0&&infoObj(o).falta<=0?'🎉 ¡Objetivo «'+o.nombre+'» conseguido!':signo>0?'Aportado':'Retirado')}}]);
     $('.oa',row).onclick=()=>mov(1);$('.or',row).onclick=()=>mov(-1);
     $('.oe',row).onclick=()=>dialog('Editar objetivo',`<div class="formgrid"><label>Nombre</label><input type="text" id="eoN" value="${esc(o.nombre)}"><label>Meta</label><input type="text" id="eoM" value="${fmt(o.meta)}" inputmode="decimal"><label>Para cuándo</label>${campoMes('eoF',o.mesMeta,'placeholder="Sin fecha"')}</div>
