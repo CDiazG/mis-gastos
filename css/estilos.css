@@ -1537,3 +1537,8 @@ button.who:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .sw i,.sw i::after{transition-property:background-color,transform,left;transition-duration:.15s;transition-timing-function:var(--ease)}
 /* cambiar de mes se hace muchas veces: movimiento casi imperceptible */
 #mLabel.entra{animation-duration:.18s}
+
+.cmit.sel{background:var(--soft)}
+
+/* La lupa va siempre pegada al círculo de la cuenta (a la derecha), tenga o no selector de mes la pestaña */
+@media (min-width:901px){header #bBuscar{margin-left:auto}header #userbox{margin-left:0}}

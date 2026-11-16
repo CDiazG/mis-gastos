@@ -282,6 +282,20 @@ module.exports = {
       assert.equal(await p.locator('#pasos').count(), 0);
     })();
   },
+  'buscador: por importe y categoría, flechas + Intro, y suma de lo encontrado'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await meter(p, [['2026-09-05', 'TIENDA UNO', -12.5, 'TRANSPORTE'], ['2026-09-06', 'OTRA COSA', -20, 'TRANSPORTE']], '2026-09');
+      await p.click('#bBuscar'); await p.fill('#bqIn', '12,5');
+      assert.match(await p.textContent('#bqRes'), /TIENDA UNO/); assert.doesNotMatch(await p.textContent('#bqRes'), /OTRA COSA/);
+      await p.fill('#bqIn', 'transporte');
+      assert.match(await p.textContent('#bqRes'), /suma/);
+      assert.equal(await p.locator('#bqRes .cmit.sel').count(), 1, 'hay uno marcado');
+      await p.press('#bqIn', 'ArrowDown'); await p.press('#bqIn', 'ArrowDown'); await p.press('#bqIn', 'ArrowUp');
+      await p.press('#bqIn', 'Enter'); await p.waitForTimeout(450);
+      assert.equal(await p.evaluate(() => TAB), 'movs');
+    })();
+  },
   'buscador único: movimientos, categorías y ajustes'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
