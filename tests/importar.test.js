@@ -16,6 +16,21 @@ async function subir(p, archivos) {
 }
 
 module.exports = {
+  'Deshacer una importación entera'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const fila = (f, c, i, sd) => `<tr><td>${f}</td><td>${c}</td><td style="text-align:right">${i} EUR</td><td style="text-align:right">${sd} EUR</td></tr>`;
+      const html = `<p>CUENTA ONLINE: ES1500491736742010038936</p><p>Saldo: 300,00 EUR (a fecha 15/11/2026)</p><table style="width:100%"><tr><td>Fecha operación</td><td>Operación</td><td>Importe</td><td>Saldo</td></tr>${fila('13/11/2026', 'Compra Tienda Uno', '-20,00', '320,00')}${fila('10/11/2026', 'Compra Super Dos', '-60,00', '340,00')}</table>`;
+      await p.evaluate(() => { S.mov.push({ id: 'mano', fecha: '2026-11-01', mes: '2026-11', concepto: 'A MANO', importe: -5, cat: 'OCIO', metodo: 'efectivo' }); save(); });
+      await subir(p, [{ name: 'x.pdf', mimeType: 'application/pdf', buffer: await L.pdfDesdeHtml(browser, html) }]);
+      await p.click('#impGo'); await L.esperar(400);
+      assert.equal(await p.evaluate(() => S.mov.filter(x => x.lote).length), 2);
+      await p.evaluate(() => go('importar')); await p.waitForSelector('[data-deshacer-imp]');
+      await p.click('[data-deshacer-imp]'); await p.click('#dlgF >> text=Deshacer'); await L.esperar(300);
+      assert.deepEqual(await p.evaluate(() => S.mov.map(x => x.id)), ['mano'], 'solo queda lo hecho a mano');
+      assert.equal(await p.locator('[data-deshacer-imp]').count(), 0);
+    })();
+  },
   'PDF con lo más reciente arriba, «Saldo a fecha» en la cabecera e ingreso sin signo'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

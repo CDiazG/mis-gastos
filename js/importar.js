@@ -146,7 +146,25 @@ function marcarDuplicados(){
     else{x.estado='nuevo';x.dupDe=null;if(x._userSel===undefined)x.sel=true}
   }
 }
+// Importaciones recientes: se pueden deshacer enteras
+function rImpHist(){
+  const h=$('#impHist');if(!h)return;const l=(S.importaciones||[]).filter(i=>S.mov.some(x=>x.lote===i.id));
+  h.innerHTML=l.length?`<div class="card pad" style="margin-top:14px"><b>Importaciones recientes</b>`+l.map(i=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)"><span class="grow" style="min-width:0"><span style="display:block">${i.n} movimientos · ${esc(fFecha(i.f))}</span><span class="small mut" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.archivos||'')}</span></span><button type="button" class="btn sm" data-deshacer-imp="${i.id}">Deshacer</button></div>`).join('')+`</div>`:'';
+  $$('[data-deshacer-imp]',h).forEach(b=>b.onclick=()=>deshacerImport(b.dataset.deshacerImp));
+}
+function deshacerImport(id){
+  const i=(S.importaciones||[]).find(x=>x.id===id);if(!i)return;
+  const n=S.mov.filter(x=>x.lote===id).length;
+  confirmar('Deshacer importación',`Se quitarán los ${n} movimientos de esta importación${i.quitados&&i.quitados.length?` y se recuperarán los ${i.quitados.length} que habían sido sustituidos`:''}. Los que hayas añadido a mano no se tocan.`,'Deshacer',()=>{
+    S.mov=S.mov.filter(x=>x.lote!==id);
+    if(i.quitados)S.mov.push(...i.quitados);
+    (i.saldos||[]).forEach(p=>{const c=S.cuentas.find(c=>c.n===p.n);if(c&&(c.f!==p.f||c.v!==p.v)){c.v=p.v;c.f=p.f;if(p.banco===undefined)delete c.banco;else c.banco=p.banco}});
+    S.importaciones=S.importaciones.filter(x=>x.id!==id);
+    save();render();rImpHist();toast('Importación deshecha');
+  });
+}
 function rImport(){
+  rImpHist();
   const o=$('#impOut');if(!IMP){o.innerHTML='';return}
   let h='';
   for(const r of IMP.res){
@@ -235,16 +253,20 @@ function guardarImport(){
   const sel=IMP.rows.filter(x=>x.sel&&x.estado!=='ya');
   const quitar=new Set();
   for(const m in IMP.sust)if(IMP.sust[m]&&IMP.sust[m].on)S.mov.forEach(y=>{if(y.origen==='excel'&&y.mes===m&&y.metodo!=='efectivo'&&y.cat!=='INGRESO')quitar.add(y.id)});
+  const quitadosObj=S.mov.filter(y=>quitar.has(y.id));
   S.mov=S.mov.filter(y=>!quitar.has(y.id));
   if(IMP.dobles&&IMP.dobles.on)IMP.dobles.lista.forEach(y=>{y.cat='TRASPASO'});
-  let orden=0;
-  for(const x of sel)S.mov.push({id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++,...(x.mon?{mon:x.mon}:{})});
+  let orden=0;const lote=uid(),prevSaldos=S.cuentas.map(c=>({n:c.n,v:c.v,f:c.f,banco:c.banco}));
+  for(const x of sel)S.mov.push({lote,id:uid(),fecha:x.fecha,mes:x.mes,concepto:x.concepto,detalle:x.detalle||'',importe:x.importe,cat:x.cat,nomina:!!x.nomina,metodo:'banco',cuenta:x.cuenta,origen:'extracto',key:x.key,orden:orden++,...(x.mon?{mon:x.mon}:{})});
   for(const r of IMP.res)if(r.iban&&r.cuenta&&!r.error)(S.aj.ibanCuenta||(S.aj.ibanCuenta={}))[r.iban]=r.cuenta;
   for(const r of IMP.res){
     if(r.error||!r.movs.length||r.saldoFin==null)continue;
     const c=S.cuentas.find(c=>c.n===r.cuenta);const ff=r.movs.map(m=>m.fecha).sort().pop();
     if(c&&(!c.f||ff>=c.f)){c.v=r.saldoFin;c.f=ff;c.banco=1}
   }
+  (S.importaciones||(S.importaciones=[])).unshift({id:lote,f:hoy(),n:sel.length,archivos:IMP.res.map(r=>r.archivo).filter(Boolean).join(', ').slice(0,80),saldos:prevSaldos,quitados:quitadosObj});
+  S.importaciones.length=Math.min(S.importaciones.length,6);
+  S.importaciones.slice(3).forEach(i=>{delete i.quitados;delete i.saldos});
   const np=emparejarTraspasos();
   save();
   if(np)setTimeout(()=>toast(np===1?'He unido un traspaso entre tus cuentas':'He unido '+np+' traspasos entre tus cuentas'),2700);
