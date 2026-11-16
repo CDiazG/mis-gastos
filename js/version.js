@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.55.0';
+const VERSION='2.55.1';
 const CAMBIOS=[
+ {v:'2.55.1',f:'2026-11-16',c:['El informe del año incluye una sección para la declaración de la renta (donativos y movimientos marcados)']},
  {v:'2.55.0',f:'2026-11-16',c:['Nueva opción «Revisar lo dudoso» en Movimientos: importes altos que la app ha categorizado sola, con botón «Está bien»']},
  {v:'2.54.1',f:'2026-11-16',c:['El Resumen te propone solo los gastos que se repiten cada mes para añadirlos a tus gastos fijos']},
  {v:'2.54.0',f:'2026-11-16',c:['Puedes deshacer una importación entera desde «Importaciones recientes»']},

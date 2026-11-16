@@ -14,6 +14,18 @@ const meter = (p, movs, mes) => p.evaluate(([ms, mes]) => {
 }, [movs, mes]);
 
 module.exports = {
+  'informe anual: sección para la renta con donativos y etiquetas'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      const h = await p.evaluate(() => {
+        S.mov.push({ id: 'd1', fecha: '2026-03-10', mes: '2026-03', concepto: 'DONATIVO CRUZ ROJA', importe: -50, cat: 'DONATIVOS', metodo: 'banco' },
+          { id: 'd2', fecha: '2026-04-02', mes: '2026-04', concepto: 'PLAN PENSIONES', importe: -100, cat: 'OCIO', metodo: 'banco', tags: ['declaración'] },
+          { id: 'd3', fecha: '2026-04-03', mes: '2026-04', concepto: 'CENA', importe: -20, cat: 'OCIO', metodo: 'banco' });
+        return informeAnio('2026');
+      });
+      assert.match(h, /Para la declaración de la renta/); assert.match(h, /CRUZ ROJA/); assert.match(h, /PLAN PENSIONES/); assert.ok(!/Movimientos con etiqueta[\s\S]*CENA/.test(h));
+    })();
+  },
   'gastos fijos: el Resumen propone solo lo que se repite cada mes'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);
