@@ -282,6 +282,16 @@ module.exports = {
       assert.equal(await p.locator('#pasos').count(), 0);
     })();
   },
+  'Añadir en móvil: un concepto larguísimo no ensancha la página'(browser, estado) {
+    return (async () => {
+      const p = await dentro(browser, estado);
+      await p.setViewportSize({ width: 390, height: 800 });
+      await p.evaluate(() => { const h = mesDe(hoy()); S.mov.push({ id: 'l1', fecha: h + '-02', mes: h, concepto: 'Devolución préstamo Compra Marketplace Internet Envio Pccomponentes Sociedad Limitada', importe: 25, cat: 'PRESTAMO', metodo: 'efectivo', cash: true }); save(); go('efectivo'); });
+      await p.waitForTimeout(400);
+      const r = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, w: innerWidth, f: document.querySelector('#s-efectivo .cashgrid>.card').getBoundingClientRect().right }));
+      assert.ok(r.sw <= r.w && r.f <= r.w, 'sin desbordar: ' + JSON.stringify(r));
+    })();
+  },
   'buscador: por importe y categoría, flechas + Intro, y suma de lo encontrado'(browser, estado) {
     return (async () => {
       const p = await dentro(browser, estado);

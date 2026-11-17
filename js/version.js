@@ -1,8 +1,9 @@
 // Cuentas Claras · Número de versión y lista de cambios (subir con herramientas/nueva-version.py)
 "use strict";
 /* ============ Versión ============ */
-const VERSION='2.62.0';
+const VERSION='2.62.1';
 const CAMBIOS=[
+ {v:'2.62.1',f:'2026-11-17',c:['Añadir en el móvil: la pantalla ya no se ensancha más que el teléfono cuando hay conceptos muy largos']},
  {v:'2.62.0',f:'2026-11-16',c:['Buscador: muévete con las flechas y abre con Intro, busca también por importe, categoría y cuenta, y muestra la suma de lo encontrado','La lupa ya no se queda sola en medio en la pestaña Evolución: va siempre junto a tu cuenta']},
  {v:'2.61.0',f:'2026-11-16',c:['Avisos y «Deshacer» entran y salen con más soltura y los interruptores se mueven más suaves','Al cambiar de mes la animación es más breve']},
  {v:'2.60.0',f:'2026-11-16',c:['El Resumen ahora es un mosaico: gráfica y frases del mes lado a lado, y objetivos, gastos fijos y últimos movimientos en tres tarjetas','Las frases del mes son puntos cortos (las 3 más importantes y «ver más»)']},

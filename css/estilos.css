@@ -271,7 +271,7 @@ dialog .df{flex-wrap:wrap}
   .fab.hide{display:none}
   #updBar{left:12px;right:12px;transform:none;}
 }
-@media (max-width:900px){.cashgrid{grid-template-columns:1fr}}
+@media (max-width:900px){.cashgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   .groups{grid-template-columns:1fr}
@@ -1542,3 +1542,7 @@ button.who:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
 /* La lupa va siempre pegada al círculo de la cuenta (a la derecha), tenga o no selector de mes la pestaña */
 @media (min-width:901px){header #bBuscar{margin-left:auto}header #userbox{margin-left:0}}
+
+/* Añadir en móvil: nada de lo de dentro (conceptos largos, «Lo de siempre») puede ensanchar la tarjeta más que la pantalla */
+.cashgrid>*,.cashform>*{min-width:0}
+.cashform .chips .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis}
